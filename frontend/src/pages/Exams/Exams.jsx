@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../config/api';
+import axios from 'axios';
+import TutorSidebar from '../Tutor/TutorSidebar';
 
 const Exams = () => {
   const [exams, setExams] = useState([]);
@@ -18,7 +19,12 @@ const Exams = () => {
 
   const fetchExams = async () => {
     try {
-      const response = await api.get('/exams');
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:5000/api/exams', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setExams(response.data.exams || []);
       setLoading(false);
     } catch (error) {
@@ -30,7 +36,12 @@ const Exams = () => {
 
   const handleStartExam = async (examId) => {
     try {
-      await api.post(`/exams/${examId}/start`);
+      const token = localStorage.getItem('token');
+      await axios.post(`http://localhost:5000/api/exams/${examId}/start`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       navigate(`/exam/${examId}`);
     } catch (error) {
       console.error('Error starting exam:', error);
@@ -50,11 +61,29 @@ const Exams = () => {
     return `px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badges[status] || badges.draft}`;
   };
 
-  if (loading) return <div className="flex justify-center items-center h-64">Loading exams...</div>;
-  if (error) return <div className="text-red-600 text-center">{error}</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <TutorSidebar />
+      <div className="flex-1 p-4 md:p-8 pt-20 md:pt-20">
+        <div className="flex justify-center items-center h-64">Loading exams...</div>
+      </div>
+    </div>
+  );
+  if (error) return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <TutorSidebar />
+      <div className="flex-1 p-4 md:p-8 pt-20 md:pt-20">
+        <div className="text-red-600 text-center">{error}</div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 flex">
+      <TutorSidebar />
+
+      <div className="flex-1 p-4 md:p-8 pt-20 md:pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-semibold text-gray-900">Exams</h1>
@@ -162,6 +191,8 @@ const Exams = () => {
               )}
             </div>
           </div>
+        </div>
+      </div>
         </div>
       </div>
     </div>

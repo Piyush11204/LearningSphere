@@ -30,7 +30,14 @@ import Exams from './pages/Exams/Exams';
 import CreateExam from './pages/Exams/CreateExam';
 import TakeExam from './pages/Exams/TakeExam';
 import ExamProgress from './pages/Progress/ExamProgress';
+// New Exam folder imports
+import StudentExams from './pages/Exam/StudentExams';
+import TakeExamStudent from './pages/Exam/TakeExam';
+import ExamResults from './pages/Exam/ExamResults';
+import StudentReports from './pages/Exam/StudentReports';
 import { useState, useEffect } from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -98,9 +105,26 @@ function App() {
             <Route path="/exams" element={<Exams />} />
             <Route path="/exam/:examId" element={<TakeExam />} />
             <Route path="/progress/exams" element={<ExamProgress />} />
+            {/* Student Exam Routes */}
+            <Route path="/student/exams" element={<StudentExams />} />
+            <Route path="/student/exam/:id" element={<TakeExamStudent />} />
+            <Route path="/student/exam/:id/results" element={<ExamResults />} />
+            <Route path="/student/reports" element={<StudentReports />} />
           </Routes>
         </main>
         <Footer />
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
       </div>
     </Router>
   );

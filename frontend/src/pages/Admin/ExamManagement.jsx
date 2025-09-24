@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { API_URLS } from '../../config/api';
 import { BookOpen, Trash2, Eye, Plus, Search, Calendar, Clock, FileText, Target, Play, Pause, CheckCircle } from 'lucide-react';
 
 const ExamManagement = () => {
@@ -22,7 +23,7 @@ const ExamManagement = () => {
     const fetchExams = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('https://p-educlud.onrender.com/api/exams', {
+        const res = await axios.get(API_URLS.EXAMS, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setExams(res.data.exams || []);
@@ -42,7 +43,7 @@ const ExamManagement = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('https://p-educlud.onrender.com/api/exams', formData, {
+      const res = await axios.post(API_URLS.EXAMS, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setExams([...exams, res.data.exam]);
@@ -66,7 +67,7 @@ const ExamManagement = () => {
     if (!window.confirm('Are you sure you want to delete this exam?')) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`https://p-educlud.onrender.com/api/exams/${id}`, {
+      await axios.delete(`${API_URLS.EXAMS}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setExams(exams.filter((exam) => exam._id !== id));
@@ -79,7 +80,7 @@ const ExamManagement = () => {
   const handleStatusChange = async (examId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.put(`https://p-educlud.onrender.com/api/exams/${examId}/status`, 
+      const res = await axios.put(`${API_URLS.EXAMS}/${examId}/status`, 
         { status: newStatus }, 
         {
           headers: { Authorization: `Bearer ${token}` },

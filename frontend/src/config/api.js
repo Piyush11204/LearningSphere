@@ -11,7 +11,9 @@ export const API_URLS = {
   REVIEWS: `${API_BASE_URL}/api/reviews`,
   ADMIN: `${API_BASE_URL}/api/admin`,
   CONTACT: `${API_BASE_URL}/api/contact`,
-  AUTH: `${API_BASE_URL}/api/auth`
+  AUTH: `${API_BASE_URL}/api/auth`,
+  EXAMS: `${API_BASE_URL}/api/exams`,
+  REPORTS: `${API_BASE_URL}/api/reports`
 };
 
 export default API_URLS;

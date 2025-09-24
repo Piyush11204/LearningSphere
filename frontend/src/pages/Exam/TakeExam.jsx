@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { API_URLS } from '../../config/api';
 import {
   Clock,
   ArrowRight,
@@ -39,7 +40,7 @@ const TakeExam = () => {
         const token = localStorage.getItem('token');
 
         // First check exam status for this user
-        const statusRes = await axios.get(`https://p-educlud.onrender.com/api/exams/${id}/status`, {
+        const statusRes = await axios.get(`${API_URLS.EXAMS}/${id}/status`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -56,7 +57,7 @@ const TakeExam = () => {
         }
 
         // Now fetch exam details
-        const res = await axios.get(`https://p-educlud.onrender.com/api/exams/${id}`, {
+        const res = await axios.get(`${API_URLS.EXAMS}/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -321,7 +322,7 @@ const TakeExam = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post(`https://p-educlud.onrender.com/api/exams/${id}/start`, {}, {
+      const res = await axios.post(`${API_URLS.EXAMS}/${id}/start`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -349,7 +350,7 @@ const TakeExam = () => {
       // Convert answers object to array format expected by backend
       const answersArray = Object.values(answers);
 
-      const res = await axios.post(`https://p-educlud.onrender.com/api/exams/${id}/submit`, {
+      const res = await axios.post(`${API_URLS.EXAMS}/${id}/submit`, {
         answers: answersArray
       }, {
         headers: { Authorization: `Bearer ${token}` },
@@ -611,7 +612,7 @@ const TakeExam = () => {
 
       // Now start the exam since fullscreen is confirmed
       const token = localStorage.getItem('token');
-      const res = await axios.post(`https://p-educlud.onrender.com/api/exams/${id}/start`, {}, {
+      const res = await axios.post(`${API_URLS.EXAMS}/${id}/start`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -720,7 +721,7 @@ const TakeExam = () => {
                           setIsStartingExam(true);
                           try {
                             const token = localStorage.getItem('token');
-                            const res = await axios.post(`https://p-educlud.onrender.com/api/exams/${id}/start`, {}, {
+                            const res = await axios.post(`${API_URLS.EXAMS}/${id}/start`, {}, {
                               headers: { Authorization: `Bearer ${token}` },
                             });
                             setExamStarted(true);

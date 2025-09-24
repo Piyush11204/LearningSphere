@@ -194,7 +194,8 @@ const Learner = () => {
               { id: 'overview', label: 'Overview', icon: BarChart3 },
               { id: 'achievements', label: 'Achievements', icon: Trophy },
               { id: 'leaderboard', label: 'Leaderboard', icon: Crown },
-              { id: 'analytics', label: 'Analytics', icon: TrendingUp }
+              { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+              { id: 'exams', label: 'Exams', icon: BookOpen }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -578,6 +579,183 @@ const Learner = () => {
                   <p>Chart visualization would go here</p>
                   <p className="text-sm">Showing XP growth over time</p>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'exams' && (
+          <div className="space-y-8">
+            {/* Exam Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Exams Taken</p>
+                    <p className="text-3xl font-bold text-gray-900">{progress.examStats?.totalExams || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <BookOpen className="w-6 h-6 text-blue-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Average Score</p>
+                    <p className="text-3xl font-bold text-gray-900">{progress.examStats?.averageScore ? Math.round(progress.examStats.averageScore) : 0}%</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Target className="w-6 h-6 text-green-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Best Score</p>
+                    <p className="text-3xl font-bold text-gray-900">{progress.examStats?.bestScore || 0}%</p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Trophy className="w-6 h-6 text-purple-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Exam XP Earned</p>
+                    <p className="text-3xl font-bold text-gray-900">{progress.examStats?.totalExamXP || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-orange-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Exam Badges */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                <Award className="w-5 h-5 mr-2 text-yellow-500" />
+                Exam Achievements
+              </h3>
+              {progress.badges && progress.badges.filter(badge => badge.category === 'exam').length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {progress.badges.filter(badge => badge.category === 'exam').map((badge, index) => (
+                    <div key={index} className="p-4 rounded-lg border bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
+                      <div className="flex items-start space-x-3">
+                        <span className="text-2xl">{badge.icon}</span>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">{badge.name}</h4>
+                          <p className="text-sm text-gray-600 mb-2">{badge.description}</p>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                              Exam
+                            </span>
+                            <span className="text-green-600 font-medium">+{badge.xpReward} XP</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Earned {new Date(badge.earnedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-4">Take your first exam to start earning achievement badges!</p>
+                  <a
+                    href="/student/exams"
+                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all"
+                  >
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Browse Exams
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Exam History */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Recent Exam History</h3>
+              {progress.examHistory && progress.examHistory.length > 0 ? (
+                <div className="space-y-4">
+                  {progress.examHistory.slice(-5).reverse().map((exam, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 rounded-lg border bg-gray-50">
+                      <div className="flex items-center space-x-4">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                          exam.score >= 80 ? 'bg-green-100' :
+                          exam.score >= 60 ? 'bg-blue-100' :
+                          exam.score >= 40 ? 'bg-yellow-100' : 'bg-red-100'
+                        }`}>
+                          {exam.score >= 80 ? <CheckCircle className="w-6 h-6 text-green-600" /> :
+                           exam.score >= 60 ? <Target className="w-6 h-6 text-blue-600" /> :
+                           exam.score >= 40 ? <AlertCircle className="w-6 h-6 text-yellow-600" /> :
+                           <XCircle className="w-6 h-6 text-red-600" />}
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900">{exam.examTitle || 'Exam'}</h4>
+                          <p className="text-sm text-gray-600">
+                            Score: {exam.score}% • {exam.timeTaken ? `${Math.floor(exam.timeTaken / 60)}:${(exam.timeTaken % 60).toString().padStart(2, '0')}` : 'N/A'}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(exam.completedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-lg font-bold ${
+                          exam.score >= 80 ? 'text-green-600' :
+                          exam.score >= 60 ? 'text-blue-600' :
+                          exam.score >= 40 ? 'text-yellow-600' : 'text-red-600'
+                        }`}>
+                          {exam.score}%
+                        </div>
+                        <div className="text-sm text-gray-600">+{exam.xpEarned || 0} XP</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-4">No exams taken yet. Start your first exam to track your progress!</p>
+                  <a
+                    href="/student/exams"
+                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all"
+                  >
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Take Your First Exam
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+              <h3 className="text-xl font-bold mb-4">Ready for More Challenges?</h3>
+              <p className="mb-6 opacity-90">Continue your learning journey with AI-powered assessments and earn more achievements.</p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a
+                  href="/student/exams"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-all"
+                >
+                  <BookOpen className="w-5 h-5 mr-2" />
+                  Browse Available Exams
+                </a>
+                <a
+                  href="/student/reports"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-400 transition-all"
+                >
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  View Detailed Reports
+                </a>
               </div>
             </div>
           </div>

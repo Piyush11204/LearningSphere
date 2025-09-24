@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { API_URLS } from '../../config/api';
 import { 
   Book, 
   Filter, 
@@ -23,7 +24,7 @@ const StudentExams = () => {
     const fetchExams = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('https://p-educlud.onrender.com/api/exams', {
+        const res = await axios.get(API_URLS.EXAMS, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setExams(res.data.exams || []);

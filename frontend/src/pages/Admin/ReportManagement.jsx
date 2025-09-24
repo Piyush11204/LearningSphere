@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { API_URLS } from '../../config/api';
 import { FileText, Download, BarChart3, Users, BookOpen, TrendingUp, Calendar, Search } from 'lucide-react';
 
 const ReportManagement = () => {
@@ -17,8 +18,8 @@ const ReportManagement = () => {
       try {
         const token = localStorage.getItem('token');
         const [usersRes, examsRes] = await Promise.all([
-          axios.get('https://p-educlud.onrender.com/api/users', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('https://p-educlud.onrender.com/api/exams', { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(API_URLS.USERS, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(API_URLS.EXAMS, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
         setUsers(usersRes.data.users || []);
         setExams(examsRes.data.exams || []);
@@ -38,7 +39,7 @@ const ReportManagement = () => {
     setIsGenerating(true);
     try {
       const token = localStorage.getItem('token');
-      const url = type === 'user' ? `https://p-educlud.onrender.com/api/reports/user/${id}` : `https://p-educlud.onrender.com/api/reports/exam/${id}`;
+      const url = type === 'user' ? `${API_URLS.REPORTS}/user/${id}` : `${API_URLS.REPORTS}/exam/${id}`;
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { API_URLS } from '../../config/api';
 import { FileText, Download, BarChart3, TrendingUp, Award, Calendar } from 'lucide-react';
 
 const StudentReports = () => {
@@ -12,7 +13,7 @@ const StudentReports = () => {
     const fetchUserId = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('https://p-educlud.onrender.com/api/auth/profile', {
+        const res = await axios.get(`${API_URLS.AUTH}/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserId(res.data.user._id);
@@ -28,7 +29,7 @@ const StudentReports = () => {
     setIsGenerating(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`https://p-educlud.onrender.com/api/reports/user/${userId}`, {
+      const res = await axios.get(`${API_URLS.REPORTS}/user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setReport(res.data.report);

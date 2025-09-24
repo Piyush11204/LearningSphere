@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../config/api';
+import axios from 'axios';
+import TutorSidebar from '../Tutor/TutorSidebar';
+import { API_URLS } from '../../config/api';
 
 const TakeExam = () => {
   const { examId } = useParams();
@@ -11,10 +13,21 @@ const TakeExam = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const handleAnswerChange = (questionIndex, answer) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionIndex]: answer
+    }));
+  };
 
   const fetchExamDetails = useCallback(async () => {
     try {
-      const response = await api.get(`/exams/${examId}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URLS.EXAMS}/${examId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const examData = response.data.exam;
       setExam(examData);
       setTimeLeft(examData.duration * 60); // Convert minutes to seconds
@@ -25,6 +38,41 @@ const TakeExam = () => {
       setLoading(false);
     }
   }, [examId]);
+
+  const handleSubmitExam = useCallback(async () => {
+    if (submitting) return;
+    
+    setSubmitting(true);
+    try {
+      const submissionData = {
+        answers: Object.entries(answers).map(([questionIndex, answer]) => ({
+          questionIndex: parseInt(questionIndex),
+          answer
+        }))
+      };
+
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URLS.EXAMS}/${examId}/submit`, submissionData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('Exam submitted:', response.data);
+      
+      // Navigate to results or dashboard with success message
+      navigate('/exams', { 
+        state: { 
+          message: 'Exam submitted successfully!',
+          score: response.data.score 
+        }
+      });
+    } catch (error) {
+      console.error('Error submitting exam:', error);
+      setError('Failed to submit exam. Please try again.');
+      setSubmitting(false);
+    }
+  }, [examId, answers, submitting, navigate]);
 
   useEffect(() => {
     fetchExamDetails();
@@ -45,44 +93,6 @@ const TakeExam = () => {
     }
   }, [timeLeft, handleSubmitExam]);
 
-
-
-  const handleAnswerChange = (questionIndex, answer) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionIndex]: answer
-    }));
-  };
-
-  const handleSubmitExam = useCallback(async () => {
-    if (submitting) return;
-    
-    setSubmitting(true);
-    try {
-      const submissionData = {
-        answers: Object.entries(answers).map(([questionIndex, answer]) => ({
-          questionIndex: parseInt(questionIndex),
-          answer
-        }))
-      };
-
-      const response = await api.post(`/exams/${examId}/submit`, submissionData);
-      console.log('Exam submitted:', response.data);
-      
-      // Navigate to results or dashboard with success message
-      navigate('/exams', { 
-        state: { 
-          message: 'Exam submitted successfully!',
-          score: response.data.score 
-        }
-      });
-    } catch (error) {
-      console.error('Error submitting exam:', error);
-      setError('Failed to submit exam. Please try again.');
-      setSubmitting(false);
-    }
-  }, [examId, answers, submitting, navigate]);
-
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -95,12 +105,37 @@ const TakeExam = () => {
     return 'text-red-600'; // Less than 5 minutes
   };
 
-  if (loading) return <div className="flex justify-center items-center h-64">Loading exam...</div>;
-  if (error) return <div className="text-red-600 text-center">{error}</div>;
-  if (!exam) return <div className="text-center">Exam not found</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <TutorSidebar />
+      <div className="flex-1 p-4 md:p-8 pt-20 md:pt-20">
+        <div className="flex justify-center items-center h-64">Loading exam...</div>
+      </div>
+    </div>
+  );
+  if (error) return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <TutorSidebar />
+      <div className="flex-1 p-4 md:p-8 pt-20 md:pt-20">
+        <div className="text-red-600 text-center">{error}</div>
+      </div>
+    </div>
+  );
+  if (!exam) return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <TutorSidebar />
+      <div className="flex-1 p-4 md:p-8 pt-20 md:pt-20">
+        <div className="text-center">Exam not found</div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 flex">
+      <TutorSidebar />
+
+      <div className="flex-1 p-4 md:p-8 pt-20 md:pt-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="bg-white shadow rounded-lg mb-6">
         <div className="px-6 py-4 border-b border-gray-200">
@@ -173,6 +208,8 @@ const TakeExam = () => {
           >
             {submitting ? 'Submitting...' : 'Submit Exam'}
           </button>
+        </div>
+      </div>
         </div>
       </div>
     </div>
