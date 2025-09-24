@@ -58,8 +58,7 @@ const ExamResults = () => {
     );
   }
 
-  const { score, totalQuestions, correctAnswers, questionResults = [], timeTaken, averageTimePerQuestion } = results;
-  const percentage = Math.round((score / totalQuestions) * 100);
+  const { percentage, totalQuestions, correctAnswers, questionResults = [], timeTaken, averageTimePerQuestion } = results;
   const incorrectAnswers = totalQuestions - correctAnswers;
 
   // Calculate additional metrics
@@ -140,7 +139,7 @@ const ExamResults = () => {
             </div>
 
             <div className="text-xl text-slate-600 mb-4">
-              {score} out of {totalQuestions} questions correct
+              {correctAnswers} out of {totalQuestions} questions correct
             </div>
 
             <div className="text-lg font-semibold mb-6">

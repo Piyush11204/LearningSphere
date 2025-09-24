@@ -23,6 +23,7 @@ import {
 
 const Learner = () => {
   const [progress, setProgress] = useState(null);
+  const [examHistory, setExamHistory] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -85,6 +86,19 @@ const Learner = () => {
         if (leaderboardResponse.ok) {
           const leaderboardData = await leaderboardResponse.json();
           setLeaderboard(leaderboardData.leaderboard || []);
+        }
+
+        // Fetch exam history
+        const examHistoryResponse = await fetch('http://localhost:5000/api/exams/history', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (examHistoryResponse.ok) {
+          const examHistoryData = await examHistoryResponse.json();
+          setExamHistory(examHistoryData.examHistory || []);
         }
 
         setLoading(false);
@@ -592,7 +606,7 @@ const Learner = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Exams Taken</p>
-                    <p className="text-3xl font-bold text-gray-900">{progress.examStats?.totalExams || 0}</p>
+                    <p className="text-3xl font-bold text-gray-900">{progress.examsCompleted || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <BookOpen className="w-6 h-6 text-blue-600" />
@@ -604,7 +618,7 @@ const Learner = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Average Score</p>
-                    <p className="text-3xl font-bold text-gray-900">{progress.examStats?.averageScore ? Math.round(progress.examStats.averageScore) : 0}%</p>
+                    <p className="text-3xl font-bold text-gray-900">{progress.examAverageScore ? Math.round(progress.examAverageScore) : 0}%</p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <Target className="w-6 h-6 text-green-600" />
@@ -616,7 +630,7 @@ const Learner = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Best Score</p>
-                    <p className="text-3xl font-bold text-gray-900">{progress.examStats?.bestScore || 0}%</p>
+                    <p className="text-3xl font-bold text-gray-900">{progress.examBestScore || 0}%</p>
                   </div>
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                     <Trophy className="w-6 h-6 text-purple-600" />
@@ -627,11 +641,13 @@ const Learner = () => {
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Exam XP Earned</p>
-                    <p className="text-3xl font-bold text-gray-900">{progress.examStats?.totalExamXP || 0}</p>
+                    <p className="text-sm font-medium text-gray-600">Pass Rate</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      {progress.examsCompleted > 0 ? Math.round((progress.examsPassed / progress.examsCompleted) * 100) : 0}%
+                    </p>
                   </div>
                   <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-orange-600" />
+                    <TrendingUp className="w-6 h-6 text-orange-600" />
                   </div>
                 </div>
               </div>
@@ -684,9 +700,9 @@ const Learner = () => {
             {/* Recent Exam History */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Recent Exam History</h3>
-              {progress.examHistory && progress.examHistory.length > 0 ? (
+              {examHistory && examHistory.length > 0 ? (
                 <div className="space-y-4">
-                  {progress.examHistory.slice(-5).reverse().map((exam, index) => (
+                  {examHistory.slice(0, 5).map((exam, index) => (
                     <div key={index} className="flex items-center justify-between p-4 rounded-lg border bg-gray-50">
                       <div className="flex items-center space-x-4">
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
@@ -700,12 +716,12 @@ const Learner = () => {
                            <XCircle className="w-6 h-6 text-red-600" />}
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-900">{exam.examTitle || 'Exam'}</h4>
+                          <h4 className="font-medium text-gray-900">{exam.title}</h4>
                           <p className="text-sm text-gray-600">
-                            Score: {exam.score}% • {exam.timeTaken ? `${Math.floor(exam.timeTaken / 60)}:${(exam.timeTaken % 60).toString().padStart(2, '0')}` : 'N/A'}
+                            Subject: {exam.subject} • Duration: {exam.duration} min
                           </p>
                           <p className="text-xs text-gray-500">
-                            {new Date(exam.completedAt).toLocaleDateString()}
+                            Submitted {new Date(exam.submittedAt).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
@@ -717,7 +733,9 @@ const Learner = () => {
                         }`}>
                           {exam.score}%
                         </div>
-                        <div className="text-sm text-gray-600">+{exam.xpEarned || 0} XP</div>
+                        <div className="text-sm text-gray-600">
+                          {exam.score >= 40 ? 'Passed' : 'Failed'}
+                        </div>
                       </div>
                     </div>
                   ))}

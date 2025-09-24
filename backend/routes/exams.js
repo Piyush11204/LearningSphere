@@ -1,5 +1,5 @@
 const express = require('express');
-const { createExam, submitExam, getExam, getAllExams, updateExamStatus, startExam, cleanupAbandonedExams, getExamStatusForUser } = require('../controllers/examController');
+const { createExam, submitExam, getExam, getAllExams, updateExamStatus, startExam, cleanupAbandonedExams, getExamStatusForUser, getUserExamHistory } = require('../controllers/examController');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
 
@@ -7,6 +7,9 @@ const router = express.Router();
 
 // Get all exams (public access for viewing)
 router.get('/', getAllExams);
+
+// Get user's exam history (authenticated users only)
+router.get('/history', auth, getUserExamHistory);
 
 // Create exam (admin/tutor, with Gemini AI questions)
 router.post('/', auth, roleCheck(['admin', 'tutor']), createExam);

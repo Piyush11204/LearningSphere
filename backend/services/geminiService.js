@@ -66,19 +66,27 @@ const generateReport = async (reportData) => {
       // Student report
       prompt = `Generate a comprehensive performance report for student: ${reportData.username}
       
-      Exam Statistics:
+      Overall Statistics:
+      - Current Level: ${reportData.currentLevel || 1}
+      - Experience Points: ${reportData.experiencePoints || 0} XP
+      - Total Badges Earned: ${reportData.badges || 0}
+      - Sessions Completed: ${reportData.totalSessions || 0}
+      - Total Learning Hours: ${reportData.totalHours || 0}h
+      
+      Exam Performance:
       - Total Exams: ${reportData.examCount || 0}
       - Average Score: ${reportData.averageScore || 0}%
-      - Recent Performance: ${JSON.stringify(reportData.examHistory?.slice(-5) || [])}
+      - Recent Exam History: ${JSON.stringify(reportData.examHistory?.slice(-5) || [])}
       
       Please provide:
-      1. Overall performance analysis
-      2. Strengths and areas for improvement
-      3. Specific recommendations for better performance
-      4. Study suggestions
-      5. Goal setting advice
+      1. Overall performance analysis including academic and engagement metrics
+      2. Strengths and areas for improvement in both exams and learning activities
+      3. Specific recommendations for better exam performance
+      4. Study suggestions and learning strategies
+      5. Goal setting advice based on current progress
+      6. Badge achievements and what they represent
       
-      Make the report encouraging, constructive, and actionable.`;
+      Make the report encouraging, constructive, and actionable. Include insights about learning patterns and progress trends.`;
     } else if (reportData.title) {
       // Exam report
       prompt = `Generate a comprehensive exam report for: ${reportData.title}

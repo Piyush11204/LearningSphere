@@ -91,22 +91,20 @@ const Tutor = () => {
       });
     });
 
-    // Mock earnings calculation - in real app this would come from payments
-    const earnings = completedSessions.length * 500; // ₹500 per session
-
-    // Mock ratings - in real app this would come from reviews
-    const averageRating = 4.8;
+    // Earnings and ratings will be implemented with payment and review systems
+    const earnings = 0; // Placeholder - will be calculated from actual payments
+    const averageRating = null; // Placeholder - will be calculated from actual reviews
 
     return {
       totalSessions: sessions.length,
       totalStudents: totalStudents.size,
       totalHours: Math.round(totalHours * 10) / 10,
       averageRating,
-      totalReviews: completedSessions.length * 2, // Mock reviews
+      totalReviews: 0, // Placeholder - will be calculated from actual reviews
       monthlyEarnings: earnings,
       activeStudents: Math.floor(totalStudents.size * 0.7), // Assume 70% are active
       completionRate: sessions.length > 0 ? Math.round((completedSessions.length / sessions.length) * 100) : 0,
-      averageAttendance: 78 // Mock attendance rate
+      averageAttendance: sessions.length > 0 ? Math.round((completedSessions.length / sessions.length) * 100) : 0 // Use completion rate as attendance proxy
     };
   };
 
@@ -161,7 +159,9 @@ const Tutor = () => {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <div className="text-sm text-gray-600">This Month</div>
-                <div className="text-lg font-bold text-green-600">₹{tutorStats.monthlyEarnings.toLocaleString('en-IN')}</div>
+                <div className="text-lg font-bold text-green-600">
+                  {tutorStats.monthlyEarnings > 0 ? `₹${tutorStats.monthlyEarnings.toLocaleString('en-IN')}` : 'Coming Soon'}
+                </div>
               </div>
               <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
                 <Award className="w-6 h-6" />
@@ -232,7 +232,9 @@ const Tutor = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Average Rating</p>
-                    <p className="text-3xl font-bold text-gray-900">{tutorStats.averageRating}</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      {tutorStats.averageRating ? tutorStats.averageRating.toFixed(1) : 'N/A'}
+                    </p>
                   </div>
                   <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                     <Star className="w-6 h-6 text-yellow-600" />
@@ -315,10 +317,18 @@ const Tutor = () => {
                     </div>
                     <div className="text-right">
                       <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                        <span className="font-medium">{session.rating || 4.5}</span>
+                        {session.rating ? (
+                          <>
+                            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                            <span className="font-medium">{session.rating}</span>
+                          </>
+                        ) : (
+                          <span className="text-sm text-gray-500">No rating</span>
+                        )}
                       </div>
-                      <p className="text-sm text-green-600 font-medium">₹{session.earnings || 500}</p>
+                      <p className="text-sm text-green-600 font-medium">
+                        {session.earnings ? `₹${session.earnings}` : 'Earnings TBD'}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -369,13 +379,21 @@ const Tutor = () => {
                       </div>
                       <div className="text-center">
                         <div className="flex items-center justify-center space-x-1">
-                          <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                          <span className="text-2xl font-bold text-gray-900">{session.rating || 4.5}</span>
+                          {session.rating ? (
+                            <>
+                              <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                              <span className="text-2xl font-bold text-gray-900">{session.rating}</span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-gray-500">No rating</span>
+                          )}
                         </div>
                         <p className="text-sm text-gray-600">Rating</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-green-600">₹{session.earnings || 500}</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {session.earnings ? `₹${session.earnings}` : 'TBD'}
+                        </p>
                         <p className="text-sm text-gray-600">Earnings</p>
                       </div>
                     </div>
@@ -422,25 +440,10 @@ const Tutor = () => {
 
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Student Feedback</h3>
-              <div className="space-y-4">
-                {[
-                  { student: "Alice Johnson", rating: 5, comment: "Excellent teaching! Very clear explanations.", date: "2024-01-20" },
-                  { student: "Bob Smith", rating: 4, comment: "Great session, learned a lot about React.", date: "2024-01-18" },
-                  { student: "Carol Davis", rating: 5, comment: "Best tutor I've had. Highly recommended!", date: "2024-01-15" }
-                ].map((review, index) => (
-                  <div key={index} className="border-b pb-4 last:border-b-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-900">{review.student}</span>
-                      <div className="flex items-center space-x-1">
-                        {[...Array(review.rating)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 text-yellow-500 fill-current" />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-gray-600 mb-1">{review.comment}</p>
-                    <p className="text-sm text-gray-500">{review.date}</p>
-                  </div>
-                ))}
+              <div className="text-center py-8">
+                <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 mb-4">Student reviews and feedback will be available soon.</p>
+                <p className="text-sm text-gray-400">Once the review system is implemented, you'll be able to see feedback from your students here.</p>
               </div>
             </div>
           </div>
@@ -448,61 +451,12 @@ const Tutor = () => {
 
         {activeTab === 'analytics' && (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Performance</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Sessions Conducted</span>
-                    <span className="font-medium">12</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Average Rating</span>
-                    <span className="font-medium">4.8</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Total Earnings</span>
-                    <span className="font-medium text-green-600">₹45,000</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Student Satisfaction</span>
-                    <span className="font-medium">94%</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Popular Topics</h3>
-                <div className="space-y-3">
-                  {[
-                    { topic: "React Development", sessions: 8, rating: 4.9 },
-                    { topic: "Data Science", sessions: 6, rating: 4.7 },
-                    { topic: "UI/UX Design", sessions: 5, rating: 5.0 },
-                    { topic: "Python Programming", sessions: 4, rating: 4.6 }
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-gray-900">{item.topic}</p>
-                        <p className="text-sm text-gray-600">{item.sessions} sessions</p>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                        <span className="font-medium">{item.rating}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Growth Trends</h3>
-              <div className="h-64 flex items-center justify-center text-gray-500">
-                <div className="text-center">
-                  <TrendingUp className="w-12 h-12 mx-auto mb-2" />
-                  <p>Chart visualization would go here</p>
-                  <p className="text-sm">Showing earnings and student growth over time</p>
-                </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Analytics Coming Soon</h3>
+              <div className="text-center py-8">
+                <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 mb-4">Detailed analytics and performance metrics will be available soon.</p>
+                <p className="text-sm text-gray-400">This will include earnings trends, student engagement metrics, and teaching performance analytics.</p>
               </div>
             </div>
           </div>

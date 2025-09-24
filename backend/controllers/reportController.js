@@ -15,7 +15,7 @@ const generateStudentReport = async (req, res, next) => {
       throw error;
     }
 
-    const user = await User.findById(userId).populate('examHistory.examId', 'title scheduledDate');
+    const user = await User.findById(userId);
     if (!user) {
       const error = new Error('User not found');
       error.statusCode = 404;
@@ -29,12 +29,37 @@ const generateStudentReport = async (req, res, next) => {
       throw error;
     }
 
+    // Get progress data
+    const progress = await Progress.findOne({ user: userId });
+
+    // Get exam history
+    const exams = await Exam.find({
+      results: { $elemMatch: { userId: userId } }
+    }).sort({ 'results.submittedAt': -1 });
+
+    const examHistory = exams.map(exam => {
+      const userResult = exam.results.find(r => r.userId.toString() === userId);
+      return {
+        examId: exam._id,
+        title: exam.title,
+        subject: exam.subject,
+        scheduledDate: exam.scheduledDate,
+        submittedAt: userResult.submittedAt,
+        score: userResult.score
+      };
+    });
+
     // Prepare data for Gemini
     const reportData = {
-      username: user.profile.name,
-      examHistory: user.examHistory,
-      examCount: user.examStats.totalExams,
-      averageScore: user.examStats.averageScore,
+      username: user.profile?.name || user.email,
+      examHistory: examHistory,
+      examCount: progress?.examsCompleted || 0,
+      averageScore: progress?.examAverageScore || 0,
+      totalSessions: progress?.sessionsCompleted || 0,
+      totalHours: progress?.totalHours || 0,
+      currentLevel: progress?.currentLevel || 1,
+      experiencePoints: progress?.experiencePoints || 0,
+      badges: progress?.badges?.length || 0
     };
 
     const report = await generateReport(reportData);
