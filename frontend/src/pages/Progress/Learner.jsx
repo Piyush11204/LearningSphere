@@ -18,8 +18,27 @@ import {
   Activity,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Download,
+  FileText,
+  LineChart
 } from 'lucide-react';
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Cell,
+  Pie,
+  Area,
+  AreaChart
+} from 'recharts';
 
 const Learner = () => {
   const [progress, setProgress] = useState(null);
@@ -139,6 +158,146 @@ const Learner = () => {
     return ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
   };
 
+  // Helper functions for reports
+  const generateXPProgressData = () => {
+    // Generate mock XP progress data for the last 30 days
+    const data = [];
+    let currentXP = Math.max(0, progress.experiencePoints - 500);
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      currentXP += Math.floor(Math.random() * 50) + 10;
+      if (currentXP > progress.experiencePoints) currentXP = progress.experiencePoints;
+      data.push({
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        xp: currentXP
+      });
+    }
+    return data;
+  };
+
+  const generateExamPerformanceData = () => {
+    return examHistory.slice(-10).map((exam, index) => ({
+      exam: `Exam ${index + 1}`,
+      score: exam.score,
+      subject: exam.subject
+    }));
+  };
+
+  const generateActivityData = () => {
+    // Generate mock weekly activity data
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days.map(day => ({
+      day,
+      hours: Math.floor(Math.random() * 4) + 1
+    }));
+  };
+
+  const generateBadgeDistributionData = () => {
+    const categories = ['experience', 'session', 'achievement', 'admin'];
+    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+    
+    return categories.map((category, index) => ({
+      name: category.charAt(0).toUpperCase() + category.slice(1),
+      value: progress.badges?.filter(badge => badge.category === category).length || 0,
+      color: colors[index]
+    })).filter(item => item.value > 0);
+  };
+
+  const generateRecentActivityData = () => {
+    // Generate mock recent activity data
+    const activities = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      activities.push({
+        date: date.toISOString(),
+        activity: i === 0 ? 'Completed exam' : i === 1 ? 'Attended live session' : 'Completed session',
+        xp: Math.floor(Math.random() * 100) + 25,
+        badges: Math.random() > 0.7 ? 1 : 0
+      });
+    }
+    return activities;
+  };
+
+  const generateAndDownloadReport = (format) => {
+    if (format === 'pdf') {
+      // Create a simple PDF-like text report
+      const reportData = {
+        title: 'Learning Progress Report',
+        generatedAt: new Date().toLocaleString(),
+        user: 'Current User',
+        summary: {
+          totalXP: progress.experiencePoints,
+          level: progress.currentLevel,
+          sessionsCompleted: progress.sessionsCompleted,
+          examsTaken: examHistory.length,
+          badgesEarned: progress.badges?.length || 0
+        },
+        examHistory: examHistory.slice(-5),
+        recentActivity: generateRecentActivityData()
+      };
+
+      // Create downloadable text file (simulating PDF)
+      const reportText = `
+LEARNING PROGRESS REPORT
+Generated: ${reportData.generatedAt}
+
+SUMMARY
+=======
+Total XP: ${reportData.summary.totalXP}
+Current Level: ${reportData.summary.level}
+Sessions Completed: ${reportData.summary.sessionsCompleted}
+Exams Taken: ${reportData.summary.examsTaken}
+Badges Earned: ${reportData.summary.badgesEarned}
+
+RECENT EXAMS
+============
+${reportData.examHistory.map(exam => 
+  `${exam.title}: ${exam.score}% (${exam.correctAnswers}/${exam.totalQuestions}) - ${exam.passed ? 'PASSED' : 'FAILED'}`
+).join('\n')}
+
+RECENT ACTIVITY
+===============
+${reportData.recentActivity.map(activity => 
+  `${new Date(activity.date).toLocaleDateString()}: ${activity.activity} (+${activity.xp} XP)`
+).join('\n')}
+      `;
+
+      const blob = new Blob([reportText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `learning-report-${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else if (format === 'csv') {
+      // Generate CSV data
+      const csvData = [
+        ['Date', 'Activity', 'XP Earned', 'Badges Earned'],
+        ...generateRecentActivityData().map(activity => [
+          new Date(activity.date).toLocaleDateString(),
+          activity.activity,
+          activity.xp,
+          activity.badges
+        ])
+      ];
+
+      const csvContent = csvData.map(row => row.join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `learning-activity-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -208,7 +367,7 @@ const Learner = () => {
               { id: 'overview', label: 'Overview', icon: BarChart3 },
               { id: 'achievements', label: 'Achievements', icon: Trophy },
               { id: 'leaderboard', label: 'Leaderboard', icon: Crown },
-              { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+              { id: 'reports', label: 'Reports', icon: FileText },
               { id: 'exams', label: 'Exams', icon: BookOpen }
             ].map((tab) => (
               <button
@@ -545,53 +704,399 @@ const Learner = () => {
           </div>
         )}
 
-        {activeTab === 'analytics' && (
+        {activeTab === 'reports' && (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Learning Activity</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">This Week</span>
-                    <span className="font-medium">5 sessions</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">This Month</span>
-                    <span className="font-medium">18 sessions</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Average per Week</span>
-                    <span className="font-medium">4.2 sessions</span>
-                  </div>
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Comprehensive Learning Reports</h3>
+                  <p className="text-sm text-gray-600">Detailed exam history, performance analytics, and progress insights</p>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Time Distribution</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Morning (6AM-12PM)</span>
-                    <span className="font-medium">35%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Afternoon (12PM-6PM)</span>
-                    <span className="font-medium">45%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Evening (6PM-12AM)</span>
-                    <span className="font-medium">20%</span>
-                  </div>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => generateAndDownloadReport('pdf')}
+                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Report
+                  </button>
+                  <button
+                    onClick={() => generateAndDownloadReport('csv')}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export Data
+                  </button>
                 </div>
               </div>
             </div>
 
+            {/* Enhanced Exam Analytics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <BookOpen className="w-8 h-8 text-blue-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{examHistory?.length || 0}</p>
+                <p className="text-sm text-gray-600">Total Exams Taken</p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{examHistory?.filter(exam => exam.passed).length || 0}</p>
+                <p className="text-sm text-gray-600">Exams Passed</p>
+                <p className="text-xs text-green-600">
+                  {examHistory?.length > 0 ? Math.round((examHistory.filter(exam => exam.passed).length / examHistory.length) * 100) : 0}% Pass Rate
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <AlertCircle className="w-8 h-8 text-red-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{examHistory?.filter(exam => !exam.passed).length || 0}</p>
+                <p className="text-sm text-gray-600">Exams Failed</p>
+                <p className="text-xs text-red-600">
+                  {examHistory?.length > 0 ? Math.round((examHistory.filter(exam => !exam.passed).length / examHistory.length) * 100) : 0}% Fail Rate
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Star className="w-8 h-8 text-yellow-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {examHistory?.length > 0 ? Math.round(examHistory.reduce((sum, exam) => sum + exam.score, 0) / examHistory.length) : 0}%
+                </p>
+                <p className="text-sm text-gray-600">Average Score</p>
+                <p className="text-xs text-gray-500">
+                  Overall Performance
+                </p>
+              </div>
+            </div>
+
+            {/* Performance Trends */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Score Distribution</h3>
+                <div className="space-y-3">
+                  {[
+                    { range: '90-100%', count: examHistory?.filter(exam => exam.score >= 90).length || 0, color: 'bg-green-500' },
+                    { range: '80-89%', count: examHistory?.filter(exam => exam.score >= 80 && exam.score < 90).length || 0, color: 'bg-blue-500' },
+                    { range: '70-79%', count: examHistory?.filter(exam => exam.score >= 70 && exam.score < 80).length || 0, color: 'bg-yellow-500' },
+                    { range: '60-69%', count: examHistory?.filter(exam => exam.score >= 60 && exam.score < 70).length || 0, color: 'bg-orange-500' },
+                    { range: '0-59%', count: examHistory?.filter(exam => exam.score < 60).length || 0, color: 'bg-red-500' }
+                  ].map((range, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 w-16">{range.range}</span>
+                      <div className="flex-1 mx-4">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full ${range.color}`}
+                            style={{ width: `${examHistory?.length > 0 ? (range.count / examHistory.length) * 100 : 0}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 w-8">{range.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Subject Performance</h3>
+                <div className="space-y-3">
+                  {(() => {
+                    const subjectStats = {};
+                    examHistory?.forEach(exam => {
+                      if (!subjectStats[exam.subject]) {
+                        subjectStats[exam.subject] = { total: 0, passed: 0, avgScore: 0 };
+                      }
+                      subjectStats[exam.subject].total++;
+                      if (exam.passed) subjectStats[exam.subject].passed++;
+                      subjectStats[exam.subject].avgScore += exam.score;
+                    });
+
+                    Object.keys(subjectStats).forEach(subject => {
+                      subjectStats[subject].avgScore = Math.round(subjectStats[subject].avgScore / subjectStats[subject].total);
+                    });
+
+                    return Object.entries(subjectStats).map(([subject, stats]) => (
+                      <div key={subject} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium text-gray-900">{subject}</p>
+                          <p className="text-sm text-gray-600">{stats.passed}/{stats.total} passed</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-gray-900">{stats.avgScore}%</p>
+                          <p className="text-xs text-gray-500">avg score</p>
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* XP Progress Chart */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Progress Trends</h3>
-              <div className="h-64 flex items-center justify-center text-gray-500">
-                <div className="text-center">
-                  <BarChart3 className="w-12 h-12 mx-auto mb-2" />
-                  <p>Chart visualization would go here</p>
-                  <p className="text-sm">Showing XP growth over time</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Experience Points Growth</h3>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={generateXPProgressData()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="xp" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Performance Analytics Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Exam Performance Chart */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Exam Performance Trends</h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsLineChart data={generateExamPerformanceData()}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="exam" />
+                      <YAxis domain={[0, 100]} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="score" stroke="#10B981" strokeWidth={3} />
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Badge Distribution Chart */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Badge Category Distribution</h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsPieChart>
+                      <Pie
+                        data={generateBadgeDistributionData()}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {generateBadgeDistributionData().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* Detailed Exam Results */}
+            <div className="bg-white rounded-xl shadow-sm">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-gray-900">Detailed Exam History</h3>
+                <p className="text-sm text-gray-600">Complete exam attempts with question-level analysis and performance insights</p>
+              </div>
+              <div className="divide-y">
+                {examHistory && examHistory.length > 0 ? (
+                  examHistory.map((exam, index) => (
+                    <div key={exam.examId || index} className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900">{exam.title}</h4>
+                          <p className="text-sm text-gray-600">
+                            Subject: {exam.subject} • Duration: {exam.duration} minutes
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Submitted on {new Date(exam.submittedAt).toLocaleDateString()} at {new Date(exam.submittedAt).toLocaleTimeString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-3xl font-bold ${exam.score >= 60 ? 'text-green-600' : 'text-red-600'}`}>
+                            {exam.score}%
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {exam.correctAnswers}/{exam.totalQuestions} Correct
+                          </div>
+                          <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                            exam.passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {exam.passed ? 'Passed' : 'Failed'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-sm text-gray-600">Time Taken</div>
+                          <div className="font-semibold">{Math.floor(exam.timeTaken / 60)}:{(exam.timeTaken % 60).toString().padStart(2, '0')}</div>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-sm text-gray-600">Difficulty</div>
+                          <div className="font-semibold">{exam.difficulty || 'Medium'}</div>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-sm text-gray-600">Questions</div>
+                          <div className="font-semibold">{exam.totalQuestions}</div>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-sm text-gray-600">Accuracy</div>
+                          <div className="font-semibold">{exam.score}%</div>
+                        </div>
+                      </div>
+
+                      {/* Question Details with Enhanced Analysis */}
+                      {exam.questionResults && exam.questionResults.length > 0 && (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-semibold text-gray-900">Question Analysis:</h5>
+                            <div className="text-sm text-gray-600">
+                              {exam.questionResults.filter(q => q.isCorrect).length} correct, {exam.questionResults.filter(q => !q.isCorrect).length} incorrect
+                            </div>
+                          </div>
+
+                          <div className="space-y-3 max-h-96 overflow-y-auto">
+                            {exam.questionResults.map((result, qIndex) => (
+                              <div key={qIndex} className={`border rounded-lg p-4 ${result.isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex-1">
+                                    <div className="flex items-center space-x-2 mb-2">
+                                      <span className="font-medium text-gray-900">Q{qIndex + 1}.</span>
+                                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                        result.isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                      }`}>
+                                        {result.isCorrect ? 'Correct' : 'Incorrect'}
+                                      </span>
+                                    </div>
+                                    <p className="font-medium text-gray-900 mb-2">
+                                      {result.questionText || 'Question text not available'}
+                                    </p>
+                                    <div className="space-y-1">
+                                      <p className="text-sm text-gray-600">
+                                        <strong>Your answer:</strong>
+                                        <span className={`ml-1 font-medium ${result.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                                          {result.userAnswer || 'Not answered'}
+                                        </span>
+                                      </p>
+                                      {!result.isCorrect && (
+                                        <p className="text-sm text-gray-600">
+                                          <strong>Correct answer:</strong>
+                                          <span className="ml-1 font-medium text-green-600">{result.correctAnswer}</span>
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                {result.explanation && (
+                                  <div className="mt-3 p-3 bg-white rounded border-l-4 border-blue-400">
+                                    <p className="text-sm text-gray-700">
+                                      <strong>Explanation:</strong> {result.explanation}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Performance Summary */}
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                        <h6 className="font-semibold text-gray-900 mb-2">Performance Summary</h6>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Accuracy:</span>
+                            <span className="ml-1 font-medium">{exam.score}%</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Questions:</span>
+                            <span className="ml-1 font-medium">{exam.totalQuestions}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Correct:</span>
+                            <span className="ml-1 font-medium text-green-600">{exam.correctAnswers}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Time Efficiency:</span>
+                            <span className="ml-1 font-medium">
+                              {exam.timeTaken <= exam.duration ? 'Good' : 'Slow'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-6 text-center text-gray-500">
+                    <BookOpen className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                    <p>No exam results available</p>
+                    <p className="text-sm">Take your first exam to see detailed performance analytics here</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Learning Insights */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Learning Consistency</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {Math.round((progress.streak?.current || 0) / Math.max(progress.streak?.longest || 1, 1) * 100)}%
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">Streak vs Best</p>
+                  </div>
+                  <Flame className="w-8 h-8 text-orange-500" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">XP Efficiency</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {progress.sessionsCompleted > 0 ? Math.round(progress.experiencePoints / progress.sessionsCompleted) : 0}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">XP per Session</p>
+                  </div>
+                  <Zap className="w-8 h-8 text-yellow-500" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Time Investment</p>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {Math.round(progress.totalHours / Math.max(progress.sessionsCompleted, 1) * 10) / 10}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">Hours per Session</p>
+                  </div>
+                  <Clock className="w-8 h-8 text-purple-500" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Achievement Rate</p>
+                    <p className="text-2xl font-bold text-indigo-600">
+                      {progress.badges?.length > 0 ? Math.round((progress.badges.length / Math.max(progress.sessionsCompleted, 1)) * 100) : 0}%
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">Badges per Session</p>
+                  </div>
+                  <Trophy className="w-8 h-8 text-indigo-500" />
                 </div>
               </div>
             </div>

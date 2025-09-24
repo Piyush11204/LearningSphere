@@ -26,7 +26,8 @@ import {
   MessageSquare,
   Shield,
   Database,
-  Globe
+  Globe,
+  Download
 } from 'lucide-react';
 
 const Admin = () => {
@@ -48,6 +49,9 @@ const Admin = () => {
     xpReward: 100
   });
   const [badgeLoading, setBadgeLoading] = useState(false);
+
+  // Exam history state
+  const [examHistory, setExamHistory] = useState([]);
 
   // Fetch badge-related data
   const fetchBadgeData = async (token) => {
@@ -249,8 +253,19 @@ const Admin = () => {
           sessionsData = await sessionsResponse.json();
         }
 
-        // Fetch badge statistics
-        await fetchBadgeData(token);
+        // Fetch exam history for reports
+        const examHistoryResponse = await fetch('http://localhost:5000/api/admin/exam-history', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        let examHistoryData = [];
+        if (examHistoryResponse.ok) {
+          examHistoryData = await examHistoryResponse.json();
+          setExamHistory(examHistoryData.examHistory || []);
+        }
 
         // Calculate comprehensive admin stats
         const stats = calculateAdminStats(analyticsData, usersData, sessionsData);
@@ -409,11 +424,8 @@ const Admin = () => {
           <nav className="flex space-x-8">
             {[
               { id: 'overview', label: 'Overview', icon: BarChart3 },
-              { id: 'users', label: 'Users', icon: Users },
               { id: 'badges', label: 'Badge Manager', icon: Award },
-              { id: 'sessions', label: 'Sessions', icon: BookOpen },
-              { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-              { id: 'system', label: 'System', icon: Settings }
+              { id: 'reports', label: 'Reports', icon: Eye }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -562,75 +574,6 @@ const Admin = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'users' && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="space-y-3">
-                  <button className="w-full text-left p-3 border rounded-lg hover:bg-gray-50">
-                    <p className="font-medium text-gray-900">View All Users</p>
-                    <p className="text-sm text-gray-600">Manage user accounts</p>
-                  </button>
-                  <button className="w-full text-left p-3 border rounded-lg hover:bg-gray-50">
-                    <p className="font-medium text-gray-900">User Verification</p>
-                    <p className="text-sm text-gray-600">Verify tutor applications</p>
-                  </button>
-                  <button className="w-full text-left p-3 border rounded-lg hover:bg-gray-50">
-                    <p className="font-medium text-gray-900">User Reports</p>
-                    <p className="text-sm text-gray-600">View user activity reports</p>
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">User Statistics</h3>
-                  <BarChart3 className="w-6 h-6 text-green-600" />
-                </div>
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-gray-900">{adminStats.totalUsers}</p>
-                    <p className="text-sm text-gray-600">Registered Users</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-gray-900">{adminStats.activeUsers}</p>
-                    <p className="text-sm text-gray-600">Active This Month</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-gray-900">{Math.round((adminStats.activeUsers / adminStats.totalUsers) * 100)}%</p>
-                    <p className="text-sm text-gray-600">Engagement Rate</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Growth Metrics</h3>
-                  <TrendingUp className="w-6 h-6 text-purple-600" />
-                </div>
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">+{adminStats.monthlyGrowth}%</p>
-                    <p className="text-sm text-gray-600">Monthly Growth</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-gray-900">85</p>
-                    <p className="text-sm text-gray-600">New This Week</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-gray-900">92%</p>
-                    <p className="text-sm text-gray-600">Retention Rate</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -829,194 +772,287 @@ const Admin = () => {
           </div>
         )}
 
-        {activeTab === 'sessions' && (
+        {/* Add Reports Tab for Learners */}
+        {activeTab === 'reports' && (
           <div className="space-y-8">
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Session Management</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-gray-900">{adminStats.totalSessions}</p>
-                  <p className="text-sm text-gray-600">Total Sessions</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Comprehensive Exam Reports & Analytics</h3>
+                  <p className="text-sm text-gray-600">Detailed exam history, performance analytics, and student insights</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-green-600">1,250</p>
-                  <p className="text-sm text-gray-600">Active Sessions</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-blue-600">{adminStats.completionRate}%</p>
-                  <p className="text-sm text-gray-600">Completion Rate</p>
+                <div className="flex items-center space-x-3">
+                  <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-2">
+                    <Download className="w-4 h-4" />
+                    <span>Export Report</span>
+                  </button>
+                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2">
+                    <Eye className="w-4 h-4" />
+                    <span>View All Reports</span>
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Session Categories</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { category: 'Web Development', count: 450, percentage: 35 },
-                  { category: 'Data Science', count: 320, percentage: 25 },
-                  { category: 'Design', count: 280, percentage: 22 },
-                  { category: 'Business', count: 170, percentage: 13 }
-                ].map((item, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
-                    <h4 className="font-medium text-gray-900">{item.category}</h4>
-                    <p className="text-2xl font-bold text-gray-900">{item.count}</p>
-                    <p className="text-sm text-gray-600">{item.percentage}% of total</p>
-                  </div>
-                ))}
+            {/* Enhanced Exam Analytics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <BookOpen className="w-8 h-8 text-blue-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{examHistory?.length || 0}</p>
+                <p className="text-sm text-gray-600">Total Exams Taken</p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{examHistory?.filter(exam => exam.passed).length || 0}</p>
+                <p className="text-sm text-gray-600">Exams Passed</p>
+                <p className="text-xs text-green-600">
+                  {examHistory?.length > 0 ? Math.round((examHistory.filter(exam => exam.passed).length / examHistory.length) * 100) : 0}% Pass Rate
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <AlertCircle className="w-8 h-8 text-red-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{examHistory?.filter(exam => !exam.passed).length || 0}</p>
+                <p className="text-sm text-gray-600">Exams Failed</p>
+                <p className="text-xs text-red-600">
+                  {examHistory?.length > 0 ? Math.round((examHistory.filter(exam => !exam.passed).length / examHistory.length) * 100) : 0}% Fail Rate
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Star className="w-8 h-8 text-yellow-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {examHistory?.length > 0 ? Math.round(examHistory.reduce((sum, exam) => sum + exam.score, 0) / examHistory.length) : 0}%
+                </p>
+                <p className="text-sm text-gray-600">Average Score</p>
+                <p className="text-xs text-gray-500">
+                  Platform Average
+                </p>
               </div>
             </div>
-          </div>
-        )}
 
-        {activeTab === 'analytics' && (
-          <div className="space-y-8">
+            {/* Performance Trends */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Analytics</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Total Revenue</span>
-                    <span className="font-medium">₹{(adminStats.totalRevenue / 100000).toFixed(1)}L</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Monthly Revenue</span>
-                    <span className="font-medium">₹1.25L</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Average per User</span>
-                    <span className="font-medium">₹1,000</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Growth Rate</span>
-                    <span className="font-medium text-green-600">+15.2%</span>
-                  </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Score Distribution</h3>
+                <div className="space-y-3">
+                  {[
+                    { range: '90-100%', count: examHistory?.filter(exam => exam.score >= 90).length || 0, color: 'bg-green-500' },
+                    { range: '80-89%', count: examHistory?.filter(exam => exam.score >= 80 && exam.score < 90).length || 0, color: 'bg-blue-500' },
+                    { range: '70-79%', count: examHistory?.filter(exam => exam.score >= 70 && exam.score < 80).length || 0, color: 'bg-yellow-500' },
+                    { range: '60-69%', count: examHistory?.filter(exam => exam.score >= 60 && exam.score < 70).length || 0, color: 'bg-orange-500' },
+                    { range: '0-59%', count: examHistory?.filter(exam => exam.score < 60).length || 0, color: 'bg-red-500' }
+                  ].map((range, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 w-16">{range.range}</span>
+                      <div className="flex-1 mx-4">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full ${range.color}`}
+                            style={{ width: `${examHistory?.length > 0 ? (range.count / examHistory.length) * 100 : 0}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 w-8">{range.count}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">User Engagement</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Daily Active Users</span>
-                    <span className="font-medium">650</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Session Duration</span>
-                    <span className="font-medium">2.5h avg</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Return Rate</span>
-                    <span className="font-medium">78%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Satisfaction Score</span>
-                    <span className="font-medium">4.6/5</span>
-                  </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Subject Performance</h3>
+                <div className="space-y-3">
+                  {(() => {
+                    const subjectStats = {};
+                    examHistory?.forEach(exam => {
+                      if (!subjectStats[exam.subject]) {
+                        subjectStats[exam.subject] = { total: 0, passed: 0, avgScore: 0 };
+                      }
+                      subjectStats[exam.subject].total++;
+                      if (exam.passed) subjectStats[exam.subject].passed++;
+                      subjectStats[exam.subject].avgScore += exam.score;
+                    });
+
+                    Object.keys(subjectStats).forEach(subject => {
+                      subjectStats[subject].avgScore = Math.round(subjectStats[subject].avgScore / subjectStats[subject].total);
+                    });
+
+                    return Object.entries(subjectStats).map(([subject, stats]) => (
+                      <div key={subject} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium text-gray-900">{subject}</p>
+                          <p className="text-sm text-gray-600">{stats.passed}/{stats.total} passed</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-gray-900">{stats.avgScore}%</p>
+                          <p className="text-xs text-gray-500">avg score</p>
+                        </div>
+                      </div>
+                    ));
+                  })()}
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Trends</h3>
-              <div className="h-64 flex items-center justify-center text-gray-500">
-                <div className="text-center">
-                  <BarChart3 className="w-12 h-12 mx-auto mb-2" />
-                  <p>Advanced analytics charts would go here</p>
-                  <p className="text-sm">Revenue trends, user growth, session analytics</p>
-                </div>
+            {/* Recent Exam Results with Enhanced Details */}
+            <div className="bg-white rounded-xl shadow-sm">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-gray-900">Detailed Exam Results</h3>
+                <p className="text-sm text-gray-600">Comprehensive exam attempts with question-level analysis</p>
+              </div>
+              <div className="divide-y">
+                {examHistory && examHistory.length > 0 ? (
+                  examHistory.map((exam, index) => (
+                    <div key={exam.examId || index} className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900">{exam.title}</h4>
+                          <p className="text-sm text-gray-600">
+                            Student: {exam.userName} ({exam.userEmail})
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Submitted on {new Date(exam.submittedAt).toLocaleDateString()} at {new Date(exam.submittedAt).toLocaleTimeString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-3xl font-bold ${exam.score >= 60 ? 'text-green-600' : 'text-red-600'}`}>
+                            {exam.score}%
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {exam.correctAnswers}/{exam.totalQuestions} Correct
+                          </div>
+                          <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                            exam.passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {exam.passed ? 'Passed' : 'Failed'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-sm text-gray-600">Subject</div>
+                          <div className="font-semibold">{exam.subject}</div>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-sm text-gray-600">Time Taken</div>
+                          <div className="font-semibold">{Math.floor(exam.timeTaken / 60)}:{(exam.timeTaken % 60).toString().padStart(2, '0')}</div>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-sm text-gray-600">Duration</div>
+                          <div className="font-semibold">{exam.duration} minutes</div>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-sm text-gray-600">Difficulty</div>
+                          <div className="font-semibold">{exam.difficulty || 'Medium'}</div>
+                        </div>
+                      </div>
+
+                      {/* Question Details with Enhanced Analysis */}
+                      {exam.questionResults && exam.questionResults.length > 0 && (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-semibold text-gray-900">Question Analysis:</h5>
+                            <div className="text-sm text-gray-600">
+                              {exam.questionResults.filter(q => q.isCorrect).length} correct, {exam.questionResults.filter(q => !q.isCorrect).length} incorrect
+                            </div>
+                          </div>
+
+                          <div className="space-y-3 max-h-96 overflow-y-auto">
+                            {exam.questionResults.map((result, qIndex) => (
+                              <div key={qIndex} className={`border rounded-lg p-4 ${result.isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex-1">
+                                    <div className="flex items-center space-x-2 mb-2">
+                                      <span className="font-medium text-gray-900">Q{qIndex + 1}.</span>
+                                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                        result.isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                      }`}>
+                                        {result.isCorrect ? 'Correct' : 'Incorrect'}
+                                      </span>
+                                    </div>
+                                    <p className="font-medium text-gray-900 mb-2">
+                                      {result.questionText || 'Question text not available'}
+                                    </p>
+                                    <div className="space-y-1">
+                                      <p className="text-sm text-gray-600">
+                                        <strong>Your answer:</strong>
+                                        <span className={`ml-1 font-medium ${result.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                                          {result.userAnswer || 'Not answered'}
+                                        </span>
+                                      </p>
+                                      {!result.isCorrect && (
+                                        <p className="text-sm text-gray-600">
+                                          <strong>Correct answer:</strong>
+                                          <span className="ml-1 font-medium text-green-600">{result.correctAnswer}</span>
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                {result.explanation && (
+                                  <div className="mt-3 p-3 bg-white rounded border-l-4 border-blue-400">
+                                    <p className="text-sm text-gray-700">
+                                      <strong>Explanation:</strong> {result.explanation}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Performance Summary */}
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                        <h6 className="font-semibold text-gray-900 mb-2">Performance Summary</h6>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Accuracy:</span>
+                            <span className="ml-1 font-medium">{exam.score}%</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Questions:</span>
+                            <span className="ml-1 font-medium">{exam.totalQuestions}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Correct:</span>
+                            <span className="ml-1 font-medium text-green-600">{exam.correctAnswers}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Time Efficiency:</span>
+                            <span className="ml-1 font-medium">
+                              {exam.timeTaken <= exam.duration ? 'Good' : 'Slow'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-6 text-center text-gray-500">
+                    <BookOpen className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                    <p>No exam results available</p>
+                    <p className="text-sm">Exam results will appear here once students take exams</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {activeTab === 'system' && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">System Health</h3>
-                  <Activity className="w-6 h-6 text-green-600" />
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Server Status</span>
-                    <span className="text-sm text-green-600 font-medium">Online</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Database</span>
-                    <span className="text-sm text-green-600 font-medium">Healthy</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">API Response</span>
-                    <span className="text-sm text-green-600 font-medium">Fast</span>
-                  </div>
-                </div>
-              </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Storage</h3>
-                  <Database className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Used Storage</span>
-                    <span className="text-sm font-medium">2.4 GB</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Available</span>
-                    <span className="text-sm font-medium">47.6 GB</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '5%' }}></div>
-                  </div>
-                </div>
-              </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Security</h3>
-                  <Shield className="w-6 h-6 text-purple-600" />
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Last Backup</span>
-                    <span className="text-sm font-medium">2h ago</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">SSL Status</span>
-                    <span className="text-sm text-green-600 font-medium">Valid</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Security Scans</span>
-                    <span className="text-sm text-green-600 font-medium">Passed</span>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">System Logs</h3>
-              <div className="space-y-3">
-                {[
-                  { time: '10:30 AM', event: 'User registration processed', type: 'info' },
-                  { time: '10:25 AM', event: 'Payment transaction completed', type: 'success' },
-                  { time: '10:20 AM', event: 'Session started successfully', type: 'info' },
-                  { time: '10:15 AM', event: 'Database backup completed', type: 'success' }
-                ].map((log, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg">
-                    <div className={`w-2 h-2 rounded-full ${
-                      log.type === 'success' ? 'bg-green-500' : 'bg-blue-500'
-                    }`}></div>
-                    <span className="text-sm text-gray-600">{log.time}</span>
-                    <span className="text-sm text-gray-900 flex-1">{log.event}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

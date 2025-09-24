@@ -82,7 +82,7 @@ const StudentReports = () => {
         });
         setUserId(res.data.user._id);
       } catch (error) {
-        toast.error('Failed to fetch user data');
+  
         console.error('Error:', error.response?.data?.message || error.message);
       }
     };

@@ -356,7 +356,34 @@ const StudentExams = () => {
                         </div>
 
                         <button
-                          onClick={() => navigate(`/exam/${exam.examId}/results`)}
+                          onClick={() => {
+                            // Prepare the exam data and results for the ExamResults component
+                            const examData = {
+                              _id: exam.examId,
+                              title: exam.title,
+                              subject: exam.subject,
+                              duration: exam.duration,
+                              questions: [] // We'll need to fetch the full exam data or reconstruct from questionResults
+                            };
+                            
+                            const resultsData = {
+                              percentage: exam.score,
+                              totalQuestions: exam.totalQuestions,
+                              correctAnswers: exam.correctAnswers,
+                              timeTaken: exam.timeTaken,
+                              questionResults: exam.questionResults || [],
+                              submittedAt: exam.submittedAt
+                            };
+                            
+                            navigate(`/exam/${exam.examId}/results`, {
+                              state: {
+                                exam: examData,
+                                results: resultsData,
+                                xpEarned: 0, // We'll calculate this if needed
+                                newBadges: []
+                              }
+                            });
+                          }}
                           className="w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center bg-gradient-to-r from-slate-600 to-slate-700 text-white hover:shadow-2xl hover:scale-105"
                         >
                           <ArrowRight className="w-5 h-5 mr-2" />
