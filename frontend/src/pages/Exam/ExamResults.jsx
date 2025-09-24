@@ -577,7 +577,7 @@ const ExamResults = () => {
           </button>
 
           <button
-            onClick={() => navigate('/student')}
+            onClick={() => navigate('/progress')}
             className="flex items-center justify-center px-8 py-4 bg-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-300 transition-all duration-200"
           >
             <TrendingUp className="w-5 h-5 mr-2" />

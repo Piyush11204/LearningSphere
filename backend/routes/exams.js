@@ -1,5 +1,5 @@
 const express = require('express');
-const { createExam, submitExam, getExam, getAllExams, updateExamStatus, startExam, cleanupAbandonedExams, getExamStatusForUser, getUserExamHistory } = require('../controllers/examController');
+const { createExam, submitExam, getExam, getAllExams, updateExamStatus, startExam, cleanupAbandonedExams, getExamStatusForUser, getUserExamHistory, deleteExam } = require('../controllers/examController');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
 
@@ -25,6 +25,9 @@ router.get('/:id/status', getExamStatusForUser);
 
 // Update exam status (admin/tutor)
 router.put('/:id/status', auth, roleCheck(['admin', 'tutor']), updateExamStatus);
+
+// Delete exam (admin/tutor)
+router.delete('/:id', auth, roleCheck(['admin', 'tutor']), deleteExam);
 
 // Cleanup abandoned exams (admin/tutor)
 router.post('/cleanup/abandoned', auth, roleCheck(['admin', 'tutor']), cleanupAbandonedExams);
