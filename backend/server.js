@@ -63,6 +63,8 @@ app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/livesessions', require('./routes/liveSessions'));
 app.use('/api/contact', require('./routes/contact'));
+app.use('/api/exams', require('./routes/exams'));
+app.use('/api/reports', require('./routes/reports'));
 
 // Socket.io integration
 require('./sockets/sessionSockets')(io);
