@@ -331,11 +331,14 @@ const TakeExam = () => {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-      // Generate session ID for anonymous users
-      const sessionId = localStorage.getItem('exam_session_id') ||
-        `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      if (!token) {
+      // Get userId from localStorage if available
+      const userId = localStorage.getItem('userId');
+      
+      // Generate session ID (for both authenticated and anonymous users)
+      let sessionId = localStorage.getItem('exam_session_id');
+      
+      if (!sessionId) {
+        sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         localStorage.setItem('exam_session_id', sessionId);
       }
 
@@ -344,13 +347,22 @@ const TakeExam = () => {
 
       const submitData = {
         answers: answersArray,
-        timeTaken: exam.duration * 60 - timeLeft
+        timeTaken: exam.duration * 60 - timeLeft,
+        sessionId: sessionId // Always send sessionId
       };
 
-      // Add session ID for anonymous users
-      if (!token) {
-        submitData.sessionId = sessionId;
+      // Add userId if available (for authenticated users)
+      if (userId && token) {
+        submitData.userId = userId;
       }
+
+      console.log('Submitting exam with data:', {
+        examId: id,
+        hasToken: !!token,
+        userId: userId,
+        sessionId: sessionId,
+        submitData: submitData
+      });
 
       const res = await axios.post(`${API_URLS.EXAMS}/${id}/submit`, submitData, { headers });
 

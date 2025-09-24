@@ -9,6 +9,70 @@ const StudentReports = () => {
   const [userId, setUserId] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Function to format the report text by removing markdown and improving presentation
+  const formatReport = (text) => {
+    if (!text) return null;
+
+    // Split the text into lines
+    const lines = text.split('\n');
+    const formattedContent = [];
+
+    lines.forEach((line, index) => {
+      let formattedLine = line.trim();
+      
+      if (!formattedLine) {
+        // Empty line - add spacing
+        formattedContent.push(<br key={index} />);
+        return;
+      }
+
+      // Remove markdown formatting
+      formattedLine = formattedLine
+        .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove bold markers
+        .replace(/\*(.*?)\*/g, '$1')      // Remove italic markers
+        .replace(/#{1,6}\s*/g, '')        // Remove heading markers
+        .replace(/`(.*?)`/g, '$1')        // Remove code markers
+        .replace(/\[(.*?)\]\(.*?\)/g, '$1'); // Remove link formatting
+
+      // Check if it's a heading (starts with caps and ends with colon or is all caps)
+      const isHeading = formattedLine.endsWith(':') || 
+                       (formattedLine === formattedLine.toUpperCase() && formattedLine.length > 5);
+
+      // Check if it's a bullet point or list item
+      const isBulletPoint = formattedLine.startsWith('-') || 
+                           formattedLine.startsWith('•') || 
+                           formattedLine.match(/^\d+\./);
+
+      // Format based on line type
+      if (isHeading) {
+        formattedContent.push(
+          <div key={index} className="mb-4 mt-6 first:mt-0">
+            <h3 className="text-lg font-bold text-slate-800 border-b-2 border-blue-200 pb-2">
+              {formattedLine.replace(':', '')}
+            </h3>
+          </div>
+        );
+      } else if (isBulletPoint) {
+        const bulletText = formattedLine.replace(/^[-•]\s*/, '').replace(/^\d+\.\s*/, '');
+        formattedContent.push(
+          <div key={index} className="flex items-start mb-2 ml-4">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+            <span className="text-slate-700">{bulletText}</span>
+          </div>
+        );
+      } else {
+        // Regular paragraph text
+        formattedContent.push(
+          <p key={index} className="mb-3 text-slate-700 leading-relaxed">
+            {formattedLine}
+          </p>
+        );
+      }
+    });
+
+    return <div>{formattedContent}</div>;
+  };
+
   useEffect(() => {
     const fetchUserId = async () => {
       try {
@@ -43,10 +107,18 @@ const StudentReports = () => {
   };
 
   const handleDownloadReport = () => {
+    // Clean the report text for download
+    const cleanReport = report
+      .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove bold markers
+      .replace(/\*(.*?)\*/g, '$1')      // Remove italic markers
+      .replace(/#{1,6}\s*/g, '')        // Remove heading markers
+      .replace(/`(.*?)`/g, '$1')        // Remove code markers
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1'); // Remove link formatting
+
     const element = document.createElement('a');
-    const file = new Blob([report], { type: 'text/plain' });
+    const file = new Blob([cleanReport], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = 'performance-report.txt';
+    element.download = `performance-report-${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -153,9 +225,9 @@ const StudentReports = () => {
                 <div className="p-8">
                   <div className="prose prose-slate max-w-none">
                     <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                      <pre className="whitespace-pre-wrap text-slate-700 font-medium leading-relaxed text-sm">
-                        {report}
-                      </pre>
+                      <div className="text-slate-700 font-medium leading-relaxed text-sm">
+                        {formatReport(report)}
+                      </div>
                     </div>
                   </div>
                   

@@ -43,7 +43,17 @@ const createExam = [
 const submitExam = async (req, res) => {
   try {
     const { id } = req.params;
-    const { answers, timeTaken, sessionId } = req.body;
+    const { answers, timeTaken, sessionId, userId } = req.body;
+
+    console.log('Exam submission received:', {
+      examId: id,
+      userIdFromAuth: req.user?._id,
+      userIdFromBody: userId,
+      isAuthenticated: !!req.user,
+      sessionId: sessionId,
+      hasAnswers: !!answers,
+      timeTaken: timeTaken
+    });
 
     // Convert answers object to array format expected by backend
     let answersArray = [];
@@ -70,11 +80,27 @@ const submitExam = async (req, res) => {
 
     // Get user (authenticated or anonymous)
     let user = null;
+    let actualSessionId = sessionId;
+    let actualUserId = null;
+    
+    // Priority: req.user (from JWT) > userId from body > anonymous
     if (req.user) {
       user = req.user;
-    } else if (sessionId) {
-      // For anonymous users, create a temporary user record or use session tracking
-      user = { _id: `anonymous_${sessionId}`, name: 'Anonymous User' };
+      actualUserId = req.user._id;
+      console.log('Using authenticated user from JWT:', actualUserId);
+    } else if (userId) {
+      // User sent userId but no valid JWT - treat as authenticated
+      actualUserId = userId;
+      user = { _id: userId, name: 'Authenticated User' };
+      console.log('Using userId from request body:', actualUserId);
+    } else {
+      // Anonymous user
+      if (!actualSessionId) {
+        actualSessionId = `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        console.log('Generated new session ID for anonymous user:', actualSessionId);
+      }
+      user = { _id: `anonymous_${actualSessionId}`, name: 'Anonymous User' };
+      console.log('Using anonymous user with session:', actualSessionId);
     }
 
     // Calculate score and create detailed question results
@@ -153,17 +179,22 @@ const submitExam = async (req, res) => {
     // Calculate percentage
     const percentage = Math.round((score / totalQuestions) * 100);
 
-    // Update exam results if user is authenticated
-    if (req.user) {
+    // Save exam results and update user progress
+    if (actualUserId) {
       // Check if user already has results for this exam
       const existingResultIndex = exam.results.findIndex(result =>
-        result.userId.toString() === req.user._id.toString()
+        result.userId && result.userId.toString() === actualUserId.toString()
       );
 
       const resultData = {
-        userId: req.user._id,
-        score: percentage,
-        submittedAt: new Date()
+        userId: actualUserId,
+        score: percentage, // Store percentage as the main score
+        submittedAt: new Date(),
+        answers: answersArray,
+        questionResults: questionResults,
+        timeTaken: timeTaken || 0,
+        totalQuestions: totalQuestions,
+        correctAnswers: questionResults.filter(q => q.isCorrect).length
       };
 
       if (existingResultIndex >= 0) {
@@ -175,85 +206,66 @@ const submitExam = async (req, res) => {
       }
 
       await exam.save();
+      console.log(`Exam result saved to database for user ${actualUserId}: ${percentage}%`);
 
-      // Update user progress and award XP
-      const progress = await Progress.findOne({ user: req.user._id });
-      if (progress) {
+      // Initialize progress variables
+      let xpAwarded = 0;
+      let newBadges = [];
+
+      // Update user progress and award XP (only for authenticated users)
+      if (actualUserId) {
+        let progress = await Progress.findOne({ user: actualUserId });
+        if (!progress) {
+          // Create new progress record if it doesn't exist
+          progress = new Progress({
+            user: actualUserId,
+            experiencePoints: 0,
+            examsCompleted: 0,
+            examsPassed: 0,
+            examsFailed: 0,
+            examAverageScore: 0,
+            examBestScore: 0,
+            badges: []
+          });
+        }
+
         // Use the Progress model's updateExamProgress method
         const examResult = {
-          status: percentage >= 40 ? 'passed' : 'failed', // Assuming 40% pass mark
+          status: percentage >= 60 ? 'passed' : 'failed', // 60% pass mark
           percentage: percentage,
-          score: score,
-          timeTaken: timeTaken,
+          score: percentage, // Use percentage as score
+          timeTaken: timeTaken || 0,
           duration: exam.duration
         };
 
-        const xpAwarded = progress.updateExamProgress(examResult);
+        console.log(`Updating progress for exam result:`, examResult);
+
+        xpAwarded = progress.updateExamProgress(examResult);
         
         // Check and award badges
-        const newBadges = progress.checkAndAwardBadges();
+        newBadges = progress.checkAndAwardBadges();
         
         await progress.save();
 
-        res.json({
-          score: score, // Raw score (number of correct answers)
-          percentage: percentage, // Percentage score
-          totalQuestions,
-          correctAnswers: questionResults.filter(q => q.isCorrect).length,
-          questionResults,
-          timeTaken,
-          averageTimePerQuestion: avgTimePerQuestion,
-          xpEarned: xpAwarded,
-          newBadges
-        });
-      } else {
-        // Create progress record if it doesn't exist
-        const examResult = {
-          status: percentage >= 40 ? 'passed' : 'failed',
-          percentage: percentage,
-          score: score,
-          timeTaken: timeTaken,
-          duration: exam.duration
-        };
-
-        const newProgress = new Progress({
-          user: req.user._id,
-          experiencePoints: 0,
-          examsCompleted: 0,
-          badges: []
-        });
-
-        const xpAwarded = newProgress.updateExamProgress(examResult);
-        const newBadges = newProgress.checkAndAwardBadges();
-        
-        await newProgress.save();
-
-        res.json({
-          score: score, // Raw score (number of correct answers)
-          percentage: percentage, // Percentage score
-          totalQuestions,
-          correctAnswers: questionResults.filter(q => q.isCorrect).length,
-          questionResults,
-          timeTaken,
-          averageTimePerQuestion: avgTimePerQuestion,
-          xpEarned: xpAwarded,
-          newBadges
-        });
-      }
+        console.log(`Progress updated: XP earned: ${xpAwarded}, New badges: ${newBadges.length}`);
     } else {
-      // For anonymous users, just return the results without saving
-      res.json({
-        score: score, // Raw score (number of correct answers)
-        percentage: percentage, // Percentage score
-        totalQuestions,
-        correctAnswers: questionResults.filter(q => q.isCorrect).length,
-        questionResults,
-        timeTaken,
-        averageTimePerQuestion: avgTimePerQuestion,
-        xpEarned: 0,
-        newBadges: []
-      });
+      console.log('Skipping progress update for anonymous user');
     }
+
+    // Send response (works for both authenticated and anonymous users)
+    res.json({
+      message: 'Exam submitted successfully',
+      score: score, // Raw score (number of correct answers)  
+      percentage: percentage, // Percentage score
+      totalQuestions,
+      correctAnswers: questionResults.filter(q => q.isCorrect).length,
+      questionResults,
+      timeTaken,
+      averageTimePerQuestion: avgTimePerQuestion,
+      xpEarned: xpAwarded, // XP earned (0 for anonymous users)
+      newBadges: newBadges, // New badges (empty array for anonymous users)
+      passed: percentage >= 60
+    });
   } catch (error) {
     console.error('Error submitting exam:', error);
     res.status(500).json({ message: 'Error submitting exam', error: error.message });
@@ -554,36 +566,49 @@ const getUserExamHistory = async (req, res, next) => {
 
     // Find all exams where the user has submitted results
     const exams = await Exam.find({
-      results: { $elemMatch: { userId: userId } }
+      'results.userId': userId
     })
       .populate('invigilator', 'profile.name email')
       .sort({ 'results.submittedAt': -1 });
 
     // Format the results for the frontend
     const examHistory = exams.map(exam => {
-      const userResult = exam.results.find(r => r.userId.toString() === userId);
+      const userResult = exam.results.find(r => r.userId && r.userId.toString() === userId);
       
+      if (!userResult) return null;
+
       return {
         examId: exam._id,
         title: exam.title,
         description: exam.description,
-        subject: exam.subject,
+        subject: exam.subject || 'General',
         scheduledDate: exam.scheduledDate,
         duration: exam.duration,
         submittedAt: userResult.submittedAt,
-        score: userResult.score,
+        score: userResult.score || 0,
+        totalQuestions: userResult.totalQuestions || exam.questions.length,
+        correctAnswers: userResult.correctAnswers || 0,
+        timeTaken: userResult.timeTaken || 0,
+        passed: (userResult.score || 0) >= 60, // 60% pass mark
         status: exam.status,
-        invigilator: exam.invigilator
+        invigilator: exam.invigilator,
+        questionResults: userResult.questionResults || []
       };
-    });
+    }).filter(Boolean); // Remove null entries
 
     // Calculate summary statistics
     const totalExams = examHistory.length;
     const averageScore = totalExams > 0 
       ? Math.round(examHistory.reduce((sum, exam) => sum + exam.score, 0) / totalExams)
       : 0;
-    const passedExams = examHistory.filter(exam => exam.score >= 40).length; // Assuming 40% pass mark
+    const passedExams = examHistory.filter(exam => exam.passed).length;
     const failedExams = totalExams - passedExams;
+    const totalQuestionsAnswered = examHistory.reduce((sum, exam) => sum + exam.totalQuestions, 0);
+    const totalCorrectAnswers = examHistory.reduce((sum, exam) => sum + exam.correctAnswers, 0);
+
+    console.log(`Exam history retrieved for user ${userId}: ${totalExams} exams found`);
+    console.log('Raw exams found:', exams.length);
+    console.log('Filtered exam history:', examHistory.length);
 
     res.json({
       success: true,
@@ -593,10 +618,14 @@ const getUserExamHistory = async (req, res, next) => {
         averageScore,
         passedExams,
         failedExams,
-        passRate: totalExams > 0 ? Math.round((passedExams / totalExams) * 100) : 0
+        passRate: totalExams > 0 ? Math.round((passedExams / totalExams) * 100) : 0,
+        totalQuestionsAnswered,
+        totalCorrectAnswers,
+        accuracy: totalQuestionsAnswered > 0 ? Math.round((totalCorrectAnswers / totalQuestionsAnswered) * 100) : 0
       }
     });
   } catch (error) {
+    console.error(`Get user exam history error: ${error.message}`);
     logger.error(`Get user exam history error: ${error.message}`);
     next(error);
   }

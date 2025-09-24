@@ -18,8 +18,24 @@ const examSchema = new mongoose.Schema({
   invigilator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Staff/Admin
   results: [{
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    score: { type: Number },
-    submittedAt: { type: Date }
+    sessionId: { type: String }, // For anonymous users
+    score: { type: Number }, // Percentage score
+    answers: [{ type: String }], // User's answers
+    questionResults: [{
+      questionId: { type: mongoose.Schema.Types.ObjectId },
+      questionText: { type: String },
+      userAnswer: { type: String },
+      correctAnswer: { type: String },
+      isCorrect: { type: Boolean },
+      marks: { type: Number },
+      difficulty: { type: String },
+      explanation: { type: String },
+      timeSpent: { type: Number }
+    }],
+    timeTaken: { type: Number }, // in seconds
+    totalQuestions: { type: Number },
+    correctAnswers: { type: Number },
+    submittedAt: { type: Date, default: Date.now }
   }],
   status: { type: String, enum: ['scheduled', 'live', 'ongoing', 'completed'], default: 'scheduled' },
   proctoringEnabled: { type: Boolean, default: false }, // For AI proctoring

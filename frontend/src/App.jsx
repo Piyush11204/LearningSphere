@@ -25,12 +25,7 @@ import TutorEarnings from './pages/Tutor/TutorEarnings';
 import TutorSchedule from './pages/Tutor/TutorSchedule';
 // Progress imports
 import Progress from './pages/Progress';
-// Exam imports
-import Exams from './pages/Exams/Exams';
-import CreateExam from './pages/Exams/CreateExam';
-import TakeExam from './pages/Exams/TakeExam';
-import ExamProgress from './pages/Progress/ExamProgress';
-// New Exam folder imports
+// Exam imports (using only the Exam folder)
 import StudentExams from './pages/Exam/StudentExams';
 import TakeExamStudent from './pages/Exam/TakeExam';
 import ExamResults from './pages/Exam/ExamResults';
@@ -99,15 +94,15 @@ function App() {
             <Route path="/tutor/students" element={<TutorStudents />} />
             <Route path="/tutor/earnings" element={<TutorEarnings />} />
             <Route path="/tutor/schedule" element={<TutorSchedule />} />
-            <Route path="/tutor/create-exam" element={<CreateExam />} />
             <Route path="/create-exam" element={<AdminCreateExam />} />
             {/* Progress Routes */}
             <Route path="/progress" element={<Progress />} />
-            {/* Exam Routes */}
-            <Route path="/exams" element={<Exams />} />
-            <Route path="/exam/:examId" element={<TakeExam />} />
-            <Route path="/progress/exams" element={<ExamProgress />} />
-            {/* Student Exam Routes */}
+            {/* Student Exam Routes - Main exam system */}
+            <Route path="/exams" element={<StudentExams />} />
+            <Route path="/exam/:id" element={<TakeExamStudent />} />
+            <Route path="/exam/:id/results" element={<ExamResults />} />
+            <Route path="/reports" element={<StudentReports />} />
+            {/* Alternative paths for consistency */}
             <Route path="/student/exams" element={<StudentExams />} />
             <Route path="/student/exam/:id" element={<TakeExamStudent />} />
             <Route path="/student/exam/:id/results" element={<ExamResults />} />

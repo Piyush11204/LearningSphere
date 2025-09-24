@@ -16,6 +16,8 @@ import {
 
 const StudentExams = () => {
   const [exams, setExams] = useState([]);
+  const [examHistory, setExamHistory] = useState([]);
+  const [activeTab, setActiveTab] = useState('available'); // 'available' or 'history'
   const [filters, setFilters] = useState({ subject: '', status: '' });
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
@@ -39,7 +41,23 @@ const StudentExams = () => {
         }
       }
     };
+
+    const fetchExamHistory = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return; // Skip if not authenticated
+
+        const res = await axios.get(`${API_URLS.EXAMS}/history`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setExamHistory(res.data.examHistory || []);
+      } catch (error) {
+        console.error('Failed to fetch exam history:', error);
+      }
+    };
+
     fetchExams();
+    fetchExamHistory();
   }, []);
 
   const handleFilterChange = (e) => {
@@ -168,17 +186,47 @@ const StudentExams = () => {
           </div>
         </div>
 
-        {/* Exams List Section */}
-        <div>
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-4 text-slate-800">
-              Available{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Examinations
-              </span>
-            </h2>
-            <p className="text-slate-600">Browse and take your scheduled exams</p>
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <div className="flex justify-center">
+            <div className="bg-white rounded-2xl p-2 shadow-lg border border-slate-200">
+              <button
+                onClick={() => setActiveTab('available')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  activeTab === 'available'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                    : 'text-slate-600 hover:text-slate-800'
+                }`}
+              >
+                Available Exams
+              </button>
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ml-2 ${
+                  activeTab === 'history'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                    : 'text-slate-600 hover:text-slate-800'
+                }`}
+              >
+                Exam History
+              </button>
+            </div>
           </div>
+        </div>
+
+        {/* Content Section */}
+        <div>
+          {activeTab === 'available' ? (
+            <>
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4 text-slate-800">
+                  Available{' '}
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Examinations
+                  </span>
+                </h2>
+                <p className="text-slate-600">Browse and take your scheduled exams</p>
+              </div>
 
           {filteredExams.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -251,11 +299,80 @@ const StudentExams = () => {
                 </div>
               ))}
             </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Book className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold text-slate-600 mb-2">No Exams Found</h3>
+                  <p className="text-slate-500">Try adjusting your search or filter criteria</p>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="text-center py-12">
-              <Book className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-slate-600 mb-2">No Exams Found</h3>
-              <p className="text-slate-500">Try adjusting your search or filter criteria</p>
+            // Exam History Tab
+            <div>
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4 text-slate-800">
+                  My Exam{' '}
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    History
+                  </span>
+                </h2>
+                <p className="text-slate-600">Review your past exam performances</p>
+              </div>
+
+              {examHistory.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {examHistory.map((exam) => (
+                    <div key={exam.examId} className="bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-100 hover:-translate-y-2">
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-bold text-slate-800">{exam.title}</h3>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                            exam.passed ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700' :
+                            'bg-gradient-to-r from-red-100 to-pink-100 text-red-700'
+                          }`}>
+                            {exam.passed ? 'Passed' : 'Failed'}
+                          </span>
+                        </div>
+
+                        <div className="space-y-3 mb-4">
+                          <p className="text-slate-600 flex items-center text-sm">
+                            <Book className="w-4 h-4 mr-2 text-blue-500" />
+                            <span className="font-medium">Subject:</span>
+                            <span className="ml-2">{exam.subject}</span>
+                          </p>
+                          <p className="text-slate-600 flex items-center text-sm">
+                            <Calendar className="w-4 h-4 mr-2 text-purple-500" />
+                            <span className="font-medium">Completed:</span>
+                            <span className="ml-2">
+                              {new Date(exam.submittedAt).toLocaleDateString()}
+                            </span>
+                          </p>
+                          <p className="text-slate-600 flex items-center text-sm">
+                            <CheckCircle className="w-4 h-4 mr-2 text-emerald-500" />
+                            <span className="font-medium">Score:</span>
+                            <span className="ml-2 font-bold">{exam.score}% ({exam.correctAnswers}/{exam.totalQuestions})</span>
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => navigate(`/exam/${exam.examId}/results`)}
+                          className="w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center bg-gradient-to-r from-slate-600 to-slate-700 text-white hover:shadow-2xl hover:scale-105"
+                        >
+                          <ArrowRight className="w-5 h-5 mr-2" />
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <CheckCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold text-slate-600 mb-2">No Exam History</h3>
+                  <p className="text-slate-500">Take your first exam to see your history here</p>
+                </div>
+              )}
             </div>
           )}
         </div>
