@@ -1,0 +1,2055 @@
+{
+  "info": {
+    "name": "Growora API Testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "550e8400-e29b-41d4-a716-446655440000",
+    "description": "API test collection for Growora - The Aura of Growth, Unlock Future with Free Learning",
+    "version": "1.0.0",
+    "postman_id": "550e8400-e29b-41d4-a716-446655440000"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"testuser@example.com\", \"password\": \"password123\", \"name\": \"Test User\", \"interests\": [\"coding\", \"math\"], \"skills\": [], \"location\": \"New York\"}"
+            },
+            "description": "Register a new user"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/auth/register"
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\"msg\": \"User registered. Please verify your email.\"}"
+            },
+            {
+              "name": "Error - Duplicate Email",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/auth/register"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"msg\": \"User already exists\"}"
+            }
+          ]
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"testuser@example.com\", \"password\": \"password123\"}"
+            },
+            "description": "Login a registered user"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/auth/login"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"token\": \"jwt-token-here\", \"user\": {\"id\": \"user-id\", \"email\": \"testuser@example.com\", \"role\": \"learner\"}}"
+            },
+            {
+              "name": "Error - Invalid Credentials",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/auth/login"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"msg\": \"Invalid credentials\"}"
+            }
+          ]
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:5000/api/auth/verify/:token",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "auth", "verify", ":token"]
+            },
+            "description": "Verify user email with token (replace :token with valid token)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "url": "http://localhost:5000/api/auth/verify/:token"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Email verified successfully\"}"
+            },
+            {
+              "name": "Error - Invalid Token",
+              "originalRequest": {
+                "method": "GET",
+                "url": "http://localhost:5000/api/auth/verify/invalid-token"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"msg\": \"Invalid token\"}"
+            }
+          ]
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/auth/forgot",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "auth", "forgot"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"testuser@example.com\"}"
+            },
+            "description": "Send password reset email"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/auth/forgot"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Reset email sent\"}"
+            },
+            {
+              "name": "Error - Non-existent Email",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/auth/forgot"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"msg\": \"No user with that email\"}"
+            }
+          ]
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/auth/reset/:token",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "auth", "reset", ":token"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"password\": \"newpassword123\"}"
+            },
+            "description": "Reset user password with token (replace :token with valid token)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/auth/reset/:token"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Password reset successfully\"}"
+            },
+            {
+              "name": "Error - Expired Token",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/auth/reset/expired-token"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"msg\": \"Invalid or expired token\"}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/auth/refresh",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "auth", "refresh"]
+            },
+            "description": "Refresh JWT token"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/auth/refresh"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"token\": \"new-jwt-token-here\"}"
+            },
+            {
+              "name": "Error - No Token",
+              "originalRequest": {
+                "method": "GET",
+                "url": "http://localhost:5000/api/auth/refresh"
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\"msg\": \"No token, authorization denied\"}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/auth/logout",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Logout user (server-side token invalidation)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/auth/logout"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Logged out successfully\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <admin-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/users?page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get all users (admin only)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <admin-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/users?page=1&limit=10"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"users\": [], \"currentPage\": 1, \"totalPages\": 1, \"total\": 0}"
+            }
+          ]
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/users/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "users", ":id"]
+            },
+            "description": "Get user by ID (replace :id with valid user ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/users/:id"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"_id\": \":id\", \"email\": \"testuser@example.com\", \"role\": \"learner\", \"profile\": {\"name\": \"Test User\", \"interests\": [\"coding\", \"math\"], \"location\": \"New York\"}}"
+            },
+            {
+              "name": "Error - User Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/users/invalid-id"
+              },
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"msg\": \"User not found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <admin-token>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/users",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "users"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"newuser@example.com\", \"password\": \"password123\", \"name\": \"New User\", \"interests\": [\"science\"], \"skills\": [\"teaching\"], \"location\": \"London\", \"role\": \"tutor\"}"
+            },
+            "description": "Create a new user (admin only)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <admin-token>"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/users"
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\"_id\": \"new-user-id\", \"email\": \"newuser@example.com\", \"role\": \"tutor\", \"profile\": {\"name\": \"New User\", \"interests\": [\"science\"], \"location\": \"London\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/users/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "users", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"profile\": {\"name\": \"Updated User\", \"interests\": [\"coding\", \"art\"]}}"
+            },
+            "description": "Update user profile (replace :id with valid user ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/users/:id"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"_id\": \":id\", \"email\": \"testuser@example.com\", \"role\": \"learner\", \"profile\": {\"name\": \"Updated User\", \"interests\": [\"coding\", \"art\"], \"location\": \"New York\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <admin-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/users/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "users", ":id"]
+            },
+            "description": "Delete user (admin only, replace :id with valid user ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <admin-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/users/:id"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"User deleted successfully\"}"
+            }
+          ]
+        },
+        {
+          "name": "Switch Mode",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/users/mode",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "users", "mode"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"isTutor\": true}"
+            },
+            "description": "Switch user mode to tutor/learner"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/users/mode"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Mode switched to Tutor\", \"user\": {\"_id\": \"user-id\", \"email\": \"testuser@example.com\", \"role\": \"learner\", \"isTutor\": true}}"
+            }
+          ]
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:5000/api/users/search?query=Test&role=learner&location=New York",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "users", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "Test"
+                },
+                {
+                  "key": "role",
+                  "value": "learner"
+                },
+                {
+                  "key": "location",
+                  "value": "New York"
+                }
+              ]
+            },
+            "description": "Search users by query, role, and location"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "url": "http://localhost:5000/api/users/search?query=Test&role=learner&location=New York"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[{\"_id\": \"user-id\", \"email\": \"testuser@example.com\", \"role\": \"learner\", \"profile\": {\"name\": \"Test User\", \"interests\": [\"coding\", \"math\"], \"location\": \"New York\"}}]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "item": [
+        {
+          "name": "Create Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <tutor-token>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/sessions/schedule",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "sessions", "schedule"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Math Basics\", \"description\": \"Learn basic math\", \"startTime\": \"2025-09-20T10:00:00Z\", \"endTime\": \"2025-09-20T11:00:00Z\", \"sessionType\": \"video\", \"learners\": [\"learner-id\"]}"
+            },
+            "description": "Schedule a new session (tutor only)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <tutor-token>"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/sessions/schedule"
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\"_id\": \"session-id\", \"title\": \"Math Basics\", \"tutor\": \"tutor-id\", \"learners\": [\"learner-id\"], \"startTime\": \"2025-09-20T10:00:00Z\", \"endTime\": \"2025-09-20T11:00:00Z\", \"status\": \"scheduled\"}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/sessions?status=scheduled&type=video",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "sessions"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "scheduled"
+                },
+                {
+                  "key": "type",
+                  "value": "video"
+                }
+              ]
+            },
+            "description": "Get all sessions for the authenticated user"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/sessions?status=scheduled&type=video"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[{\"_id\": \"session-id\", \"title\": \"Math Basics\", \"tutor\": {\"profile\": {\"name\": \"Test Tutor\"}}, \"learners\": [{\"profile\": {\"name\": \"Test Learner\"}}], \"startTime\": \"2025-09-20T10:00:00Z\", \"status\": \"scheduled\"}]"
+            }
+          ]
+        },
+        {
+          "name": "Get Session by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/sessions/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "sessions", ":id"]
+            },
+            "description": "Get session by ID (replace :id with valid session ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/sessions/:id"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"_id\": \":id\", \"title\": \"Math Basics\", \"tutor\": {\"profile\": {\"name\": \"Test Tutor\"}}, \"learners\": [{\"profile\": {\"name\": \"Test Learner\"}}], \"startTime\": \"2025-09-20T10:00:00Z\"}"
+            },
+            {
+              "name": "Error - Access Denied",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <invalid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/sessions/:id"
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "body": "{\"msg\": \"Access denied\"}"
+            }
+          ]
+        },
+        {
+          "name": "Update Session",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <tutor-token>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/sessions/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "sessions", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"learners\": [\"learner-id-2\"], \"startTime\": \"2025-09-20T11:00:00Z\"}"
+            },
+            "description": "Update session (tutor only, replace :id with valid session ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <tutor-token>"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/sessions/:id"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"_id\": \":id\", \"title\": \"Math Basics\", \"tutor\": \"tutor-id\", \"learners\": [\"learner-id-2\"], \"startTime\": \"2025-09-20T11:00:00Z\"}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Session",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <tutor-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/sessions/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "sessions", ":id"]
+            },
+            "description": "Cancel/delete session (tutor only, replace :id with valid session ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <tutor-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/sessions/:id"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Session cancelled successfully\"}"
+            }
+          ]
+        },
+        {
+          "name": "Join Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/sessions/:id/join",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "sessions", ":id", "join"]
+            },
+            "description": "Join a session (replace :id with valid session ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/sessions/:id/join"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"meetingLink\": \"room_session-id_timestamp\", \"status\": \"live\"}"
+            }
+          ]
+        },
+        {
+          "name": "Upload Recording",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <tutor-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/sessions/:id/recording",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "sessions", ":id", "recording"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "recording",
+                  "type": "file",
+                  "src": "/path/to/recording.mp4"
+                }
+              ]
+            },
+            "description": "Upload session recording (replace :id with valid session ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <tutor-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/sessions/:id/recording"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"recordingUrl\": \"cloudinary-url-here\"}"
+            },
+            {
+              "name": "Error - No File",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <tutor-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/sessions/:id/recording"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"msg\": \"No file uploaded\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Matching",
+      "item": [
+        {
+          "name": "Generate Matches",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/matching/generate",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "matching", "generate"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\": \"learner-id\", \"limit\": 10}"
+            },
+            "description": "Generate matches for a learner"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/matching/generate"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"matches\": [], \"msg\": \"0 matches generated\"}"
+            }
+          ]
+        },
+        {
+          "name": "Get Matches",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/matching/:userId?status=pending",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "matching", ":userId"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending"
+                }
+              ]
+            },
+            "description": "Get matches for a user (replace :userId with valid user ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/matching/:userId?status=pending"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[{\"_id\": \"match-id\", \"learner\": {\"profile\": {\"name\": \"Test Learner\"}}, \"tutor\": {\"profile\": {\"name\": \"Test Tutor\"}}, \"matchScore\": 85, \"status\": \"pending\"}]"
+            }
+          ]
+        },
+        {
+          "name": "Accept Match",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/matching/accept/:matchId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "matching", "accept", ":matchId"]
+            },
+            "description": "Accept a match (replace :matchId with valid match ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/matching/accept/:matchId"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Match accepted\", \"match\": {\"_id\": \":matchId\", \"status\": \"accepted\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Reject Match",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/matching/reject/:matchId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "matching", "reject", ":matchId"]
+            },
+            "description": "Reject a match (replace :matchId with valid match ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/matching/reject/:matchId"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Match rejected\"}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Match",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/matching/:matchId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "matching", ":matchId"]
+            },
+            "description": "Delete a match (replace :matchId with valid match ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/matching/:matchId"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Match deleted\"}"
+            }
+          ]
+        },
+        {
+          "name": "Get Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/matching/recommendations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "matching", "recommendations"]
+            },
+            "description": "Get top match recommendations"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/matching/recommendations"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"recommendations\": [{\"_id\": \"match-id\", \"tutor\": {\"profile\": {\"name\": \"Test Tutor\", \"avatar\": \"\", \"bio\": \"\"}}, \"matchScore\": 85}]}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Progress",
+      "item": [
+        {
+          "name": "Create Progress",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/progress",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "progress"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\": \"user-id\"}"
+            },
+            "description": "Create progress for a new user"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/progress"
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\"_id\": \"progress-id\", \"user\": \"user-id\", \"sessionsCompleted\": 0, \"totalHours\": 0, \"experiencePoints\": 0}"
+            }
+          ]
+        },
+        {
+          "name": "Update Progress",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/progress",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "progress"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\": \"user-id\", \"sessionsCompleted\": 1, \"hours\": 1, \"xp\": 50}"
+            },
+            "description": "Update user progress"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/progress"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Progress updated\", \"progress\": {\"_id\": \"progress-id\", \"user\": \"user-id\", \"sessionsCompleted\": 1, \"totalHours\": 1, \"experiencePoints\": 50}}"
+            }
+          ]
+        },
+        {
+          "name": "Get Progress",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/progress/:userId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "progress", ":userId"]
+            },
+            "description": "Get progress for a user (replace :userId with valid user ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/progress/:userId"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"_id\": \"progress-id\", \"user\": {\"profile\": {\"name\": \"Test User\"}}, \"sessionsCompleted\": 1, \"totalHours\": 1}"
+            }
+          ]
+        },
+        {
+          "name": "Get Leaderboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/progress/leaderboard?limit=5",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "progress", "leaderboard"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Get top users leaderboard"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/progress/leaderboard?limit=5"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"leaderboard\": [{\"_id\": \"progress-id\", \"user\": {\"profile\": {\"name\": \"Test User\"}}, \"experiencePoints\": 50, \"leaderboardRank\": 1}]}"
+            }
+          ]
+        },
+        {
+          "name": "Update Progress Manually",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <admin-token>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/progress/:progressId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "progress", ":progressId"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"experiencePoints\": 100}"
+            },
+            "description": "Manually update progress (admin only, replace :progressId with valid ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <admin-token>"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/progress/:progressId"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"_id\": \":progressId\", \"user\": \"user-id\", \"experiencePoints\": 100}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Progress",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <admin-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/progress/:progressId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "progress", ":progressId"]
+            },
+            "description": "Delete progress (admin only, replace :progressId with valid ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <admin-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/progress/:progressId"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Progress deleted\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Submit Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/reviews",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "reviews"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"sessionId\": \"session-id\", \"reviewedUserId\": \"tutor-id\", \"rating\": 4, \"feedback\": \"Great session!\", \"isAnonymous\": false}"
+            },
+            "description": "Submit a review for a session"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/reviews"
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\"msg\": \"Review submitted\", \"review\": {\"_id\": \"review-id\", \"session\": \"session-id\", \"reviewer\": \"user-id\", \"reviewedUser\": \"tutor-id\", \"rating\": 4, \"feedback\": \"Great session!\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Get User Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/reviews/user/:userId?sessionId=session-id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "reviews", "user", ":userId"],
+              "query": [
+                {
+                  "key": "sessionId",
+                  "value": "session-id"
+                }
+              ]
+            },
+            "description": "Get reviews for a user (replace :userId with valid user ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/reviews/user/:userId?sessionId=session-id"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"reviews\": [{\"_id\": \"review-id\", \"rating\": 4, \"feedback\": \"Great session!\", \"session\": {\"title\": \"Math Basics\"}}], \"averageRating\": 4.0}"
+            }
+          ]
+        },
+        {
+          "name": "Get Session Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/reviews/session/:sessionId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "reviews", "session", ":sessionId"]
+            },
+            "description": "Get reviews for a session (replace :sessionId with valid session ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/reviews/session/:sessionId"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[{\"_id\": \"review-id\", \"rating\": 4, \"feedback\": \"Great session!\", \"reviewer\": {\"profile\": {\"name\": \"Test User\"}}, \"reviewedUser\": {\"profile\": {\"name\": \"Test Tutor\"}}}]"
+            }
+          ]
+        },
+        {
+          "name": "Update Review",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/reviews/:reviewId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "reviews", ":reviewId"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"feedback\": \"Updated feedback\", \"rating\": 5}"
+            },
+            "description": "Update a review (replace :reviewId with valid review ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/reviews/:reviewId"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"_id\": \":reviewId\", \"session\": \"session-id\", \"reviewer\": \"user-id\", \"reviewedUser\": \"tutor-id\", \"rating\": 5, \"feedback\": \"Updated feedback\"}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <valid-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/reviews/:reviewId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "reviews", ":reviewId"]
+            },
+            "description": "Delete a review (replace :reviewId with valid review ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <valid-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/reviews/:reviewId"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Review deleted\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <admin-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/admin/users?page=1&limit=20",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get all users (admin only)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <admin-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/admin/users?page=1&limit=20"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"users\": [], \"currentPage\": 1, \"totalPages\": 1, \"total\": 0}"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Ban User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <admin-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/admin/users/:userId/ban",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "admin", "users", ":userId", "ban"]
+            },
+            "description": "Ban or unban a user (admin only, replace :userId with valid user ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <admin-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/admin/users/:userId/ban"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"User banned\", \"user\": {\"_id\": \":userId\", \"isBanned\": true}}"
+            }
+          ]
+        },
+        {
+          "name": "Change Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <admin-token>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/admin/users/:userId/role",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "admin", "users", ":userId", "role"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"role\": \"admin\"}"
+            },
+            "description": "Change user role (admin only, replace :userId with valid user ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <admin-token>"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/admin/users/:userId/role"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Role updated\", \"user\": {\"_id\": \":userId\", \"role\": \"admin\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Moderate Session",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <admin-token>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/admin/sessions/:sessionId/moderate",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "admin", "sessions", ":sessionId", "moderate"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"action\": \"approve\"}"
+            },
+            "description": "Moderate a session (approve/delete, replace :sessionId with valid session ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <admin-token>"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "http://localhost:5000/api/admin/sessions/:sessionId/moderate"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Session approved\", \"session\": {\"_id\": \":sessionId\", \"isApproved\": true}}"
+            }
+          ]
+        },
+        {
+          "name": "Get Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <admin-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/admin/analytics",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "admin", "analytics"]
+            },
+            "description": "Get admin analytics"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <admin-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/admin/analytics"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"totalUsers\": 0, \"activeSessions\": 0, \"totalMatches\": 0, \"matchingSuccessRate\": 0}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Review (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer <admin-token>"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/admin/reviews/:reviewId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "admin", "reviews", ":reviewId"]
+            },
+            "description": "Delete a review (admin only, replace :reviewId with valid review ID)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer <admin-token>"
+                  }
+                ],
+                "url": "http://localhost:5000/api/admin/reviews/:reviewId"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\"msg\": \"Review deleted\"}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
