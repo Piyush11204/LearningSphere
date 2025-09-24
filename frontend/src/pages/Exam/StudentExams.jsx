@@ -23,14 +23,20 @@ const StudentExams = () => {
   useEffect(() => {
     const fetchExams = async () => {
       try {
+        // Try to get token for authenticated users, but allow public access
         const token = localStorage.getItem('token');
-        const res = await axios.get(API_URLS.EXAMS, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const res = await axios.get(API_URLS.EXAMS, { headers });
         setExams(res.data.exams || []);
-      } catch (error) {
-        toast.error('Failed to fetch exams');
-        console.error('Error:', error.response?.data?.message || error.message);
+      } catch {
+        // For public access, try without authentication
+        try {
+          const res = await axios.get(API_URLS.EXAMS);
+          setExams(res.data.exams || []);
+        } catch {
+          // Ignore public access error, just show empty list
+        }
       }
     };
     fetchExams();

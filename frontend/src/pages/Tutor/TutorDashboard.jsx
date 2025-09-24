@@ -13,7 +13,8 @@ import {
   BookOpen,
   Plus,
   Eye,
-  MessageSquare
+  MessageSquare,
+  Activity
 } from 'lucide-react';
 
 const TutorDashboard = () => {
@@ -23,10 +24,13 @@ const TutorDashboard = () => {
     totalEarnings: 0,
     upcomingSessions: 0,
     completedSessions: 0,
-    averageRating: 0
+    averageRating: 0,
+    totalExams: 0,
+    liveExams: 0
   });
   const [recentSessions, setRecentSessions] = useState([]);
   const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -55,6 +59,13 @@ const TutorDashboard = () => {
 
       const liveSessions = liveSessionsResponse.data || [];
 
+      // Fetch exams data
+      const examsResponse = await axios.get('http://localhost:5000/api/exams', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const examsList = examsResponse.data.exams || [];
+
       // Calculate stats
       const now = new Date();
       const upcoming = sessions.filter(session =>
@@ -71,7 +82,9 @@ const TutorDashboard = () => {
         totalEarnings: completed.length * 25, // Assuming $25 per session
         upcomingSessions: upcoming.length,
         completedSessions: completed.length,
-        averageRating: 4.8 // Mock data
+        averageRating: 4.8, // Mock data
+        totalExams: examsList.length,
+        liveExams: examsList.filter(exam => exam.status === 'live' || exam.status === 'ongoing').length
       });
 
       // Set recent sessions (last 5)
@@ -82,6 +95,9 @@ const TutorDashboard = () => {
 
       // Set upcoming sessions
       setUpcomingSessions(upcoming.slice(0, 5));
+
+      // Set recent exams (last 5 created by this tutor)
+      setExams(examsList.filter(exam => exam.invigilator === JSON.parse(atob(token.split('.')[1])).id).slice(0, 5));
 
       setLoading(false);
     } catch (error) {
@@ -109,6 +125,13 @@ const TutorDashboard = () => {
       icon: Video,
       path: '/tutor/create-live-session',
       color: 'bg-green-500 hover:bg-green-600'
+    },
+    {
+      title: 'Create Exam',
+      description: 'Create AI-powered exams',
+      icon: BookOpen,
+      path: '/create-exam',
+      color: 'bg-teal-500 hover:bg-teal-600'
     },
     {
       title: 'View Schedule',
@@ -162,7 +185,7 @@ const TutorDashboard = () => {
           </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-8 gap-6 mb-8">
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="p-5">
               <div className="flex items-center">
@@ -258,12 +281,44 @@ const TutorDashboard = () => {
               </div>
             </div>
           </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <BookOpen className="w-8 h-8 text-teal-600" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Total Exams</dt>
+                    <dd className="text-lg font-medium text-gray-900">{stats.totalExams}</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <Activity className="w-8 h-8 text-pink-600" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Live Exams</dt>
+                    <dd className="text-lg font-medium text-gray-900">{stats.liveExams}</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Quick Actions */}
         <div className="bg-white shadow rounded-lg p-6 mb-8">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {quickActions.map((action, index) => {
               const Icon = action.icon;
               return (
@@ -284,7 +339,7 @@ const TutorDashboard = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Recent Sessions */}
           <div className="bg-white shadow rounded-lg">
             <div className="px-6 py-4 border-b border-gray-200">
@@ -350,6 +405,65 @@ const TutorDashboard = () => {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Recent Exams */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">My Recent Exams</h3>
+            <button
+              onClick={() => navigate('/create-exam')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700"
+            >
+              <BookOpen className="w-4 h-4 mr-2" />
+              Create New Exam
+            </button>
+          </div>
+          {exams.length > 0 ? (
+            <div className="space-y-4">
+              {exams.map((exam) => (
+                <div key={exam._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-teal-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{exam.title}</p>
+                      <p className="text-xs text-gray-500">
+                        {exam.subject} • {exam.duration} minutes • {exam.questions?.length || 0} questions
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      exam.status === 'live' ? 'bg-green-100 text-green-800' :
+                      exam.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
+                      exam.status === 'scheduled' ? 'bg-purple-100 text-purple-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {exam.status}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(exam.scheduledDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-sm font-medium text-gray-900 mb-2">No exams created yet</h3>
+              <p className="text-sm text-gray-500 mb-4">Create your first AI-powered exam to get started</p>
+              <button
+                onClick={() => navigate('/create-exam')}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                Create First Exam
+              </button>
+            </div>
+          )}
         </div>
         </div>
       </div>

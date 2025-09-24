@@ -35,6 +35,8 @@ import StudentExams from './pages/Exam/StudentExams';
 import TakeExamStudent from './pages/Exam/TakeExam';
 import ExamResults from './pages/Exam/ExamResults';
 import StudentReports from './pages/Exam/StudentReports';
+// Admin imports
+import AdminCreateExam from './pages/Admin/AdminCreateExam';
 import { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -98,7 +100,7 @@ function App() {
             <Route path="/tutor/earnings" element={<TutorEarnings />} />
             <Route path="/tutor/schedule" element={<TutorSchedule />} />
             <Route path="/tutor/create-exam" element={<CreateExam />} />
-            <Route path="/create-exam" element={<CreateExam />} />
+            <Route path="/create-exam" element={<AdminCreateExam />} />
             {/* Progress Routes */}
             <Route path="/progress" element={<Progress />} />
             {/* Exam Routes */}

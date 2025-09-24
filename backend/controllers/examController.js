@@ -39,211 +39,279 @@ const createExam = [
   },
 ];
 
-    // Submit exam attempt (student)
-const submitExam = async (req, res, next) => {
-  let examId;
+// Submit exam answers
+const submitExam = async (req, res) => {
   try {
-    examId = req.params.id;
-    const { answers, timeTaken } = req.body; // Array of answers [answer1, answer2, ...]
+    const { id } = req.params;
+    const { answers, timeTaken, sessionId } = req.body;
 
-    if (!isValidObjectId(examId)) {
-      const error = new Error('Invalid exam ID');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const exam = await Exam.findById(examId);
+    // Find the exam
+    const exam = await Exam.findById(id);
     if (!exam) {
-      const error = new Error('Exam not found');
-      error.statusCode = 404;
-      throw error;
+      return res.status(404).json({ message: 'Exam not found' });
     }
 
-    // Allow submission for live or ongoing exams
-    if (!['live', 'ongoing'].includes(exam.status)) {
-      const error = new Error('Exam is not available for submission');
-      error.statusCode = 400;
-      throw error;
+    // Get user (authenticated or anonymous)
+    let user = null;
+    if (req.user) {
+      user = req.user;
+    } else if (sessionId) {
+      // For anonymous users, create a temporary user record or use session tracking
+      user = { _id: `anonymous_${sessionId}`, name: 'Anonymous User' };
     }
 
-    // Check if student has already submitted this exam
-    const existingResult = exam.results.find(r => r.userId.toString() === req.user.id);
-    if (existingResult) {
-      const error = new Error('You have already submitted this exam');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    // Calculate score
+    // Calculate score and create detailed question results
     let score = 0;
-    let correctAnswers = 0;
-    const totalQuestions = exam.questions.length;
     const questionResults = [];
+    const totalQuestions = exam.questions.length;
 
-    exam.questions.forEach((q, index) => {
-      const isCorrect = answers && answers[index] && answers[index] === q.correctAnswer;
+    // Calculate average time per question
+    const avgTimePerQuestion = Math.floor(timeTaken / totalQuestions);
+
+    for (let i = 0; i < totalQuestions; i++) {
+      const question = exam.questions[i];
+      const userAnswer = answers[i] || '';
+      const isCorrect = userAnswer === question.correctAnswer;
+
       if (isCorrect) {
-        score += q.marks || 1;
-        correctAnswers++;
+        score += question.marks;
       }
+
+      // Generate explanation using Gemini AI
+      let explanation = '';
+      try {
+        const model = require('@google/generative-ai').GoogleGenerativeAI;
+        const genAI = new model(process.env.GEMINI_API_KEY);
+        const aiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+        const explanationPrompt = `Provide a brief explanation for this multiple choice question:
+
+Question: ${question.questionText}
+Correct Answer: ${question.correctAnswer}
+Options: ${question.options.join(', ')}
+
+Please provide a 1-2 sentence explanation of why ${question.correctAnswer} is the correct answer.`;
+
+        const explanationResult = await aiModel.generateContent(explanationPrompt);
+        explanation = explanationResult.response.text().trim();
+      } catch (error) {
+        console.error('Error generating explanation:', error);
+        explanation = 'Explanation not available at this time.';
+      }
+
+      // Determine difficulty based on question content (simple heuristic)
+      let difficulty = 'medium';
+      const questionText = question.questionText.toLowerCase();
+      if (questionText.includes('explain') || questionText.includes('describe') || questionText.includes('analyze')) {
+        difficulty = 'hard';
+      } else if (questionText.includes('what') || questionText.includes('which') || questionText.includes('identify')) {
+        difficulty = 'easy';
+      }
+
       questionResults.push({
-        questionIndex: index,
-        userAnswer: answers[index] || null,
-        correctAnswer: q.correctAnswer,
         isCorrect,
-        marks: isCorrect ? (q.marks || 1) : 0
+        userAnswer,
+        correctAnswer: question.correctAnswer,
+        marks: question.marks,
+        difficulty,
+        explanation,
+        timeSpent: avgTimePerQuestion // Distribute total time across questions
       });
-    });
+    }
 
+    // Calculate percentage
     const percentage = Math.round((score / totalQuestions) * 100);
-    const examStatus = percentage >= 50 ? 'passed' : 'failed'; // 50% pass threshold
 
-    // Get user and update exam history
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      const error = new Error('User not found');
-      error.statusCode = 404;
-      throw error;
-    }
+    // Update exam results if user is authenticated
+    if (req.user) {
+      // Check if user already has results for this exam
+      const existingResultIndex = exam.results.findIndex(result =>
+        result.userId.toString() === req.user._id.toString()
+      );
 
-    // Prepare exam result for user history
-    const examResult = {
-      examId,
-      score,
-      totalQuestions,
-      correctAnswers,
-      percentage,
-      duration: exam.duration,
-      status: examStatus,
-      timeTaken: timeTaken || exam.duration * 60 // in seconds
-    };
+      const resultData = {
+        userId: req.user._id,
+        score: percentage,
+        submittedAt: new Date()
+      };
 
-    // Update user exam history
-    user.examHistory.push(examResult);
-    await user.updateExamStats();
-    await user.save();
+      if (existingResultIndex >= 0) {
+        // Update existing result
+        exam.results[existingResultIndex] = resultData;
+      } else {
+        // Add new result
+        exam.results.push(resultData);
+      }
 
-    // Update user progress and award badges/XP
-    let progress = await Progress.findOne({ user: req.user.id });
-    if (!progress) {
-      // Create progress entry if it doesn't exist
-      progress = new Progress({
-        user: req.user.id,
-        experiencePoints: 0,
-        currentLevel: 1
+      await exam.save();
+
+      // Update user progress and award XP
+      const progress = await Progress.findOne({ userId: req.user._id });
+      if (progress) {
+        // Award XP: 100 for attempt + 20 per correct question + 400 bonus if >80%
+        const correctAnswers = questionResults.filter(q => q.isCorrect).length;
+        let xpEarned = 100; // Base XP for attempt
+        xpEarned += correctAnswers * 20; // 20 XP per correct question
+        if (percentage > 80) {
+          xpEarned += 400; // Bonus for >80% score
+        }
+
+        progress.experiencePoints += xpEarned;
+
+        // Check for badges
+        const newBadges = [];
+
+        // Perfect score badge
+        if (percentage === 100 && !progress.badges.some(badge => badge.name === 'Perfect Score')) {
+          newBadges.push({
+            name: 'Perfect Score',
+            description: 'Achieved 100% on an exam',
+            icon: '🏆',
+            xpReward: 20
+          });
+          progress.experiencePoints += 20;
+        }
+
+        // High scorer badge
+        if (percentage >= 90 && !progress.badges.some(badge => badge.name === 'High Scorer')) {
+          newBadges.push({
+            name: 'High Scorer',
+            description: 'Scored 90% or above on an exam',
+            icon: '⭐',
+            xpReward: 15
+          });
+          progress.experiencePoints += 15;
+        }
+
+        // First exam badge
+        if (progress.examsCompleted === 0) {
+          newBadges.push({
+            name: 'First Steps',
+            description: 'Completed your first exam',
+            icon: '🎓',
+            xpReward: 10
+          });
+          progress.experiencePoints += 10;
+        }
+
+        // Add new badges to progress
+        progress.badges.push(...newBadges);
+        progress.examsCompleted += 1;
+
+        await progress.save();
+
+        res.json({
+          score: percentage,
+          totalQuestions,
+          correctAnswers: questionResults.filter(q => q.isCorrect).length,
+          questionResults,
+          timeTaken,
+          averageTimePerQuestion: avgTimePerQuestion,
+          xpEarned,
+          newBadges
+        });
+      } else {
+        // Create progress record if it doesn't exist
+        const correctAnswers = questionResults.filter(q => q.isCorrect).length;
+        let xpEarned = 100; // Base XP for attempt
+        xpEarned += correctAnswers * 20; // 20 XP per correct question
+        if (percentage > 80) {
+          xpEarned += 400; // Bonus for >80% score
+        }
+
+        const newProgress = new Progress({
+          userId: req.user._id,
+          experiencePoints: xpEarned,
+          examsCompleted: 1,
+          badges: [{
+            name: 'First Steps',
+            description: 'Completed your first exam',
+            icon: '🎓',
+            xpReward: 10
+          }]
+        });
+
+        await newProgress.save();
+
+        res.json({
+          score: percentage,
+          totalQuestions,
+          correctAnswers: questionResults.filter(q => q.isCorrect).length,
+          questionResults,
+          timeTaken,
+          averageTimePerQuestion: avgTimePerQuestion,
+          xpEarned,
+          newBadges: [{
+            name: 'First Steps',
+            description: 'Completed your first exam',
+            icon: '🎓',
+            xpReward: 10
+          }]
+        });
+      }
+    } else {
+      // For anonymous users, just return the results without saving
+      res.json({
+        score: percentage,
+        totalQuestions,
+        correctAnswers: questionResults.filter(q => q.isCorrect).length,
+        questionResults,
+        timeTaken,
+        averageTimePerQuestion: avgTimePerQuestion,
+        xpEarned: 0,
+        newBadges: []
       });
     }
-
-    // Update exam progress and award XP
-    const xpAwarded = progress.updateExamProgress(examResult);
-    
-    // Check for special badges
-    const badges = progress.constructor.getBadgeDefinitions();
-    
-    // Check for perfect score badge
-    if (percentage === 100 && !progress.badges.find(b => b.id === 'perfect-score')) {
-      progress.badges.push({
-        id: 'perfect-score',
-        name: badges['perfect-score'].name,
-        description: badges['perfect-score'].description,
-        category: badges['perfect-score'].category,
-        icon: badges['perfect-score'].icon,
-        xpReward: badges['perfect-score'].xpReward
-      });
-      progress.experiencePoints += badges['perfect-score'].xpReward;
-    }
-    
-    // Check for speed demon badge
-    if (timeTaken && timeTaken < (exam.duration * 60 * 0.5) && 
-        !progress.badges.find(b => b.id === 'speed-demon')) {
-      progress.badges.push({
-        id: 'speed-demon',
-        name: badges['speed-demon'].name,
-        description: badges['speed-demon'].description,
-        category: badges['speed-demon'].category,
-        icon: badges['speed-demon'].icon,
-        xpReward: badges['speed-demon'].xpReward
-      });
-      progress.experiencePoints += badges['speed-demon'].xpReward;
-    }
-
-    // Check and award other badges
-    const newBadges = progress.checkAndAwardBadges();
-    await progress.save();    // Update exam results
-    exam.results.push({
-      userId: req.user.id,
-      score,
-      submittedAt: new Date(),
-      answers: answers
-    });
-
-    // Keep exam status as ongoing if there are other students taking it
-    // Only change to completed when admin manually completes it
-    await exam.save();
-
-    logger.info(`Exam submitted: ${exam.title} by user ${user.email} - Score: ${score}/${totalQuestions}`);
-    
-    res.json({
-      success: true,
-      score,
-      totalQuestions,
-      correctAnswers,
-      percentage,
-      status: examStatus,
-      xpAwarded,
-      newBadges,
-      questionResults,
-      timeTaken
-    });
   } catch (error) {
-    logger.error(`Submit exam error: ${error.message}`, { examId, userId: req.user.id });
-    next(error);
+    console.error('Error submitting exam:', error);
+    res.status(500).json({ message: 'Error submitting exam', error: error.message });
   }
 };
 
-// Get all exams (students see available exams, admin sees all)
+// Get all exams (public access - shows all available exams)
 const getAllExams = async (req, res, next) => {
   try {
-    let exams;
-    if (req.user.role === 'admin') {
-      // Admin sees all exams
-      exams = await Exam.find()
-        .populate('participants', 'email profile.name')
-        .populate('invigilator', 'email profile.name')
-        .sort({ scheduledDate: -1 });
-    } else if (req.user.role === 'tutor') {
-      // Tutors see their own exams + all scheduled/live/ongoing exams
-      exams = await Exam.find({
-        $or: [
-          { invigilator: req.user.id }, // Their own created exams
-          { status: { $in: ['scheduled', 'live', 'ongoing'] } }
-        ]
-      })
-        .populate('participants', 'email profile.name')
-        .populate('invigilator', 'email profile.name')
-        .sort({ scheduledDate: -1 });
-    } else {
-      // Students see exams they're participating in or all scheduled/live/ongoing exams
-      exams = await Exam.find({
+    // Show all scheduled, live, and ongoing exams for public access
+    const exams = await Exam.find({
+      status: { $in: ['scheduled', 'live', 'ongoing'] }
+    })
+      .populate('participants', 'email profile.name')
+      .populate('invigilator', 'email profile.name')
+      .sort({ scheduledDate: -1 });
+
+    // For authenticated users, also include their completed exams
+    if (req.user) {
+      const userExams = await Exam.find({
         $or: [
           { participants: req.user.id },
-          { status: { $in: ['scheduled', 'live', 'ongoing'] } }
+          { results: { $elemMatch: { userId: req.user.id } } }
         ]
       })
         .populate('participants', 'email profile.name')
         .populate('invigilator', 'email profile.name')
         .sort({ scheduledDate: -1 });
-    }
 
-    logger.info(`Exams fetched by user ${req.user.id}`);
-    res.json({ success: true, exams });
+      // Merge and deduplicate
+      const examMap = new Map();
+      [...exams, ...userExams].forEach(exam => {
+        examMap.set(exam._id.toString(), exam);
+      });
+
+      const allExams = Array.from(examMap.values());
+      logger.info(`Exams fetched for user ${req.user.id}`);
+      res.json({ success: true, exams: allExams });
+    } else {
+      // Public access - only show available exams
+      logger.info('Exams fetched for public access');
+      res.json({ success: true, exams });
+    }
   } catch (error) {
-    logger.error(`Fetch exams error: ${error.message}`, { userId: req.user.id });
+    logger.error(`Fetch exams error: ${error.message}`);
     next(error);
   }
 };
 
-// Get exam details (admin sees all, students see own results)
+// Get exam details (public access for viewing exam information)
 const getExam = async (req, res, next) => {
   let examId;
   try {
@@ -263,14 +331,18 @@ const getExam = async (req, res, next) => {
       throw error;
     }
 
-    // Admin sees full results, students see only their submission
+    // For public access, return exam without sensitive information
     let response = { success: true, exam };
-    if (req.user.role !== 'admin') {
+
+    // If user is authenticated, include their results
+    if (req.user) {
       const userResult = exam.results.find(r => r.userId.toString() === req.user.id);
-      response = { success: true, exam: { ...exam.toObject(), results: userResult || null } };
+      if (userResult) {
+        response.exam = { ...exam.toObject(), userResult };
+      }
     }
 
-    logger.info(`Exam fetched: ${exam.title} by user ${req.user.id}`);
+    logger.info(`Exam fetched: ${exam.title}`);
     res.json(response);
   } catch (error) {
     logger.error(`Fetch exam error: ${error.message}`, { examId });
@@ -278,7 +350,7 @@ const getExam = async (req, res, next) => {
   }
 };
 
-// Start exam (student) - changes status from live to ongoing, or allows resuming ongoing exams
+// Start exam (public access - allows anonymous users to start exams)
 const startExam = async (req, res, next) => {
   let examId;
   try {
@@ -304,25 +376,28 @@ const startExam = async (req, res, next) => {
       throw error;
     }
 
-    // If exam is live, change to ongoing when student starts
+    // For authenticated users, check if they have already submitted
+    if (req.user) {
+      const existingResult = exam.results.find(r => r.userId.toString() === req.user.id);
+      if (existingResult) {
+        const error = new Error('You have already submitted this exam');
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
+    // If exam is live, change to ongoing when user starts
     if (exam.status === 'live') {
       exam.status = 'ongoing';
       exam.updatedAt = new Date();
       await exam.save();
     }
 
-    // Check if student has already submitted this exam
-    const existingResult = exam.results.find(r => r.userId.toString() === req.user.id);
-    if (existingResult) {
-      const error = new Error('You have already submitted this exam');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    logger.info(`Exam ${exam.status === 'ongoing' ? 'resumed' : 'started'}: ${exam.title} by user ${req.user.id}`);
+    const userId = req.user ? req.user.id : 'anonymous';
+    logger.info(`Exam ${exam.status === 'ongoing' ? 'resumed' : 'started'}: ${exam.title} by user ${userId}`);
     res.json({ success: true, exam, resumed: exam.status === 'ongoing' });
   } catch (error) {
-    logger.error(`Start exam error: ${error.message}`, { examId, userId: req.user.id });
+    logger.error(`Start exam error: ${error.message}`, { examId });
     next(error);
   }
 };
@@ -424,7 +499,7 @@ const cleanupAbandonedExams = async (req, res, next) => {
   }
 };
 
-// Get exam status for a specific user
+// Get exam status for a specific user (public access)
 const getExamStatusForUser = async (req, res, next) => {
   let examId;
   try {
@@ -443,9 +518,20 @@ const getExamStatusForUser = async (req, res, next) => {
       throw error;
     }
 
-    // Check if user has already submitted
-    const existingResult = exam.results.find(r => r.userId.toString() === req.user.id);
-    const hasSubmitted = !!existingResult;
+    // Check submission status
+    let hasSubmitted = false;
+    let submittedAt = null;
+    let score = null;
+
+    if (req.user) {
+      // For authenticated users, check by user ID
+      const existingResult = exam.results.find(r => r.userId.toString() === req.user.id);
+      if (existingResult) {
+        hasSubmitted = true;
+        submittedAt = existingResult.submittedAt;
+        score = existingResult.score;
+      }
+    }
 
     // Check if exam can be started/resumed
     const canStart = ['live', 'ongoing'].includes(exam.status) && !hasSubmitted;
@@ -456,11 +542,11 @@ const getExamStatusForUser = async (req, res, next) => {
       status: exam.status,
       canStart,
       hasSubmitted,
-      submittedAt: existingResult?.submittedAt,
-      score: existingResult?.score
+      submittedAt,
+      score
     });
   } catch (error) {
-    logger.error(`Get exam status error: ${error.message}`, { examId, userId: req.user.id });
+    logger.error(`Get exam status error: ${error.message}`, { examId });
     next(error);
   }
 };

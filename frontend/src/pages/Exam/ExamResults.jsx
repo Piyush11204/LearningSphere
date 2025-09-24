@@ -18,7 +18,11 @@ import {
   AlertCircle,
   Lightbulb,
   Star,
-  Zap
+  Zap,
+  Gift,
+  Medal,
+  Flame,
+  Sparkles
 } from 'lucide-react';
 
 const ExamResults = () => {
@@ -28,11 +32,15 @@ const ExamResults = () => {
   const [exam, setExam] = useState(null);
   const [showDetailedBreakdown, setShowDetailedBreakdown] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [xpEarned, setXpEarned] = useState(0);
+  const [badgesEarned, setBadgesEarned] = useState([]);
 
   useEffect(() => {
     if (location.state) {
       setResults(location.state.results);
       setExam(location.state.exam);
+      setXpEarned(location.state.xpEarned || 0);
+      setBadgesEarned(location.state.newBadges || []);
     } else {
       // If no state, redirect back to exams
       navigate('/student/exams');
@@ -100,17 +108,6 @@ const ExamResults = () => {
     }
     return recommendations;
   };
-
-  const getGrade = (percentage) => {
-    if (percentage >= 90) return { grade: 'A+', color: 'text-green-600', bgColor: 'bg-green-100' };
-    if (percentage >= 80) return { grade: 'A', color: 'text-green-600', bgColor: 'bg-green-100' };
-    if (percentage >= 70) return { grade: 'B', color: 'text-blue-600', bgColor: 'bg-blue-100' };
-    if (percentage >= 60) return { grade: 'C', color: 'text-yellow-600', bgColor: 'bg-yellow-100' };
-    if (percentage >= 50) return { grade: 'D', color: 'text-orange-600', bgColor: 'bg-orange-100' };
-    return { grade: 'F', color: 'text-red-600', bgColor: 'bg-red-100' };
-  };
-
-  const gradeInfo = getGrade(percentage);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-8">
@@ -274,27 +271,70 @@ const ExamResults = () => {
 
                       {selectedQuestion === index && (
                         <div className="mt-4 pt-4 border-t border-slate-200">
-                          <p className="text-slate-700 mb-3">{exam.questions[index]?.questionText}</p>
-                          <div className="space-y-2">
-                            <div className="text-sm">
-                              <span className="font-medium text-slate-600">Your Answer: </span>
-                              <span className={result.isCorrect ? 'text-green-600' : 'text-red-600'}>
-                                {result.userAnswer || 'Not answered'}
-                              </span>
-                            </div>
-                            {!result.isCorrect && (
-                              <div className="text-sm">
-                                <span className="font-medium text-slate-600">Correct Answer: </span>
-                                <span className="text-green-600">{result.correctAnswer}</span>
-                              </div>
-                            )}
-                            {result.explanation && (
-                              <div className="text-sm mt-3 p-3 bg-blue-50 rounded-lg">
-                                <span className="font-medium text-blue-800">Explanation: </span>
-                                <span className="text-blue-700">{result.explanation}</span>
-                              </div>
-                            )}
+                          <div className="mb-4">
+                            <h5 className="font-semibold text-slate-800 mb-2">Question:</h5>
+                            <p className="text-slate-700 bg-slate-100 p-3 rounded-lg">{exam.questions[index]?.questionText}</p>
                           </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div className="space-y-2">
+                              <div className="text-sm">
+                                <span className="font-medium text-slate-600">Your Answer: </span>
+                                <span className={`font-semibold ${result.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                                  {result.userAnswer || 'Not answered'}
+                                </span>
+                              </div>
+                              {!result.isCorrect && (
+                                <div className="text-sm">
+                                  <span className="font-medium text-slate-600">Correct Answer: </span>
+                                  <span className="font-semibold text-green-600">{result.correctAnswer}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <div className="text-sm">
+                                <span className="font-medium text-slate-600">Difficulty: </span>
+                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                  result.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                                  result.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                  'bg-red-100 text-red-700'
+                                }`}>
+                                  {result.difficulty || 'medium'}
+                                </span>
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-medium text-slate-600">Time Spent: </span>
+                                <span className="text-slate-700">{result.timeSpent || avgTimePerQuestion}s</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {result.explanation && (
+                            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                              <div className="flex items-start">
+                                <Lightbulb className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="font-medium text-blue-800">Explanation: </span>
+                                  <span className="text-blue-700">{result.explanation}</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {!result.isCorrect && (
+                            <div className="mt-3 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                              <div className="flex items-start">
+                                <AlertCircle className="w-5 h-5 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="font-medium text-yellow-800">Learning Opportunity: </span>
+                                  <span className="text-yellow-700">
+                                    Review this topic in your study materials. Focus on understanding the underlying concepts rather than memorization.
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -323,6 +363,61 @@ const ExamResults = () => {
               </div>
             )}
           </div>
+
+          {/* Improvement Areas */}
+          {incorrectAnswers > 0 && (
+            <div className="border-t border-slate-200 pt-8 mt-8">
+              <h3 className="text-xl font-bold text-slate-800 mb-6">Areas for Improvement</h3>
+
+              <div className="bg-red-50 rounded-xl p-6 border border-red-200">
+                <div className="flex items-center mb-4">
+                  <AlertCircle className="w-6 h-6 text-red-600 mr-3" />
+                  <h4 className="text-lg font-semibold text-red-800">Focus Areas</h4>
+                </div>
+
+                <div className="space-y-4">
+                  {questionResults.filter(r => !r.isCorrect).slice(0, 5).map((result, index) => (
+                    <div key={index} className="bg-white/70 rounded-lg p-4 border border-red-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium text-red-800 mb-1">
+                            Question {questionResults.findIndex(r => r === result) + 1}
+                          </div>
+                          <div className="text-sm text-red-700 mb-2">
+                            {exam.questions[questionResults.findIndex(r => r === result)]?.questionText?.substring(0, 100)}...
+                          </div>
+                          <div className="text-xs text-red-600">
+                            <span className="font-medium">Your answer:</span> {result.userAnswer || 'Not answered'} |
+                            <span className="font-medium ml-2">Correct:</span> {result.correctAnswer}
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            result.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                            result.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {result.difficulty || 'medium'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 p-4 bg-red-100 rounded-lg border border-red-300">
+                  <h5 className="font-semibold text-red-800 mb-2">Study Recommendations:</h5>
+                  <ul className="text-sm text-red-700 space-y-1">
+                    <li>• Review the questions you got wrong and understand the correct reasoning</li>
+                    <li>• Practice similar questions in the topics you struggled with</li>
+                    <li>• Focus on understanding concepts rather than memorizing answers</li>
+                    <li>• Take practice tests to improve time management</li>
+                    <li>• Consider seeking help from tutors for difficult topics</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Performance Analysis & Recommendations */}
           <div className="border-t border-slate-200 pt-8 mt-8">
@@ -397,6 +492,80 @@ const ExamResults = () => {
             </div>
           </div>
         </div>
+
+        {/* XP and Badges Earned Section */}
+        {(xpEarned > 0 || badgesEarned.length > 0) && (
+          <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 rounded-2xl shadow-xl p-8 mb-8 border border-purple-200">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center px-6 py-3 bg-white/70 backdrop-blur-sm rounded-full text-sm font-medium mb-6 border border-purple-200 shadow-sm">
+                <Gift className="w-5 h-5 mr-2 text-purple-500" />
+                <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Rewards Earned
+                </span>
+              </div>
+
+              <h2 className="text-3xl font-bold mb-4 text-slate-800">
+                Congratulations! 🎉
+              </h2>
+              <p className="text-lg text-slate-600">You've earned rewards for your performance</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* XP Earned */}
+              {xpEarned > 0 && (
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                      <Zap className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-yellow-600 mb-2">+{xpEarned} XP</div>
+                    <div className="text-sm text-yellow-700">Experience Points Earned</div>
+                    <div className="text-xs text-yellow-600 mt-2">
+                      Keep learning to level up and unlock more rewards!
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Badges Earned */}
+              {badgesEarned.length > 0 && (
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+                  <div className="text-center mb-4">
+                    <Medal className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                    <h3 className="text-lg font-semibold text-green-800">New Badges Unlocked!</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {badgesEarned.map((badge, index) => (
+                      <div key={index} className="flex items-center p-3 bg-white/70 rounded-lg border border-green-200">
+                        <div className="text-2xl mr-3">{badge.icon}</div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-green-800">{badge.name}</div>
+                          <div className="text-sm text-green-600">{badge.description}</div>
+                          {badge.xpReward > 0 && (
+                            <div className="text-xs text-yellow-600 mt-1">+{badge.xpReward} XP bonus</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Achievement Message */}
+            <div className="text-center mt-6">
+              <div className="inline-block px-6 py-3 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full text-sm font-medium text-purple-800 border border-purple-200">
+                <Sparkles className="w-4 h-4 inline mr-2" />
+                {percentage >= 90 ? "Outstanding achievement! You're a star performer!" :
+                 percentage >= 80 ? "Excellent work! Keep up the amazing performance!" :
+                 percentage >= 70 ? "Great job! You're doing really well!" :
+                 "Good effort! Keep practicing to improve further!"}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

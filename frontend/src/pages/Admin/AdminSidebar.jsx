@@ -10,7 +10,8 @@ import {
   Shield,
   MessageSquare,
   TrendingUp,
-  Mail
+  Mail,
+  BookOpen
 } from 'lucide-react';
 
 const AdminSidebar = ({ isOpen, onClose }) => {
@@ -39,6 +40,11 @@ const AdminSidebar = ({ isOpen, onClose }) => {
       icon: Video
     },
     {
+      name: 'Exam Management',
+      path: '/admin/exams',
+      icon: BookOpen
+    },
+    {
       name: 'Create Exam',
       path: '/create-exam',
       icon: TrendingUp
@@ -48,26 +54,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
       path: '/admin/contacts',
       icon: Mail
     },
-    {
-      name: 'Analytics',
-      path: '/admin/analytics',
-      icon: BarChart3
-    },
-    {
-      name: 'Reviews',
-      path: '/admin/reviews',
-      icon: MessageSquare
-    },
-    {
-      name: 'Moderation',
-      path: '/admin/moderation',
-      icon: Shield
-    },
-    {
-      name: 'Settings',
-      path: '/admin/settings',
-      icon: Settings
-    }
+  
   ];
 
   const isActive = (path, exact = false) => {
@@ -89,7 +76,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:static lg:inset-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>

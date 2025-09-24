@@ -2,13 +2,14 @@ const User = require('../models/User');
 const Exam = require('../models/Exam');
 const { generateReport } = require('../services/geminiService');
 const Progress = require('../models/Progress');
+const mongoose = require('mongoose');
 
 // Generate student performance report (admin or self)
 const generateStudentReport = async (req, res, next) => {
   let userId;
   try {
     userId = req.params.userId || req.user.id; // Admin can specify user, students get own report
-    if (!isValidObjectId(userId)) {
+    if (!mongoose.isValidObjectId(userId)) {
       const error = new Error('Invalid user ID');
       error.statusCode = 400;
       throw error;
@@ -50,7 +51,7 @@ const generateExamReport = async (req, res, next) => {
   let examId;
   try {
     examId = req.params.examId;
-    if (!isValidObjectId(examId)) {
+    if (!mongoose.isValidObjectId(examId)) {
       const error = new Error('Invalid exam ID');
       error.statusCode = 400;
       throw error;

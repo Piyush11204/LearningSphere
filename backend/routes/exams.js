@@ -5,20 +5,20 @@ const roleCheck = require('../middleware/roleCheck');
 
 const router = express.Router();
 
-// Get all exams (authenticated users)
-router.get('/', auth, getAllExams);
+// Get all exams (public access for viewing)
+router.get('/', getAllExams);
 
 // Create exam (admin/tutor, with Gemini AI questions)
 router.post('/', auth, roleCheck(['admin', 'tutor']), createExam);
 
-// Submit exam attempt (student)
-router.post('/:id/submit', auth, roleCheck('student'), submitExam);
+// Submit exam attempt (public access for taking exams)
+router.post('/:id/submit', submitExam);
 
-// Start exam (student) - changes status from live to ongoing
-router.post('/:id/start', auth, roleCheck('student'), startExam);
+// Start exam (public access for taking exams)
+router.post('/:id/start', startExam);
 
-// Get exam status for user (student)
-router.get('/:id/status', auth, roleCheck('student'), getExamStatusForUser);
+// Get exam status for user (public access)
+router.get('/:id/status', getExamStatusForUser);
 
 // Update exam status (admin/tutor)
 router.put('/:id/status', auth, roleCheck(['admin', 'tutor']), updateExamStatus);
@@ -26,7 +26,7 @@ router.put('/:id/status', auth, roleCheck(['admin', 'tutor']), updateExamStatus)
 // Cleanup abandoned exams (admin/tutor)
 router.post('/cleanup/abandoned', auth, roleCheck(['admin', 'tutor']), cleanupAbandonedExams);
 
-// Get exam details (admin sees all, students see own results)
-router.get('/:id', auth, getExam);
+// Get exam details (public access for viewing)
+router.get('/:id', getExam);
 
 module.exports = router;

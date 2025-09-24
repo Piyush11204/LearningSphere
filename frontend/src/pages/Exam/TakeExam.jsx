@@ -37,35 +37,18 @@ const TakeExam = () => {
   useEffect(() => {
     const fetchExam = async () => {
       try {
+        // Try to get token for authenticated users, but allow public access
         const token = localStorage.getItem('token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        // First check exam status for this user
-        const statusRes = await axios.get(`${API_URLS.EXAMS}/${id}/status`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (statusRes.data.hasSubmitted) {
-          toast.error('You have already submitted this exam');
-          navigate('/student/exams');
-          return;
-        }
-
-        if (!statusRes.data.canStart) {
-          toast.error('This exam is not available for you to take');
-          navigate('/student/exams');
-          return;
-        }
-
-        // Now fetch exam details
-        const res = await axios.get(`${API_URLS.EXAMS}/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // For public access, we can fetch exam details without status check
+        const res = await axios.get(`${API_URLS.EXAMS}/${id}`, { headers });
 
         if (res.data.exam) {
           setExam(res.data.exam);
           setTimeLeft(res.data.exam.duration * 60); // Convert minutes to seconds
 
-          // Check if there's saved progress for this exam
+          // Check if there's saved progress for this exam (works for all users)
           const savedProgress = localStorage.getItem(`exam_${id}_progress`);
           if (savedProgress) {
             const progress = JSON.parse(savedProgress);
@@ -322,9 +305,9 @@ const TakeExam = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post(`${API_URLS.EXAMS}/${id}/start`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const res = await axios.post(`${API_URLS.EXAMS}/${id}/start`, {}, { headers });
 
       setExamStarted(true);
 
@@ -346,15 +329,30 @@ const TakeExam = () => {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      // Generate session ID for anonymous users
+      const sessionId = localStorage.getItem('exam_session_id') ||
+        `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      if (!token) {
+        localStorage.setItem('exam_session_id', sessionId);
+      }
 
       // Convert answers object to array format expected by backend
       const answersArray = Object.values(answers);
 
-      const res = await axios.post(`${API_URLS.EXAMS}/${id}/submit`, {
-        answers: answersArray
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const submitData = {
+        answers: answersArray,
+        timeTaken: exam.duration * 60 - timeLeft
+      };
+
+      // Add session ID for anonymous users
+      if (!token) {
+        submitData.sessionId = sessionId;
+      }
+
+      const res = await axios.post(`${API_URLS.EXAMS}/${id}/submit`, submitData, { headers });
 
       // Exit fullscreen when exam is submitted
       if (isFullscreen) {
@@ -376,7 +374,7 @@ const TakeExam = () => {
       toast.error(error.response?.data?.message || 'Failed to submit exam');
       setIsSubmitting(false);
     }
-  }, [isSubmitting, answers, id, exam, navigate, isFullscreen, exitFullscreen]);
+  }, [isSubmitting, answers, id, exam, navigate, isFullscreen, exitFullscreen, timeLeft]);
 
   // Timer effect
   useEffect(() => {
@@ -612,9 +610,9 @@ const TakeExam = () => {
 
       // Now start the exam since fullscreen is confirmed
       const token = localStorage.getItem('token');
-      const res = await axios.post(`${API_URLS.EXAMS}/${id}/start`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const res = await axios.post(`${API_URLS.EXAMS}/${id}/start`, {}, { headers });
 
       setExamStarted(true);
 
@@ -721,9 +719,9 @@ const TakeExam = () => {
                           setIsStartingExam(true);
                           try {
                             const token = localStorage.getItem('token');
-                            const res = await axios.post(`${API_URLS.EXAMS}/${id}/start`, {}, {
-                              headers: { Authorization: `Bearer ${token}` },
-                            });
+                            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+                            const res = await axios.post(`${API_URLS.EXAMS}/${id}/start`, {}, { headers });
                             setExamStarted(true);
                             if (res.data.resumed) {
                               toast.info('Exam resumed! Your previous answers have been restored.');
@@ -772,6 +770,41 @@ const TakeExam = () => {
   const currentQ = exam.questions[currentQuestion];
   const answeredQuestions = Object.values(answers).filter(answer => answer !== '').length;
 
+  // Only show exam content if in fullscreen mode
+  if (!isFullscreen) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center p-8">
+        <div className="max-w-md mx-auto text-center">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <AlertTriangle className="w-16 h-16 text-red-600 mx-auto mb-6" />
+            <h1 className="text-2xl font-bold text-slate-800 mb-4">Fullscreen Required</h1>
+            <p className="text-slate-600 mb-6">
+              This exam can only be taken in fullscreen mode for security and integrity purposes.
+            </p>
+            
+            <div className="space-y-4">
+              <button
+                onClick={enterFullscreen}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 flex items-center justify-center"
+              >
+                <Maximize className="w-5 h-5 mr-2" />
+                Enter Fullscreen Mode
+              </button>
+              
+              <div className="text-sm text-slate-500">
+                <p className="mb-2">Alternative methods:</p>
+                <div className="space-y-1">
+                  <div>• Press <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">F11</kbd> on your keyboard</div>
+                  <div>• Click the fullscreen button (⛶) in your browser</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div ref={examContainerRef} className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       {/* Fullscreen Warning Overlay */}
@@ -788,6 +821,7 @@ const TakeExam = () => {
                 : `Final warning! You exited fullscreen mode 3 times. The exam will continue in fullscreen in 5 seconds.`
               }
             </p>
+            
             <div className="mb-4">
               <div className="text-sm text-slate-500">
                 {fullscreenWarningCount < 3
@@ -796,6 +830,15 @@ const TakeExam = () => {
                 }
               </div>
             </div>
+            
+            <button
+              onClick={enterFullscreen}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all duration-200 mb-4 flex items-center justify-center"
+            >
+              <Maximize className="w-4 h-4 mr-2" />
+              Enter Fullscreen Now
+            </button>
+            
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           </div>
         </div>
