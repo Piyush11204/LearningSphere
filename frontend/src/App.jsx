@@ -25,6 +25,11 @@ import TutorEarnings from './pages/Tutor/TutorEarnings';
 import TutorSchedule from './pages/Tutor/TutorSchedule';
 // Progress imports
 import Progress from './pages/Progress';
+// Exam imports
+import Exams from './pages/Exams/Exams';
+import CreateExam from './pages/Exams/CreateExam';
+import TakeExam from './pages/Exams/TakeExam';
+import ExamProgress from './pages/Progress/ExamProgress';
 import { useState, useEffect } from 'react';
 
 function App() {
@@ -85,8 +90,14 @@ function App() {
             <Route path="/tutor/students" element={<TutorStudents />} />
             <Route path="/tutor/earnings" element={<TutorEarnings />} />
             <Route path="/tutor/schedule" element={<TutorSchedule />} />
+            <Route path="/tutor/create-exam" element={<CreateExam />} />
+            <Route path="/create-exam" element={<CreateExam />} />
             {/* Progress Routes */}
             <Route path="/progress" element={<Progress />} />
+            {/* Exam Routes */}
+            <Route path="/exams" element={<Exams />} />
+            <Route path="/exam/:examId" element={<TakeExam />} />
+            <Route path="/progress/exams" element={<ExamProgress />} />
           </Routes>
         </main>
         <Footer />

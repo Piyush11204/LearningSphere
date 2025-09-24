@@ -211,6 +211,17 @@ const getAllExams = async (req, res, next) => {
         .populate('participants', 'email profile.name')
         .populate('invigilator', 'email profile.name')
         .sort({ scheduledDate: -1 });
+    } else if (req.user.role === 'tutor') {
+      // Tutors see their own exams + all scheduled/live/ongoing exams
+      exams = await Exam.find({
+        $or: [
+          { invigilator: req.user.id }, // Their own created exams
+          { status: { $in: ['scheduled', 'live', 'ongoing'] } }
+        ]
+      })
+        .populate('participants', 'email profile.name')
+        .populate('invigilator', 'email profile.name')
+        .sort({ scheduledDate: -1 });
     } else {
       // Students see exams they're participating in or all scheduled/live/ongoing exams
       exams = await Exam.find({
@@ -331,15 +342,22 @@ const updateExamStatus = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
+    // First find the exam to check permissions
+    const existingExam = await Exam.findById(id);
+    if (!existingExam) {
+      return res.status(404).json({ success: false, message: 'Exam not found' });
+    }
+
+    // Check if tutor is trying to update someone else's exam
+    if (req.user.role === 'tutor' && existingExam.invigilator.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Access denied: can only update your own exams' });
+    }
+
     const exam = await Exam.findByIdAndUpdate(
       id,
       { status, updatedAt: new Date() },
       { new: true }
     );
-
-    if (!exam) {
-      return res.status(404).json({ success: false, message: 'Exam not found' });
-    }
 
     logger.info(`Exam status updated: ${exam.title} to ${status}`);
     res.json({ success: true, exam });

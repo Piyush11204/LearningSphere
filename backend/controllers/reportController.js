@@ -56,10 +56,17 @@ const generateExamReport = async (req, res, next) => {
       throw error;
     }
 
-    const exam = await Exam.findById(examId).populate('participants', 'username').populate('results.userId', 'username');
+    const exam = await Exam.findById(examId).populate('participants', 'profile.name').populate('results.userId', 'profile.name');
     if (!exam) {
       const error = new Error('Exam not found');
       error.statusCode = 404;
+      throw error;
+    }
+
+    // Check if tutor is trying to access someone else's exam report
+    if (req.user.role === 'tutor' && exam.invigilator.toString() !== req.user.id) {
+      const error = new Error('Access denied: can only generate reports for your own exams');
+      error.statusCode = 403;
       throw error;
     }
 

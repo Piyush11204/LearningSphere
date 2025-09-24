@@ -47,7 +47,7 @@ const CreateExam = () => {
           <div className="px-4 sm:px-0">
             <h3 className="text-lg font-medium leading-6 text-gray-900">Create New Exam</h3>
             <p className="mt-1 text-sm text-gray-600">
-              Create an AI-powered exam with automatically generated questions using Gemini AI.
+              Create an AI-powered exam with automatically generated questions using Gemini AI. Available for tutors and administrators.
             </p>
           </div>
         </div>

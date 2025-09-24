@@ -55,6 +55,12 @@ const TutorSidebar = () => {
       description: 'Start Live Session'
     },
     {
+      name: 'Create Exam',
+      path: '/tutor/create-exam',
+      icon: Clock,
+      description: 'AI-Powered Exams'
+    },
+    {
       name: 'Schedule',
       path: '/tutor/schedule',
       icon: Calendar,

@@ -59,10 +59,10 @@ const Exams = () => {
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-semibold text-gray-900">Exams</h1>
           <p className="mt-2 text-sm text-gray-700">
-            {userRole === 'admin' ? 'Manage all exams in the system' : 'View and take available exams'}
+            {(userRole === 'admin' || userRole === 'tutor') ? 'Manage and create exams' : 'View and take available exams'}
           </p>
         </div>
-        {userRole === 'admin' && (
+        {(userRole === 'admin' || userRole === 'tutor') && (
           <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
             <button
               onClick={() => navigate('/create-exam')}
@@ -82,7 +82,7 @@ const Exams = () => {
                 <div className="text-center py-12">
                   <h3 className="mt-2 text-sm font-medium text-gray-900">No exams available</h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    {userRole === 'admin' ? 'Get started by creating a new exam.' : 'Check back later for new exams.'}
+                    {(userRole === 'admin' || userRole === 'tutor') ? 'Get started by creating a new exam.' : 'Check back later for new exams.'}
                   </p>
                 </div>
               ) : (
@@ -138,7 +138,7 @@ const Exams = () => {
                               Start Exam
                             </button>
                           )}
-                          {userRole === 'admin' && (
+                          {(userRole === 'admin' || userRole === 'tutor') && (
                             <>
                               <button
                                 onClick={() => navigate(`/exam/${exam._id}`)}

@@ -39,6 +39,11 @@ const AdminSidebar = ({ isOpen, onClose }) => {
       icon: Video
     },
     {
+      name: 'Create Exam',
+      path: '/create-exam',
+      icon: TrendingUp
+    },
+    {
       name: 'Contact Management',
       path: '/admin/contacts',
       icon: Mail
