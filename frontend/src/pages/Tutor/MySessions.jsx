@@ -101,18 +101,30 @@ const MySessions = () => {
       const token = localStorage.getItem('token');
       const endpoint = isLiveSession ? 'livesessions' : 'sessions';
 
+      console.log('Joining session:', { sessionId, isLiveSession, endpoint });
+
       const response = await axios.post(`http://localhost:5000/api/${endpoint}/${sessionId}/join`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      console.log('Join response:', response.data);
+
       if (response.data.meetingLink) {
-        window.open(response.data.meetingLink, '_blank', 'noopener,noreferrer');
+        // Navigate to video call page with the meeting link
+        navigate(`/video-call/${sessionId}`, { 
+          state: { 
+            meetingLink: response.data.meetingLink,
+            sessionDetails: response.data.sessionDetails,
+            isTutor: response.data.isTutor
+          }
+        });
       } else {
-        navigate(`/video-call/${response.data.meetingLink || sessionId}`);
+        // Fallback to session ID
+        navigate(`/video-call/${sessionId}`);
       }
     } catch (error) {
       console.error('Error joining session:', error);
-      alert('Failed to join session');
+      alert(error.response?.data?.msg || 'Failed to join session. Please check your permissions.');
     }
   };
 
@@ -326,7 +338,7 @@ const MySessions = () => {
                         </span>
                         {session.sessionId && (
                           <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 border border-purple-200">
-                            Live Session
+                            One-on-One Live
                           </span>
                         )}
                       </div>
@@ -362,8 +374,11 @@ const MySessions = () => {
                     <div className="flex items-center text-sm text-gray-600">
                       <Users className="w-4 h-4 mr-2" />
                       <span>
-                        {session.learners?.length || session.participants?.length || 0} participants
-                        {session.maxParticipants && ` / ${session.maxParticipants}`}
+                        {session.sessionId ? (
+                          session.invitedStudentEmail ? `One-on-one with ${session.invitedStudentEmail} (2 people max)` : 'One-on-one session (2 people max)'
+                        ) : (
+                          `${session.learners?.length || 0} participants${session.maxParticipants ? ` / ${session.maxParticipants}` : ''}`
+                        )}
                       </span>
                     </div>
 
@@ -396,9 +411,9 @@ const MySessions = () => {
                         Details
                       </button>
 
-                      {session.isActive && (
+                      {session.sessionId && session.isActive && (
                         <button
-                          onClick={() => handleJoinSession(session.sessionId || session._id, !!session.sessionId)}
+                          onClick={() => handleJoinSession(session._id, true)}
                           className="flex items-center px-3 py-2 text-sm text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
                         >
                           <Play className="w-4 h-4 mr-2" />
@@ -406,13 +421,35 @@ const MySessions = () => {
                         </button>
                       )}
 
-                      {!session.isActive && session.scheduledTime && new Date(session.scheduledTime) <= new Date() && session.sessionId && (
+                      {session.sessionId && !session.isActive && (
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleStartLiveSession(session._id)}
+                            className="flex items-center px-3 py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            Start Session
+                          </button>
+                          <button
+                            onClick={() => {
+                              console.log('Joining session as tutor:', session);
+                              handleJoinSession(session._id, true);
+                            }}
+                            className="flex items-center px-3 py-2 text-sm text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
+                          >
+                            <Video className="w-4 h-4 mr-2" />
+                            Join Now
+                          </button>
+                        </div>
+                      )}
+
+                      {!session.sessionId && (
                         <button
-                          onClick={() => handleStartLiveSession(session._id)}
-                          className="flex items-center px-3 py-2 text-sm text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
+                          onClick={() => handleJoinSession(session._id, false)}
+                          className="flex items-center px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
                         >
-                          <Play className="w-4 h-4 mr-2" />
-                          Start Live
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Session
                         </button>
                       )}
                     </div>
@@ -528,27 +565,50 @@ const MySessions = () => {
 
                 <div>
                   <h5 className="text-sm font-medium text-gray-700 mb-3">
-                    Participants ({selectedSession.learners?.length || selectedSession.participants?.length || 0})
+                    {selectedSession.sessionId ? 'Student Information' : `Participants (${selectedSession.learners?.length || 0})`}
                   </h5>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {(selectedSession.learners || selectedSession.participants || []).map((participant, idx) => (
-                      <div key={idx} className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
-                        <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-medium">
-                            {participant.profile?.name?.charAt(0) || participant.userId?.profile?.name?.charAt(0) || 'P'}
-                          </span>
+                    {selectedSession.sessionId ? (
+                      // One-on-one live session
+                      selectedSession.invitedStudentEmail ? (
+                        <div className="flex items-center space-x-3 p-2 bg-blue-50 rounded-lg">
+                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-medium">
+                              {selectedSession.invitedStudentEmail.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">Invited Student</p>
+                            <p className="text-xs text-gray-500">{selectedSession.invitedStudentEmail}</p>
+                          </div>
+                          <span className="text-xs text-blue-600 font-medium">One-on-One</span>
                         </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">
-                            {participant.profile?.name || participant.userId?.profile?.name || 'Unknown Participant'}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {participant.email || participant.userId?.email}
-                          </p>
-                        </div>
-                      </div>
-                    )) || (
-                      <p className="text-sm text-gray-500">No participants yet</p>
+                      ) : (
+                        <p className="text-sm text-gray-500">No student invited yet</p>
+                      )
+                    ) : (
+                      // Regular session
+                      (selectedSession.learners || []).length > 0 ? (
+                        selectedSession.learners.map((participant, idx) => (
+                          <div key={idx} className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
+                            <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs font-medium">
+                                {participant.profile?.name?.charAt(0) || 'P'}
+                              </span>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">
+                                {participant.profile?.name || 'Unknown Participant'}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {participant.email}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-500">No participants yet</p>
+                      )
                     )}
                   </div>
                 </div>

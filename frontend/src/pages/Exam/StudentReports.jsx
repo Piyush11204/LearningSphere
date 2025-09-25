@@ -92,9 +92,34 @@ const StudentReports = () => {
           const progressRes = await axios.get(`${API_URLS.PROGRESS}/user/${res.data.user._id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setUserProgress(progressRes.data.progress);
+          setUserProgress(progressRes.data);
+          console.log('User progress data:', progressRes.data);
         } catch (progressError) {
           console.error('Error fetching progress:', progressError);
+          // If progress not found, try to create it
+          try {
+            await axios.post(`${API_URLS.PROGRESS}`,
+              { userId: res.data.user._id },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            // Try fetching again after creation
+            const progressRes = await axios.get(`${API_URLS.PROGRESS}/user/${res.data.user._id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            setUserProgress(progressRes.data);
+            console.log('Created and fetched user progress data:', progressRes.data);
+          } catch (createError) {
+            console.error('Error creating progress:', createError);
+            // Set default progress data
+            setUserProgress({
+              currentLevel: 1,
+              experiencePoints: 0,
+              sessionsCompleted: 0,
+              liveSessionsAttended: 0,
+              totalHours: 0,
+              badges: []
+            });
+          }
         }
       } catch (error) {
         console.error('Error:', error.response?.data?.message || error.message);
@@ -138,7 +163,17 @@ const StudentReports = () => {
     // Add date - use report generation date instead of current date
     doc.setFontSize(12);
     doc.setTextColor(107, 114, 128); // Gray color
-    const displayDate = reportDate ? reportDate.toLocaleDateString() : new Date().toLocaleDateString();
+    const displayDate = reportDate ?
+      new Date(reportDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }) :
+      new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
     doc.text(`Generated on: ${displayDate}`, 20, 55);
 
     let yPosition = 75;

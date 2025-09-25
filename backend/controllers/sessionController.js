@@ -1,4 +1,6 @@
+const mongoose = require('mongoose');
 const Session = require('../models/Session');
+const { sendLiveSessionInvitation, sendLiveSessionConfirmation } = require('../utils/emailTemplates');
 const LiveSession = require('../models/LiveSession');
 const User = require('../models/User');
 const Progress = require('../models/Progress');
@@ -63,7 +65,7 @@ exports.createSession = async (req, res) => {
 // Create live session
 exports.createLiveSession = async (req, res) => {
   try {
-    const { title, description, startTime, endTime, maxParticipants } = req.body;
+    const { title, description, startTime, endTime, studentEmail } = req.body;
     const tutor = req.user.id;
 
     // Validate tutor
@@ -71,24 +73,82 @@ exports.createLiveSession = async (req, res) => {
       return res.status(403).json({ msg: 'Must be in tutor mode to create live session' });
     }
 
-    const liveSession = new LiveSession({
+    // Validate student email
+    if (!studentEmail) {
+      return res.status(400).json({ msg: 'Student email is required for one-on-one sessions' });
+    }
+
+    // Find student by email
+    const student = await User.findOne({ email: studentEmail });
+    if (!student) {
+      return res.status(400).json({ msg: 'Student not found with this email address' });
+    }
+
+    // Check if student is not the tutor
+    if (student._id.toString() === req.user.id.toString()) {
+      return res.status(400).json({ msg: 'Cannot create session with yourself' });
+    }
+
+    console.log('Tutor ID:', req.user.id);
+    console.log('Student ID:', student._id);
+
+    // Create session data object
+    const sessionData = {
       title,
       description,
-      tutor,
-      startTime: new Date(startTime),
-      endTime: new Date(endTime),
-      maxParticipants: maxParticipants || 20
-    });
+      tutor: new mongoose.Types.ObjectId(req.user.id), // Ensure proper ObjectId format
+      maxParticipants: 2, // Tutor + 1 student for one-on-one session
+      invitedStudent: student._id,
+      invitedStudentEmail: studentEmail,
+      status: 'live', // Make sessions live/active by default
+      isActive: true, // Make sessions active immediately
+      participants: [req.user.id, student._id] // Add both tutor and student as participants immediately
+    };
+
+    // Add dates only if provided
+    if (startTime) {
+      sessionData.startTime = new Date(startTime);
+    }
+    if (endTime) {
+      sessionData.endTime = new Date(endTime);
+    }
+
+    console.log('Session data to save:', sessionData);
+
+    const liveSession = new LiveSession(sessionData);
     await liveSession.save();
 
-    // Send reminder emails
-    const reminderTime = new Date(liveSession.startTime.getTime() - 30 * 60 * 1000);  // 30 min before
-    setTimeout(async () => {
-      const tutorUser = await User.findById(req.user.id).select('email profile.name');
-      await sendSessionReminder(tutorUser.email, liveSession, tutorUser.profile?.name || 'You');
-    }, reminderTime - Date.now());
+    // Send invitation email to student
+    const tutorUser = await User.findById(req.user.id).select('email profile.name');
+    const studentUser = await User.findById(student._id).select('profile.name');
+    const sessionDetails = {
+      title: liveSession.title,
+      description: liveSession.description,
+      startTime: liveSession.startTime,
+      endTime: liveSession.endTime,
+      _id: liveSession._id
+    };
 
-    res.status(201).json(liveSession);
+    // Send email to student
+    await sendLiveSessionInvitation(
+      studentEmail,
+      sessionDetails,
+      tutorUser.profile?.name || tutorUser.email,
+      studentUser.profile?.name || student.email
+    );
+
+    // Send confirmation to tutor
+    await sendLiveSessionConfirmation(
+      tutorUser.email,
+      sessionDetails,
+      studentUser.profile?.name || student.email,
+      tutorUser.profile?.name || tutorUser.email
+    );
+
+    res.status(201).json({
+      liveSession,
+      message: 'Live session created successfully. Student has been notified via email.'
+    });
   } catch (error) {
     console.error('Create live session error:', error);
     res.status(500).json({ msg: 'Server error creating live session', error: error.message });
@@ -262,11 +322,23 @@ exports.joinSession = async (req, res) => {
 // Get all live sessions
 exports.getLiveSessions = async (req, res) => {
   try {
-    const liveSessions = await LiveSession.find({ status: 'live' })
+    const userId = req.user.id;
+    
+    // Find sessions where user is either the tutor or the invited student
+    const query = {
+      $or: [
+        { tutor: userId }, // Sessions created by this user (tutor)
+        { invitedStudent: userId } // Sessions where this user is invited as student
+      ]
+    };
+
+    const liveSessions = await LiveSession.find(query)
       .populate('tutor', 'profile.name email')
+      .populate('invitedStudent', 'profile.name email')
       .populate('participants', 'profile.name email')
       .sort({ createdAt: -1 });
 
+    console.log(`Found ${liveSessions.length} live sessions for user ${userId}`);
     res.json(liveSessions);
   } catch (error) {
     console.error('Get live sessions error:', error);
@@ -282,54 +354,66 @@ exports.joinLiveSession = async (req, res) => {
       return res.status(404).json({ msg: 'Live session not found' });
     }
 
-    // Check if session is full
-    if (liveSession.participants.length >= liveSession.maxParticipants) {
+    // Check if user is the invited student or the tutor
+    const userId = req.user.id;
+    const isTutor = liveSession.tutor.toString() === userId;
+    const isInvitedStudent = liveSession.invitedStudent && liveSession.invitedStudent.toString() === userId;
+
+    if (!isTutor && !isInvitedStudent) {
+      return res.status(403).json({ msg: 'You are not invited to this session' });
+    }
+
+    // Check if session is full (shouldn't happen for one-on-one, but safety check)
+    if (liveSession.participants.length >= liveSession.maxParticipants && !liveSession.participants.some(p => p.toString() === userId)) {
       return res.status(400).json({ msg: 'Session is full' });
     }
 
-    // Add participant if not already joined
-    if (!liveSession.participants.some(p => p.toString() === req.user.id)) {
-      liveSession.participants.push(req.user.id);
+    // Add participant if not already joined (only for students, tutor is already added)
+    if (!liveSession.participants.some(p => p.toString() === userId)) {
+      liveSession.participants.push(userId);
       await liveSession.save();
-      
-      // Award 100 XP for joining live session
-      let progress = await Progress.findOne({ user: req.user.id });
-      if (!progress) {
-        // Create progress entry if doesn't exist
-        const badgeDefinitions = Progress.getBadgeDefinitions();
-        const noobieBadge = badgeDefinitions['noobie'];
-        
-        progress = new Progress({
-          user: req.user.id,
-          experiencePoints: noobieBadge.xpReward,
-          currentLevel: 1,
-          badges: [{
-            id: noobieBadge.id,
-            name: noobieBadge.name,
-            description: noobieBadge.description,
-            category: noobieBadge.category,
-            icon: noobieBadge.icon,
-            xpReward: noobieBadge.xpReward,
-            earnedAt: new Date()
-          }]
-        });
+
+      // Award XP for joining live session (only for students)
+      if (!isTutor) {
+        let progress = await Progress.findOne({ user: userId });
+        if (!progress) {
+          // Create progress entry if doesn't exist
+          const badgeDefinitions = Progress.getBadgeDefinitions();
+          const noobieBadge = badgeDefinitions['noobie'];
+
+          progress = new Progress({
+            user: userId,
+            experiencePoints: noobieBadge.xpReward,
+            currentLevel: 1,
+            badges: [{
+              id: noobieBadge.id,
+              name: noobieBadge.name,
+              description: noobieBadge.description,
+              category: noobieBadge.category,
+              icon: noobieBadge.icon,
+              xpReward: noobieBadge.xpReward,
+              earnedAt: new Date()
+            }]
+          });
+        }
+
+        // Award 150 XP for joining live session
+        progress.experiencePoints += 150;
+        progress.liveSessionsAttended += 1;
+        progress.sessionsCompleted += 1;
+        progress.currentLevel = Math.floor(progress.experiencePoints / 1000) + 1;
+
+        // Check and award badges
+        const newBadges = progress.checkAndAwardBadges();
+        await progress.save();
+
+        if (newBadges.length > 0) {
+          const user = await User.findById(userId);
+          console.log(`User ${user.email} earned badges from live session: ${newBadges.map(b => b.name).join(', ')}`);
+        }
+
+        console.log(`User ${req.user.email} joined live session and earned 150 XP (Total: ${progress.experiencePoints} XP)`);
       }
-      
-      // Award 100 XP for joining + 50 bonus for live session
-      progress.experiencePoints += 150;
-      progress.liveSessionsAttended += 1;
-      progress.sessionsCompleted += 1;
-      progress.currentLevel = Math.floor(progress.experiencePoints / 1000) + 1;
-      
-      // Check and award badges
-      const newBadges = progress.checkAndAwardBadges();
-      await progress.save();
-      
-      if (newBadges.length > 0) {
-        console.log(`User ${req.user.email} earned badges from live session: ${newBadges.map(b => b.name).join(', ')}`);
-      }
-      
-      console.log(`User ${req.user.email} joined live session and earned 150 XP (Total: ${progress.experiencePoints} XP)`);
     }
 
     // Generate meeting room for live session
@@ -338,10 +422,17 @@ exports.joinLiveSession = async (req, res) => {
       await liveSession.save();
     }
 
-    res.json({ 
-      meetingLink: liveSession.meetingLink, 
+    res.json({
+      meetingLink: liveSession.meetingLink,
       participantCount: liveSession.participants.length,
-      maxParticipants: liveSession.maxParticipants
+      maxParticipants: liveSession.maxParticipants,
+      isTutor,
+      sessionDetails: {
+        title: liveSession.title,
+        description: liveSession.description,
+        startTime: liveSession.startTime,
+        endTime: liveSession.endTime
+      }
     });
   } catch (error) {
     console.error('Join live session error:', error);

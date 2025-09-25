@@ -35,13 +35,16 @@ const LiveSessions = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">1-on-1 Live Sessions</h1>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">One-on-One Live Sessions</h1>
+            <p className="text-gray-600 mt-2">Personal tutoring sessions between tutors and students</p>
+          </div>
           {userRole === 'tutor' && (
             <Link
-              to="/create-session"
+              to="/tutor/create-live-session"
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
             >
-              Create New Session
+              Schedule New Session
             </Link>
           )}
         </div>
@@ -54,21 +57,42 @@ const LiveSessions = () => {
                 <p className="text-gray-600 mb-4 line-clamp-2">{session.description}</p>
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-sm text-gray-500">
-                    {session.isActive ? 'Live Now' : session.scheduledTime ? new Date(session.scheduledTime).toLocaleString() : 'Upcoming'}
+                    {session.isActive ? 'Live Now' : session.startTime ? new Date(session.startTime).toLocaleString() : 'Upcoming'}
                   </span>
-                  <span className="text-sm font-medium text-blue-600">
-                    {session.participants.length}/{session.maxParticipants}
-                  </span>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
+                      1-on-1
+                    </span>
+                    <span className="text-sm font-medium text-blue-600">
+                      {session.participants?.length || 0}/1
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
-                  <span>By</span>
-                  <span className="font-medium">{session.tutorId.profile.name}</span>
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <div className="flex items-center space-x-2">
+                    <span>Tutor:</span>
+                    <span className="font-medium">{session.tutor?.profile?.name || session.tutor?.email}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {userRole === 'tutor' && session.invitedStudentEmail && (
+                      <div className="flex items-center space-x-1 text-xs bg-green-100 px-2 py-1 rounded">
+                        <span>👨‍🎓</span>
+                        <span className="text-green-700">Student Invited</span>
+                      </div>
+                    )}
+                    {userRole !== 'tutor' && session.invitedStudentEmail && (
+                      <div className="flex items-center space-x-1 text-xs bg-blue-100 px-2 py-1 rounded">
+                        <span>📧</span>
+                        <span className="text-blue-700">You're Invited</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <Link
-                  to={`/session/${session.sessionId}`}
+                  to={`/session/${session._id}`}
                   className="w-full block bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 rounded-lg text-center font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  {userRole === 'tutor' ? 'Manage' : 'Join Session'}
+                  {userRole === 'tutor' ? 'Manage Session' : 'Join 1-on-1 Session'}
                 </Link>
               </div>
             </div>
@@ -80,10 +104,10 @@ const LiveSessions = () => {
             <p className="text-gray-600 text-lg">No sessions available</p>
             {userRole === 'tutor' && (
               <Link
-                to="/create-session"
+                to="/tutor/create-live-session"
                 className="mt-4 inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
               >
-                Create Your First Session
+                Schedule Your First One-on-One Session
               </Link>
             )}
           </div>

@@ -49,8 +49,10 @@ const VideoCall = ({ sessionId, userName }) => {
 
   // Initialize peer connection
   const initializePeerConnection = useCallback((remoteUserId) => {
-    if (peerConnections.has(remoteUserId)) {
-      return peerConnections.get(remoteUserId);
+    // Check if connection already exists
+    const existingPc = peerConnections.get(remoteUserId);
+    if (existingPc) {
+      return existingPc;
     }
 
     console.log('🔗 Initializing peer connection for:', remoteUserId);
@@ -104,7 +106,7 @@ const VideoCall = ({ sessionId, userName }) => {
     });
 
     return pc;
-  }, [iceServers, localStream, sessionId, peerConnections, setPeerConnections]);
+  }, [iceServers, localStream, sessionId, peerConnections]);
 
   // WebRTC signal handlers
   const handleWebRTCOffer = useCallback(async ({ offer, fromUserId }) => {
@@ -129,31 +131,35 @@ const VideoCall = ({ sessionId, userName }) => {
 
   const handleWebRTCAnswer = useCallback(async ({ answer, fromUserId }) => {
     console.log('📨 Received WebRTC answer from:', fromUserId);
-    const pc = peerConnections.get(fromUserId);
-    
-    if (pc) {
-      try {
-        await pc.setRemoteDescription(answer);
-        console.log('✅ Set remote description for answer');
-      } catch (error) {
-        console.error('Error handling answer:', error);
+    setPeerConnections(prevConnections => {
+      const pc = prevConnections.get(fromUserId);
+      
+      if (pc) {
+        pc.setRemoteDescription(answer).then(() => {
+          console.log('✅ Set remote description for answer');
+        }).catch(error => {
+          console.error('Error handling answer:', error);
+        });
       }
-    }
-  }, [peerConnections]);
+      return prevConnections;
+    });
+  }, []);
 
   const handleICECandidate = useCallback(async ({ candidate, fromUserId }) => {
     console.log('🧊 Received ICE candidate from:', fromUserId);
-    const pc = peerConnections.get(fromUserId);
-    
-    if (pc && candidate) {
-      try {
-        await pc.addIceCandidate(candidate);
-        console.log('✅ Added ICE candidate');
-      } catch (error) {
-        console.error('Error adding ICE candidate:', error);
+    setPeerConnections(prevConnections => {
+      const pc = prevConnections.get(fromUserId);
+      
+      if (pc && candidate) {
+        pc.addIceCandidate(candidate).then(() => {
+          console.log('✅ Added ICE candidate');
+        }).catch(error => {
+          console.error('Error adding ICE candidate:', error);
+        });
       }
-    }
-  }, [peerConnections]);
+      return prevConnections;
+    });
+  }, []);
 
   // Start local media stream
   const startLocalStream = useCallback(async () => {
@@ -219,15 +225,15 @@ const VideoCall = ({ sessionId, userName }) => {
       setParticipants(prev => prev.filter(p => p.userId !== data.userId));
       
       // Clean up peer connection
-      const pc = peerConnections.get(data.userId);
-      if (pc) {
-        pc.close();
-        setPeerConnections(prev => {
-          const newMap = new Map(prev);
-          newMap.delete(data.userId);
-          return newMap;
-        });
-      }
+      setPeerConnections(prev => {
+        const pc = prev.get(data.userId);
+        if (pc) {
+          pc.close();
+        }
+        const newMap = new Map(prev);
+        newMap.delete(data.userId);
+        return newMap;
+      });
       
       // Remove remote stream
       setRemoteStreams(prev => {
@@ -264,7 +270,7 @@ const VideoCall = ({ sessionId, userName }) => {
         socketRef.current.disconnect();
       }
     };
-  }, [initializePeerConnection, handleWebRTCOffer, handleWebRTCAnswer, handleICECandidate, peerConnections, localStream, sessionId]);
+  }, [initializePeerConnection, handleWebRTCOffer, handleWebRTCAnswer, handleICECandidate, localStream, sessionId]);
 
   // Join session and start stream
   useEffect(() => {
@@ -332,11 +338,14 @@ const VideoCall = ({ sessionId, userName }) => {
           const videoTrack = localStream.getVideoTracks()[0];
           if (videoTrack) {
             // Replace the screen track with camera track in all peer connections
-            peerConnections.forEach((pc) => {
-              const sender = pc.getSenders().find(s => s.track?.kind === 'video');
-              if (sender) {
-                sender.replaceTrack(videoTrack);
-              }
+            setPeerConnections(prevConnections => {
+              prevConnections.forEach((pc) => {
+                const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+                if (sender) {
+                  sender.replaceTrack(videoTrack);
+                }
+              });
+              return prevConnections;
             });
           }
         }
@@ -352,11 +361,14 @@ const VideoCall = ({ sessionId, userName }) => {
         
         // Replace camera track with screen track in all peer connections
         const screenTrack = screenStream.getVideoTracks()[0];
-        peerConnections.forEach((pc) => {
-          const sender = pc.getSenders().find(s => s.track?.kind === 'video');
-          if (sender) {
-            sender.replaceTrack(screenTrack);
-          }
+        setPeerConnections(prevConnections => {
+          prevConnections.forEach((pc) => {
+            const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+            if (sender) {
+              sender.replaceTrack(screenTrack);
+            }
+          });
+          return prevConnections;
         });
         
         // Handle when user stops sharing via browser UI
@@ -367,7 +379,7 @@ const VideoCall = ({ sessionId, userName }) => {
     } catch (error) {
       console.error('Error toggling screen share:', error);
     }
-  }, [isScreenSharing, screenStream, localStream, peerConnections]);
+  }, [isScreenSharing, screenStream, localStream]);
 
   const toggleChat = useCallback(() => {
     setIsChatOpen(prev => !prev);

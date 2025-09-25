@@ -92,12 +92,7 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors relative">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5h-5l5-5zm-8-8V7a3 3 0 116 0v2M9 15v0a3 3 0 01-3-3V9a3 3 0 013-3v0a3 3 0 013 3v3a3 3 0 01-3 3z" />
-                  </svg>
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-                </button>
+               
 
                 <div className="relative">
                   <button

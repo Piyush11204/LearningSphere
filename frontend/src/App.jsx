@@ -13,7 +13,8 @@ import Admin from './pages/Admin/Admin';
 import LiveSessions from './pages/LiveSession/LiveSessions';
 import LiveSession from './pages/LiveSession/LiveSession';
 import CreateSession from './pages/LiveSession/CreateSession';
-import VideoCall from './pages/LiveSession/VideoCall';
+import VideoCall from './pages/LiveSession/VideoCall.jsx';
+import VideoCallWrapper from './pages/LiveSession/VideoCallWrapper';
 // Tutor imports
 import TutorDashboard from './pages/Tutor/TutorDashboard';
 import CreateSessionTutor from './pages/Tutor/CreateSession';
@@ -81,7 +82,7 @@ function App() {
             <Route path="/live-sessions" element={<LiveSessions />} />
             <Route path="/session/:sessionId" element={<LiveSession />} />
             <Route path="/create-session" element={<CreateSession />} />
-            <Route path="/video-call/:sessionId" element={<VideoCall />} />
+            <Route path="/video-call/:sessionId" element={<VideoCallWrapper />} />
             <Route path="/matching" element={<Matching />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin/*" element={<Admin />} />

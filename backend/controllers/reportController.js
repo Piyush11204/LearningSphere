@@ -38,16 +38,17 @@ const generateStudentReport = async (req, res, next) => {
     }).sort({ 'results.submittedAt': -1 });
 
     const examHistory = exams.map(exam => {
-      const userResult = exam.results.find(r => r.userId.toString() === userId);
+      const userResult = exam.results.find(r => r.userId && r.userId.toString() === userId);
+      if (!userResult) return null; // Skip if no result found for this user
       return {
         examId: exam._id,
         title: exam.title,
-        subject: exam.subject,
+        subject: exam.subject || 'General', // Default subject if not specified
         scheduledDate: exam.scheduledDate,
         submittedAt: userResult.submittedAt,
         score: userResult.score
       };
-    });
+    }).filter(item => item !== null); // Remove null entries
 
     // Prepare data for Gemini
     const reportData = {

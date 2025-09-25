@@ -12,20 +12,28 @@ const liveSessionSchema = new mongoose.Schema({
   },
   tutor: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
   },
   startTime: {
     type: Date,
-    required: true
+    required: false
   },
   endTime: {
     type: Date,
-    required: true
+    required: false
   },
   maxParticipants: {
     type: Number,
-    default: 20
+    default: 2, // Tutor + 1 student for one-on-one sessions
+    max: 2 // Ensure only tutor and student can join
+  },
+  invitedStudent: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  invitedStudentEmail: {
+    type: String,
+    trim: true
   },
   participants: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -34,7 +42,7 @@ const liveSessionSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['scheduled', 'live', 'completed', 'cancelled'],
-    default: 'scheduled'
+    default: 'live' // Changed default to 'live'
   },
   meetingLink: {
     type: String,
@@ -43,7 +51,7 @@ const liveSessionSchema = new mongoose.Schema({
   recordingUrl: String,
   isActive: {
     type: Boolean,
-    default: false
+    default: true // Changed default to true
   },
   chatMessages: [{
     userId: {

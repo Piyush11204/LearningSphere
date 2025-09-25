@@ -46,7 +46,11 @@ module.exports = (io) => {
         console.log(`Session: ${sessionId}`);
         console.log(`Socket ID: ${socket.id}`);
 
-        const session = await LiveSession.findOne({ sessionId });
+        // Try to find session by _id first, then by sessionId field
+        let session = await LiveSession.findById(sessionId);
+        if (!session) {
+          session = await LiveSession.findOne({ sessionId });
+        }
         if (!session) throw new Error('Live session not found');
 
         socket.join(sessionId);
@@ -61,21 +65,55 @@ module.exports = (io) => {
         });
 
         // Notify others in the room
+        console.log(`🔔 Notifying other users in session ${sessionId} about new user: ${userName}`);
         socket.to(sessionId).emit('userJoined', {
           userId,
           userName,
           socketId: socket.id,
           timestamp: new Date()
         });
+        
+        // Also notify the new user about existing users in the room
+        const roomSockets = Array.from(io.sockets.sockets.values()).filter(s => 
+          s.sessionId === sessionId && s.userId !== userId
+        );
+        
+        console.log(`👥 Existing users in session: ${roomSockets.length}`);
+        roomSockets.forEach(existingSocket => {
+          console.log(`Existing user: ${existingSocket.userName} (${existingSocket.userId})`);
+          socket.emit('userJoined', {
+            userId: existingSocket.userId,
+            userName: existingSocket.userName,
+            socketId: existingSocket.id,
+            timestamp: new Date()
+          });
+        });
 
         // Send current participants to the new user
-        const participants = await LiveSession.findOne({ sessionId })
-          .populate('participants.userId', 'profile.name');
+        const participantSession = await LiveSession.findById(sessionId)
+          .populate('participants', 'profile.name email') || 
+          await LiveSession.findOne({ sessionId })
+          .populate('participants', 'profile.name email');
 
-        console.log(`Sending liveSessionUsers to new user with ${participants.participants.length} participants`);
+        console.log(`Sending liveSessionUsers to new user with ${participantSession?.participants?.length || 0} participants`);
+        console.log('Participants data:', participantSession?.participants);
+
+        // Get connected users using the socket's room membership
+        // Since socket.join() is synchronous, we can check immediately
+        const connectedSockets = Array.from(io.sockets.sockets.values()).filter(s => 
+          s.rooms && s.rooms.has(sessionId) && s.id !== socket.id
+        );
+        const connectedUsers = connectedSockets.map(s => ({
+          userId: s.userId,
+          userName: s.userName,
+          socketId: s.id
+        }));
+
+        console.log('Connected users in room (via socket filtering):', connectedUsers);
 
         socket.emit('liveSessionUsers', {
-          participants: participants.participants,
+          participants: participantSession?.participants || [],
+          connectedUsers: connectedUsers,
           session: {
             title: session.title,
             isActive: session.isActive
@@ -94,8 +132,11 @@ module.exports = (io) => {
       try {
         console.log(`Chat message from ${userName} in session ${sessionId}: ${message}`);
 
-        // Save message to database
-        const session = await LiveSession.findOne({ sessionId });
+        // Find session by _id or sessionId field
+        let session = await LiveSession.findById(sessionId);
+        if (!session) {
+          session = await LiveSession.findOne({ sessionId });
+        }
         if (!session) return;
 
         const chatMessage = {
@@ -116,8 +157,6 @@ module.exports = (io) => {
         socket.emit('error', { msg: 'Failed to send message' });
       }
     });
-
-    // WebRTC signaling for live sessions
     socket.on('webrtc-offer', ({ sessionId, targetUserId, offer }) => {
       console.log(`=== WEBRTC OFFER RECEIVED ===`);
       console.log(`From: ${socket.userId} (${socket.userName})`);
@@ -254,19 +293,6 @@ module.exports = (io) => {
         userId: socket.userId,
         userName: socket.userName,
         socketId: socket.id
-      });
-    });
-
-    // Handle chat messages
-    socket.on('sendChatMessage', (messageData) => {
-      console.log('📨 Chat message received:', messageData);
-      
-      // Broadcast the message to all users in the session except sender
-      socket.to(messageData.sessionId).emit('chatMessage', {
-        userId: messageData.userId,
-        userName: messageData.userName,
-        message: messageData.message,
-        timestamp: messageData.timestamp
       });
     });
 

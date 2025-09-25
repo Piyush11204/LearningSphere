@@ -6,8 +6,9 @@ const CreateSession = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    scheduledTime: '',
-    maxParticipants: 2 // Limited to 2 for one-on-one sessions
+    startTime: '',
+    endTime: '',
+    studentEmail: ''
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -24,15 +25,45 @@ const CreateSession = () => {
     setLoading(true);
     
     try {
+      // Validate form data (only title, description, and studentEmail are required)
+      if (!formData.title || !formData.description || !formData.studentEmail) {
+        alert('Please fill in all required fields (Title, Description, Student Email)');
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.studentEmail)) {
+        alert('Please enter a valid student email address');
+        return;
+      }
+
+      // Validate dates only if both are provided
+      if (formData.startTime && formData.endTime) {
+        if (new Date(formData.startTime) <= new Date()) {
+          alert('Start time must be in the future');
+          return;
+        }
+
+        if (new Date(formData.endTime) <= new Date(formData.startTime)) {
+          alert('End time must be after start time');
+          return;
+        }
+      } else if (formData.startTime && !formData.endTime) {
+        alert('Please provide end time if start time is specified');
+        return;
+      } else if (!formData.startTime && formData.endTime) {
+        alert('Please provide start time if end time is specified');
+        return;
+      }
+
       const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/api/livesessions', formData, {
+      await axios.post('http://localhost:5000/api/livesessions', formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (response.data.sessionId) {
-        // Navigate to the session page with the session ID
-        navigate(`/session/${response.data.sessionId}`);
-      }
+      alert('One-on-one live session created successfully! Student has been notified via email.');
+      navigate('/tutor/dashboard');
     } catch (error) {
       console.error('Error creating session:', error);
       alert(error.response?.data?.msg || 'Failed to create session');
@@ -51,7 +82,7 @@ const CreateSession = () => {
             name="title"
             value={formData.title}
             onChange={handleChange}
-            placeholder="Session Title"
+            placeholder="Session Title (e.g., Math Tutoring - Algebra)"
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
@@ -59,31 +90,63 @@ const CreateSession = () => {
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="Session Description"
+            placeholder="Describe what will be covered in this tutoring session..."
             rows={3}
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
           />
           <input
-            type="datetime-local"
-            name="scheduledTime"
-            value={formData.scheduledTime}
+            type="email"
+            name="studentEmail"
+            value={formData.studentEmail}
             onChange={handleChange}
+            placeholder="Student Email (they will receive an invitation)"
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
           />
-          <input
-            type="number"
-            name="maxParticipants"
-            value={formData.maxParticipants}
-            readOnly
-            className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-            title="One-on-one sessions are limited to 2 participants"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Start Time (Optional - Session starts immediately if not set)</label>
+              <input
+                type="datetime-local"
+                name="startTime"
+                value={formData.startTime}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">End Time (Optional)</label>
+              <input
+                type="datetime-local"
+                name="endTime"
+                value={formData.endTime}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">One-on-One Session (2 People Max)</h3>
+                <p className="text-sm text-blue-700">
+                  The student will receive an email invitation with the session link. Room capacity: You + 1 student. Sessions start immediately when created - use scheduling only if you want to plan for later.
+                </p>
+              </div>
+            </div>
+          </div>
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50"
           >
-            {loading ? 'Creating...' : 'Create Session'}
+            {loading ? 'Creating Session...' : 'Create & Start Live Session'}
           </button>
         </form>
       </div>

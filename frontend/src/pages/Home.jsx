@@ -453,9 +453,12 @@ const Home = () => {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all">
+                      <Link 
+                        to={`/session/${session._id}`} 
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all inline-block text-center"
+                      >
                         Join Now
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>

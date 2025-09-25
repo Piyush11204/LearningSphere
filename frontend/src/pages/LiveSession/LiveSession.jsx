@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import VideoCall from './VideoCall';
+import VideoCall from './VideoCall.jsx';
 import { Play, Users, Calendar, MessageCircle } from 'lucide-react';
 
 const Session = () => {
