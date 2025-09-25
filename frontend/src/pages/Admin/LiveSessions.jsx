@@ -34,7 +34,7 @@ const LiveSessions = () => {
         status: statusFilter !== 'all' ? statusFilter : ''
       });
 
-      const response = await axios.get(`http://localhost:5000/api/livesessions?${params}`, {
+      const response = await axios.get(`https://learningsphere-1fgj.onrender.com/api/livesessions?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -54,19 +54,19 @@ const LiveSessions = () => {
     try {
       const token = localStorage.getItem('token');
       if (action === 'delete') {
-        await axios.delete(`http://localhost:5000/api/livesessions/${sessionId}`, {
+        await axios.delete(`https://learningsphere-1fgj.onrender.com/api/livesessions/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setLiveSessions(liveSessions.filter(session => session._id !== sessionId));
       } else if (action === 'start') {
-        await axios.post(`http://localhost:5000/api/livesessions/${sessionId}/start`, {}, {
+        await axios.post(`https://learningsphere-1fgj.onrender.com/api/livesessions/${sessionId}/start`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setLiveSessions(liveSessions.map(session =>
           session._id === sessionId ? { ...session, isActive: true } : session
         ));
       } else if (action === 'end') {
-        await axios.post(`http://localhost:5000/api/livesessions/${sessionId}/end`, {}, {
+        await axios.post(`https://learningsphere-1fgj.onrender.com/api/livesessions/${sessionId}/end`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setLiveSessions(liveSessions.map(session =>

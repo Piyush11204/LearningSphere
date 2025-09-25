@@ -44,7 +44,7 @@ const TutorStudents = () => {
       }
 
       // Fetch sessions to get student data
-      const sessionsResponse = await axios.get('http://localhost:5000/api/sessions', {
+      const sessionsResponse = await axios.get('https://learningsphere-1fgj.onrender.com/api/sessions', {
         headers: { Authorization: `Bearer ${token}` }
       });
 

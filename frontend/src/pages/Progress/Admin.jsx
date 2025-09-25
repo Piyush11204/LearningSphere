@@ -57,7 +57,7 @@ const Admin = () => {
   const fetchBadgeData = async (token) => {
     try {
       // Fetch all progress data to calculate badge stats
-      const progressResponse = await fetch('http://localhost:5000/api/progress/leaderboard?limit=1000', {
+      const progressResponse = await fetch('https://learningsphere-1fgj.onrender.com/api/progress/leaderboard?limit=1000', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -156,7 +156,7 @@ const Admin = () => {
       const token = localStorage.getItem('token');
       const adminId = localStorage.getItem('userId');
 
-      const response = await fetch('http://localhost:5000/api/progress/admin/award-badge', {
+      const response = await fetch('https://learningsphere-1fgj.onrender.com/api/progress/admin/award-badge', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -213,7 +213,7 @@ const Admin = () => {
         }
 
         // Fetch analytics data
-        const analyticsResponse = await fetch('http://localhost:5000/api/admin/analytics', {
+        const analyticsResponse = await fetch('https://learningsphere-1fgj.onrender.com/api/admin/analytics', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -227,7 +227,7 @@ const Admin = () => {
         const analyticsData = await analyticsResponse.json();
 
         // Fetch users data
-        const usersResponse = await fetch('http://localhost:5000/api/admin/users', {
+        const usersResponse = await fetch('https://learningsphere-1fgj.onrender.com/api/admin/users', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -241,7 +241,7 @@ const Admin = () => {
         }
 
         // Fetch sessions data
-        const sessionsResponse = await fetch('http://localhost:5000/api/sessions', {
+        const sessionsResponse = await fetch('https://learningsphere-1fgj.onrender.com/api/sessions', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -254,7 +254,7 @@ const Admin = () => {
         }
 
         // Fetch exam history for reports
-        const examHistoryResponse = await fetch('http://localhost:5000/api/admin/exam-history', {
+        const examHistoryResponse = await fetch('https://learningsphere-1fgj.onrender.com/api/admin/exam-history', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

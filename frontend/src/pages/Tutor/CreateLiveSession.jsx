@@ -61,7 +61,7 @@ const CreateLiveSession = () => {
         studentEmail: formData.studentEmail
       };
 
-      const response = await axios.post('http://localhost:5000/api/livesessions', sessionData, {
+      const response = await axios.post('https://learningsphere-1fgj.onrender.com/api/livesessions', sessionData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

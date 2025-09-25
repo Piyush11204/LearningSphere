@@ -15,7 +15,7 @@ const Session = () => {
     try {
       console.log('Fetching session with ID:', sessionId);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/livesessions/${sessionId}`, {
+      const response = await axios.get(`https://learningsphere-1fgj.onrender.com/api/livesessions/${sessionId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log('Session data received:', response.data);
@@ -35,7 +35,7 @@ const Session = () => {
   const handleJoin = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`http://localhost:5000/api/livesessions/${sessionId}/join`, {}, {
+      const response = await axios.post(`https://learningsphere-1fgj.onrender.com/api/livesessions/${sessionId}/join`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setIsJoined(true);
@@ -49,7 +49,7 @@ const Session = () => {
   const handleStart = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/livesessions/${sessionId}/start`, {}, {
+      await axios.post(`https://learningsphere-1fgj.onrender.com/api/livesessions/${sessionId}/start`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSession({ ...session, isActive: true });

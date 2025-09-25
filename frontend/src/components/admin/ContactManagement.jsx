@@ -68,7 +68,7 @@ const ContactManagement = () => {
       });
 
       console.log('Fetching contacts with token:', token.substring(0, 20) + '...');
-      const response = await fetch(`http://localhost:5000/api/contact?${queryParams}`, {
+      const response = await fetch(`https://learningsphere-1fgj.onrender.com/api/contact?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -102,7 +102,7 @@ const ContactManagement = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/contact/stats', {
+      const response = await fetch('https://learningsphere-1fgj.onrender.com/api/contact/stats', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -177,7 +177,7 @@ const ContactManagement = () => {
 
   const submitUpdate = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/contact/${selectedContact._id}`, {
+      const response = await fetch(`https://learningsphere-1fgj.onrender.com/api/contact/${selectedContact._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -198,7 +198,7 @@ const ContactManagement = () => {
 
   const submitNote = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/contact/${selectedContact._id}/notes`, {
+      const response = await fetch(`https://learningsphere-1fgj.onrender.com/api/contact/${selectedContact._id}/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -220,7 +220,7 @@ const ContactManagement = () => {
   const handleDeleteContact = async (contactId) => {
     if (window.confirm('Are you sure you want to delete this contact?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/contact/${contactId}`, {
+        const response = await fetch(`https://learningsphere-1fgj.onrender.com/api/contact/${contactId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`

@@ -38,7 +38,7 @@ const Sessions = () => {
         type: typeFilter !== 'all' ? typeFilter : ''
       });
 
-      const response = await axios.get(`http://localhost:5000/api/sessions?${params}`, {
+      const response = await axios.get(`https://learningsphere-1fgj.onrender.com/api/sessions?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -58,7 +58,7 @@ const Sessions = () => {
   const handleModerateSession = async (sessionId, action) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/admin/sessions/${sessionId}/moderate`,
+      await axios.put(`https://learningsphere-1fgj.onrender.com/api/admin/sessions/${sessionId}/moderate`,
         { action },
         { headers: { Authorization: `Bearer ${token}` } }
       );

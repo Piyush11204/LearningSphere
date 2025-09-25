@@ -15,7 +15,7 @@ const Matching = () => {
       return;
     }
 
-    fetch(`http://localhost:5000/api/matching/${userId}?status=pending`, {
+    fetch(`https://learningsphere-1fgj.onrender.com/api/matching/${userId}?status=pending`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {

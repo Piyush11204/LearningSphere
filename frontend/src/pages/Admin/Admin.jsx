@@ -47,16 +47,16 @@ const AdminDashboard = () => {
 
     // Fetch admin stats
     Promise.all([
-      fetch('http://localhost:5000/api/admin/stats', {
+      fetch('https://learningsphere-1fgj.onrender.com/api/admin/stats', {
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => ({ ok: false })),
-      fetch('http://localhost:5000/api/users', {
+      fetch('https://learningsphere-1fgj.onrender.com/api/users', {
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => ({ ok: false })),
-      fetch('http://localhost:5000/api/sessions', {
+      fetch('https://learningsphere-1fgj.onrender.com/api/sessions', {
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => ({ ok: false })),
-      fetch('http://localhost:5000/api/exams', {
+      fetch('https://learningsphere-1fgj.onrender.com/api/exams', {
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => ({ ok: false }))
     ])

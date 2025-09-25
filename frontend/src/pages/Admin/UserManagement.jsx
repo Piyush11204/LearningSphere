@@ -38,7 +38,7 @@ const UserManagement = () => {
         status: statusFilter !== 'all' ? statusFilter : ''
       });
 
-      const response = await axios.get(`http://localhost:5000/api/admin/users?${params}`, {
+      const response = await axios.get(`https://learningsphere-1fgj.onrender.com/api/admin/users?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -58,7 +58,7 @@ const UserManagement = () => {
   const handleRoleChange = async (userId, newRole) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/admin/users/${userId}/role`, { role: newRole }, {
+      await axios.put(`https://learningsphere-1fgj.onrender.com/api/admin/users/${userId}/role`, { role: newRole }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -77,7 +77,7 @@ const UserManagement = () => {
   const handleBanUser = async (userId, isCurrentlyBanned) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/admin/users/${userId}/ban`, {}, {
+      await axios.put(`https://learningsphere-1fgj.onrender.com/api/admin/users/${userId}/ban`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

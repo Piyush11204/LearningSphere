@@ -5,7 +5,7 @@
 OLD FLOW:
 1. User registers
 2. User gets verification email with link like: 
-   http://localhost:5000/api/auth/verify/abc123token
+   https://learningsphere-1fgj.onrender.com/api/auth/verify/abc123token
 3. User clicks link
 4. Browser shows JSON response: {"msg": "Email verified successfully"}
 5. User stays on backend API URL - BAD UX!
@@ -13,7 +13,7 @@ OLD FLOW:
 NEW FLOW:
 1. User registers  
 2. User gets verification email with link like:
-   http://localhost:5000/api/auth/verify/abc123token
+   https://learningsphere-1fgj.onrender.com/api/auth/verify/abc123token
 3. User clicks link
 4. Backend verifies email and redirects to:
    http://localhost:5173/?verification=success&message=Email%20verified%20successfully

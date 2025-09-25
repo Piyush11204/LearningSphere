@@ -12,7 +12,7 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
       const userId = localStorage.getItem('userId');
       
       if (token && userId && token.length > 20 && token !== '<valid-token>') {
-        fetch(`http://localhost:5000/api/users/${userId}`, {
+        fetch(`https://learningsphere-1fgj.onrender.com/api/users/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
           .then((res) => {

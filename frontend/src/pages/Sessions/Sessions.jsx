@@ -45,7 +45,7 @@ const Sessions = () => {
         return;
       }
 
-      const response = await axios.get('http://localhost:5000/api/sessions', {
+      const response = await axios.get('https://learningsphere-1fgj.onrender.com/api/sessions', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -111,7 +111,7 @@ const Sessions = () => {
   const handleJoinSession = async (sessionId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`http://localhost:5000/api/sessions/${sessionId}/join`, {}, {
+      const response = await axios.post(`https://learningsphere-1fgj.onrender.com/api/sessions/${sessionId}/join`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

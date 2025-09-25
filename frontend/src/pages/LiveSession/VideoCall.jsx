@@ -184,7 +184,7 @@ const VideoCall = ({ sessionId, userName }) => {
 
   // Socket connection and event handlers
   useEffect(() => {
-    socketRef.current = io('http://localhost:5000', {
+    socketRef.current = io('https://learningsphere-1fgj.onrender.com', {
       transports: ['websocket', 'polling']
     });
 

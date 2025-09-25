@@ -42,10 +42,10 @@ const TutorSchedule = () => {
 
       // Fetch both sessions and exams
       const [sessionsResponse, examsResponse] = await Promise.all([
-        axios.get('http://localhost:5000/api/sessions', {
+        axios.get('https://learningsphere-1fgj.onrender.com/api/sessions', {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get('http://localhost:5000/api/exams', {
+        axios.get('https://learningsphere-1fgj.onrender.com/api/exams', {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -144,7 +144,7 @@ const TutorSchedule = () => {
     if (window.confirm('Are you sure you want to delete this session?')) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:5000/api/sessions/${sessionId}`, {
+        await axios.delete(`https://learningsphere-1fgj.onrender.com/api/sessions/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         fetchSchedule();

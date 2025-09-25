@@ -58,7 +58,7 @@ const CreateSession = () => {
       }
 
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/livesessions', formData, {
+      await axios.post('https://learningsphere-1fgj.onrender.com/api/livesessions', formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

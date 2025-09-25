@@ -67,7 +67,7 @@ const CreateSession = () => {
         meetingLink: formData.meetingLink
       };
 
-      await axios.post('http://localhost:5000/api/sessions/schedule', sessionData, {
+      await axios.post('https://learningsphere-1fgj.onrender.com/api/sessions/schedule', sessionData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

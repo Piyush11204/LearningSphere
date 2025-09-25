@@ -64,7 +64,7 @@ const Learner = () => {
         }
 
         // Fetch user progress
-        const progressResponse = await fetch(`http://localhost:5000/api/progress/${userId}`, {
+        const progressResponse = await fetch(`https://learningsphere-1fgj.onrender.com/api/progress/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -76,7 +76,7 @@ const Learner = () => {
             // Progress not found, create it
             await createProgressForUser(userId, token);
             // Retry fetching
-            const retryResponse = await fetch(`http://localhost:5000/api/progress/${userId}`, {
+            const retryResponse = await fetch(`https://learningsphere-1fgj.onrender.com/api/progress/${userId}`, {
               headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -95,7 +95,7 @@ const Learner = () => {
         }
 
         // Fetch leaderboard
-        const leaderboardResponse = await fetch('http://localhost:5000/api/progress/leaderboard', {
+        const leaderboardResponse = await fetch('https://learningsphere-1fgj.onrender.com/api/progress/leaderboard', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -108,7 +108,7 @@ const Learner = () => {
         }
 
         // Fetch exam history
-        const examHistoryResponse = await fetch('http://localhost:5000/api/exams/history', {
+        const examHistoryResponse = await fetch('https://learningsphere-1fgj.onrender.com/api/exams/history', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -130,7 +130,7 @@ const Learner = () => {
 
     const createProgressForUser = async (userId, token) => {
       try {
-        const response = await fetch('http://localhost:5000/api/progress', {
+        const response = await fetch('https://learningsphere-1fgj.onrender.com/api/progress', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

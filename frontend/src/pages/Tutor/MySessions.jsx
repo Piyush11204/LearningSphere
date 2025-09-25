@@ -34,11 +34,11 @@ const MySessions = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
 
-      const sessionsResponse = await axios.get('http://localhost:5000/api/sessions', {
+      const sessionsResponse = await axios.get('https://learningsphere-1fgj.onrender.com/api/sessions', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const liveSessionsResponse = await axios.get('http://localhost:5000/api/livesessions', {
+      const liveSessionsResponse = await axios.get('https://learningsphere-1fgj.onrender.com/api/livesessions', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -65,7 +65,7 @@ const MySessions = () => {
       const token = localStorage.getItem('token');
       const endpoint = isLiveSession ? 'livesessions' : 'sessions';
 
-      await axios.delete(`http://localhost:5000/api/${endpoint}/${sessionId}`, {
+      await axios.delete(`https://learningsphere-1fgj.onrender.com/api/${endpoint}/${sessionId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -83,7 +83,7 @@ const MySessions = () => {
   const handleStartLiveSession = async (sessionId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/livesessions/${sessionId}/start`, {}, {
+      await axios.post(`https://learningsphere-1fgj.onrender.com/api/livesessions/${sessionId}/start`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -103,7 +103,7 @@ const MySessions = () => {
 
       console.log('Joining session:', { sessionId, isLiveSession, endpoint });
 
-      const response = await axios.post(`http://localhost:5000/api/${endpoint}/${sessionId}/join`, {}, {
+      const response = await axios.post(`https://learningsphere-1fgj.onrender.com/api/${endpoint}/${sessionId}/join`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

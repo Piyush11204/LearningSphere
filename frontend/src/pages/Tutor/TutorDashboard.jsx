@@ -46,21 +46,21 @@ const TutorDashboard = () => {
       }
 
       // Fetch sessions data
-      const sessionsResponse = await axios.get('http://localhost:5000/api/sessions', {
+      const sessionsResponse = await axios.get('https://learningsphere-1fgj.onrender.com/api/sessions', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       const sessions = sessionsResponse.data || [];
 
       // Fetch live sessions data
-      const liveSessionsResponse = await axios.get('http://localhost:5000/api/livesessions', {
+      const liveSessionsResponse = await axios.get('https://learningsphere-1fgj.onrender.com/api/livesessions', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       const liveSessions = liveSessionsResponse.data || [];
 
       // Fetch exams data
-      const examsResponse = await axios.get('http://localhost:5000/api/exams', {
+      const examsResponse = await axios.get('https://learningsphere-1fgj.onrender.com/api/exams', {
         headers: { Authorization: `Bearer ${token}` }
       });
 

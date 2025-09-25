@@ -14,7 +14,7 @@ const LiveSessions = () => {
   const fetchSessions = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/livesessions', {
+      const response = await axios.get('https://learningsphere-1fgj.onrender.com/api/livesessions', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSessions(response.data);

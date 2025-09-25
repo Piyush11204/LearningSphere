@@ -63,7 +63,7 @@ const TutorProfile = () => {
       const decoded = JSON.parse(atob(token.split('.')[1])); // Decode JWT payload
       const userId = decoded.id;
 
-      const userResponse = await axios.get(`http://localhost:5000/api/users/${userId}`, {
+      const userResponse = await axios.get(`https://learningsphere-1fgj.onrender.com/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -79,7 +79,7 @@ const TutorProfile = () => {
       });
 
       // Fetch additional stats
-      const sessionsResponse = await axios.get('http://localhost:5000/api/sessions', {
+      const sessionsResponse = await axios.get('https://learningsphere-1fgj.onrender.com/api/sessions', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -125,7 +125,7 @@ const TutorProfile = () => {
       };
 
       const response = await axios.put(
-        `http://localhost:5000/api/users/${profile._id}`,
+        `https://learningsphere-1fgj.onrender.com/api/users/${profile._id}`,
         updates,
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -189,7 +189,7 @@ const TutorProfile = () => {
       formData.append('avatar', file);
 
       const response = await axios.put(
-        `http://localhost:5000/api/users/${profile._id}`,
+        `https://learningsphere-1fgj.onrender.com/api/users/${profile._id}`,
         formData,
         {
           headers: {

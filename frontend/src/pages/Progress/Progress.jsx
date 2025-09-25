@@ -18,7 +18,7 @@ const Progress = () => {
         }
 
         // Fetch user data to get role
-        const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+        const response = await fetch(`https://learningsphere-1fgj.onrender.com/api/users/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

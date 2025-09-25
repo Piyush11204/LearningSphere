@@ -44,7 +44,7 @@ const Tutor = () => {
         }
 
         // Fetch tutor's sessions
-        const sessionsResponse = await fetch('http://localhost:5000/api/sessions', {
+        const sessionsResponse = await fetch('https://learningsphere-1fgj.onrender.com/api/sessions', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
