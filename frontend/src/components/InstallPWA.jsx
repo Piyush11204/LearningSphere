@@ -93,7 +93,7 @@ const InstallPWA = ({ className = "" }) => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 max-w-sm w-full">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Install Growora</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Install LearingSphere</h3>
                 <button onClick={dismissPrompt} className="text-gray-400 hover:text-gray-600">
                   <X className="w-5 h-5" />
                 </button>
@@ -149,7 +149,7 @@ const InstallPWA = ({ className = "" }) => {
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       <button
-        onClick={() => window.open('https://growora.com/download', '_blank')}
+        onClick={() => window.open('https://LearingSphere.com/download', '_blank')}
         className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
       >
         <Monitor className="w-4 h-4" />

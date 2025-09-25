@@ -28,7 +28,7 @@ const submitContact = async (req, res) => {
     // Send confirmation email to user
     const userEmailTemplate = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #3B82F6;">Thank you for contacting Growora!</h2>
+        <h2 style="color: #3B82F6;">Thank you for contacting LearingSphere!</h2>
         <p>Dear ${name},</p>
         <p>We've received your message and will get back to you within 24 hours.</p>
         
@@ -42,7 +42,7 @@ const submitContact = async (req, res) => {
         <p>If you have any urgent questions, feel free to call us at +1 (555) 123-4567 or use our live chat feature.</p>
         
         <p>Best regards,<br>
-        The Growora Support Team</p>
+        The LearingSphere Support Team</p>
         
         <hr style="margin: 30px 0;">
         <p style="color: #6B7280; font-size: 12px;">
@@ -54,7 +54,7 @@ const submitContact = async (req, res) => {
     try {
       await sendEmail({
         to: email,
-        subject: 'Thank you for contacting Growora',
+        subject: 'Thank you for contacting LearingSphere',
         html: userEmailTemplate
       });
     } catch (emailError) {
@@ -83,7 +83,7 @@ const submitContact = async (req, res) => {
 
     try {
       await sendEmail({
-        to: process.env.ADMIN_EMAIL || 'admin@growora.com',
+        to: process.env.ADMIN_EMAIL || 'admin@LearingSphere.com',
         subject: `New Contact Form: ${subject}`,
         html: adminEmailTemplate
       });

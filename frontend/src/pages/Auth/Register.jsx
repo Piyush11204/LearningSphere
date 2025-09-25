@@ -31,7 +31,7 @@ const Register = ({ setIsAuthenticated, setUsername }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
       <div className="container mx-auto p-6 max-w-md bg-white rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">Join Growora</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">Join LearingSphere</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"

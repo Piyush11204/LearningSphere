@@ -73,7 +73,7 @@ const CreateSession = () => {
 
       setSuccess('Session created successfully!');
       setTimeout(() => {
-        navigate('/tutor/sessions');
+        navigate('/tutor/my-sessions');
       }, 2000);
 
     } catch (error) {

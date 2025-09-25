@@ -1,7 +1,7 @@
 // Service Worker for PWA functionality
-const CACHE_NAME = 'growora-v1.0.0';
-const STATIC_CACHE = 'growora-static-v1.0.0';
-const DYNAMIC_CACHE = 'growora-dynamic-v1.0.0';
+const CACHE_NAME = 'LearingSphere-v1.0.0';
+const STATIC_CACHE = 'LearingSphere-static-v1.0.0';
+const DYNAMIC_CACHE = 'LearingSphere-dynamic-v1.0.0';
 
 // Files to cache immediately
 const STATIC_ASSETS = [

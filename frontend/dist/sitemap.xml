@@ -6,7 +6,7 @@
 
   <!-- Homepage -->
   <url>
-    <loc>https://growora.com/</loc>
+    <loc>https://LearingSphere.com/</loc>
     <lastmod>2025-09-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -14,14 +14,14 @@
 
   <!-- Static Pages -->
   <url>
-    <loc>https://growora.com/about</loc>
+    <loc>https://LearingSphere.com/about</loc>
     <lastmod>2025-09-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://growora.com/contact</loc>
+    <loc>https://LearingSphere.com/contact</loc>
     <lastmod>2025-09-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -29,21 +29,21 @@
 
   <!-- Public Pages -->
   <url>
-    <loc>https://growora.com/sessions</loc>
+    <loc>https://LearingSphere.com/sessions</loc>
     <lastmod>2025-09-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://growora.com/live-sessions</loc>
+    <loc>https://LearingSphere.com/live-sessions</loc>
     <lastmod>2025-09-25</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://growora.com/exams</loc>
+    <loc>https://LearingSphere.com/exams</loc>
     <lastmod>2025-09-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -51,14 +51,14 @@
 
   <!-- Authentication Pages -->
   <url>
-    <loc>https://growora.com/login</loc>
+    <loc>https://LearingSphere.com/login</loc>
     <lastmod>2025-09-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://growora.com/register</loc>
+    <loc>https://LearingSphere.com/register</loc>
     <lastmod>2025-09-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>

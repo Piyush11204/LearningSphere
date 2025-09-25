@@ -1,11 +1,11 @@
-# 🌱 Growora - Comprehensive Learning Management System
+# 🌱 LearingSphere - Comprehensive Learning Management System
 
 [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-green.svg)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/Database-MongoDB-brightgreen.svg)](https://mongodb.com/)
 [![Socket.io](https://img.shields.io/badge/WebSocket-Socket.io-black.svg)](https://socket.io/)
 
-Growora is a feature-rich, full-stack learning management platform that connects learners with tutors through personalized matching, gamified progress tracking, and comprehensive session management. Built with modern web technologies and designed for scalability.
+LearingSphere is a feature-rich, full-stack learning management platform that connects learners with tutors through personalized matching, gamified progress tracking, and comprehensive session management. Built with modern web technologies and designed for scalability.
 
 ## 🚀 **Core System Architecture**
 
@@ -362,7 +362,7 @@ Growora is a feature-rich, full-stack learning management platform that connects
 
 ### **Backend Setup**
 ```bash
-cd growora-backend
+cd LearingSphere-backend
 npm install
 # Configure environment variables in .env file
 npm start
@@ -378,7 +378,7 @@ npm run dev
 ### **Environment Variables**
 ```env
 # Database
-MONGODB_URI=mongodb://localhost:27017/growora
+MONGODB_URI=mongodb://localhost:27017/LearingSphere
 
 # JWT Secret
 JWT_SECRET=your_jwt_secret_key
@@ -397,7 +397,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 ## 🤝 **Contributing**
 
-Growora welcomes contributions! Please read our contributing guidelines and submit pull requests for any improvements.
+LearingSphere welcomes contributions! Please read our contributing guidelines and submit pull requests for any improvements.
 
 ### **Development Workflow**
 1. Fork the repository
@@ -420,4 +420,4 @@ Built with modern web technologies and best practices to create a comprehensive 
 
 ---
 
-**Growora** - *Empowering learners worldwide through personalized education* 🌱📚
+**LearingSphere** - *Empowering learners worldwide through personalized education* 🌱📚

@@ -524,7 +524,7 @@ exports.uploadRecording = async (req, res) => {
 
     const result = await cloudinary.uploader.upload(req.file.path, {
       resource_type: 'video',
-      folder: 'growora/sessions'
+      folder: 'LearingSphere/sessions'
     });
 
     const session = await Session.findByIdAndUpdate(

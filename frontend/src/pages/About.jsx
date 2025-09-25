@@ -90,7 +90,7 @@ const About = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              About <span className="text-yellow-400">Growora</span>
+              About <span className="text-yellow-400">LearingSphere</span>
             </h1>
             <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-gray-100">
               Empowering learners worldwide through personalized education and meaningful mentor connections
@@ -206,7 +206,7 @@ const About = () => {
                     <p className="text-gray-700">
                       Founded by two college students who struggled to find quality tutors for advanced subjects. 
                       They realized that great mentors existed everywhere, but there was no easy way to connect 
-                      with them. This sparked the idea for Growora.
+                      with them. This sparked the idea for LearingSphere.
                     </p>
                   </div>
                 </div>

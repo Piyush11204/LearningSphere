@@ -1,6 +1,6 @@
 {
-  "name": "Growora - Personalized Learning Platform",
-  "short_name": "Growora",
+  "name": "LearingSphere - Personalized Learning Platform",
+  "short_name": "LearingSphere",
   "description": "Connect with expert tutors for personalized learning experiences with gamified progress tracking and live sessions",
   "start_url": "/",
   "display": "standalone",

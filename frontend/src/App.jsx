@@ -96,6 +96,7 @@ function App() {
             <Route path="/tutor/earnings" element={<TutorEarnings />} />
             <Route path="/tutor/schedule" element={<TutorSchedule />} />
             <Route path="/create-exam" element={<AdminCreateExam />} />
+            <Route path="/tutor/create-exam" element={<AdminCreateExam />} />
             {/* Progress Routes */}
             <Route path="/progress" element={<Progress />} />
             {/* Student Exam Routes - Main exam system */}

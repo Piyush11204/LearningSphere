@@ -195,7 +195,7 @@ const Home = () => {
   // FAQ data will be fetched from API
   const faqs = [
     {
-      question: "How does Growora's matching system work?",
+      question: "How does LearingSphere's matching system work?",
       answer: "Our AI-powered matching system analyzes your profile, interests, skills, and learning goals to connect you with the most suitable tutors. We consider factors like teaching style, subject expertise, availability, and past success rates to ensure the best learning experience."
     },
     {
@@ -215,7 +215,7 @@ const Home = () => {
       answer: "You can reschedule sessions up to 24 hours in advance through your dashboard. Our tutors are flexible and will work with you to find a mutually convenient time."
     },
     {
-      question: "How do I become a tutor on Growora?",
+      question: "How do I become a tutor on LearingSphere?",
       answer: "To become a tutor, you need to apply through our tutor registration process. You'll need to provide your credentials, teaching experience, and undergo a verification process to ensure quality education for our learners."
     },
     {
@@ -302,14 +302,14 @@ const Home = () => {
               ) : (
                 <>
                   Unlock Your Future with{' '}
-                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> Growora Learning</span>
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> LearingSphere Learning</span>
                 </>
               )}
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
               {user 
                 ? "Continue your learning journey with expert mentors, interactive sessions, and AI-powered assessments."
-                : "Connect with expert mentors, join interactive sessions, and accelerate your learning journey. Growora makes quality education accessible to everyone, everywhere."
+                : "Connect with expert mentors, join interactive sessions, and accelerate your learning journey. LearingSphere makes quality education accessible to everyone, everywhere."
               }
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -734,7 +734,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Why Choose Growora?
+              Why Choose LearingSphere?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               We're not just another learning platform. We're your partner in growth and success.
@@ -838,7 +838,7 @@ const Home = () => {
                 What Our Students Say
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Real stories from real learners who transformed their careers with Growora
+                Real stories from real learners who transformed their careers with LearingSphere
               </p>
             </div>
 
@@ -890,7 +890,7 @@ const Home = () => {
                 Frequently Asked Questions
               </h2>
               <p className="text-xl text-gray-600">
-                Everything you need to know about Growora
+                Everything you need to know about LearingSphere
               </p>
             </div>
 
@@ -939,7 +939,7 @@ const Home = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Email Us</h3>
-                  <p className="text-blue-100 mb-1">support@growora.in</p>
+                  <p className="text-blue-100 mb-1">support@LearingSphere.in</p>
                   <p className="text-sm text-blue-200">Get a response within 24 hours</p>
                 </div>
               </div>
