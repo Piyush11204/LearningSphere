@@ -25,6 +25,8 @@ const VideoCall = ({ sessionId, userName }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const [screenStream, setScreenStream] = useState(null);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   const localVideoRef = useRef(null);
   const socketRef = useRef(null);
@@ -315,6 +317,58 @@ const VideoCall = ({ sessionId, userName }) => {
     }
   }, [newMessage, sessionId, userName]);
 
+  const toggleScreenShare = useCallback(async () => {
+    try {
+      if (isScreenSharing) {
+        // Stop screen sharing
+        if (screenStream) {
+          screenStream.getTracks().forEach(track => track.stop());
+          setScreenStream(null);
+        }
+        setIsScreenSharing(false);
+        
+        // Switch back to camera
+        if (localStream) {
+          const videoTrack = localStream.getVideoTracks()[0];
+          if (videoTrack) {
+            // Replace the screen track with camera track in all peer connections
+            peerConnections.forEach((pc) => {
+              const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+              if (sender) {
+                sender.replaceTrack(videoTrack);
+              }
+            });
+          }
+        }
+      } else {
+        // Start screen sharing
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false
+        });
+        
+        setScreenStream(screenStream);
+        setIsScreenSharing(true);
+        
+        // Replace camera track with screen track in all peer connections
+        const screenTrack = screenStream.getVideoTracks()[0];
+        peerConnections.forEach((pc) => {
+          const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+          if (sender) {
+            sender.replaceTrack(screenTrack);
+          }
+        });
+        
+        // Handle when user stops sharing via browser UI
+        screenTrack.onended = () => {
+          toggleScreenShare();
+        };
+      }
+    } catch (error) {
+      console.error('Error toggling screen share:', error);
+    }
+  }, [isScreenSharing, screenStream, localStream, peerConnections]);
+
   const toggleChat = useCallback(() => {
     setIsChatOpen(prev => !prev);
   }, []);
@@ -324,7 +378,7 @@ const VideoCall = ({ sessionId, userName }) => {
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
         <div className="flex items-center space-x-4">
-          <h1 className="text-white text-lg font-medium">Live Session</h1>
+          <h1 className="text-white text-lg font-medium">1-on-1 Live Session</h1>
           <span className="text-gray-400 text-sm">
             {participants.length + 1} participant{participants.length !== 0 ? 's' : ''}
           </span>
@@ -343,7 +397,7 @@ const VideoCall = ({ sessionId, userName }) => {
       <div className="flex-1 flex">
         {/* Video Area */}
         <div className="flex-1 relative">
-          {/* Video Grid */}
+          {/* Video Layout - One-on-One */}
           <div className="h-full p-6">
             {participants.length === 0 ? (
               // Only local video when alone
@@ -366,7 +420,7 @@ const VideoCall = ({ sessionId, userName }) => {
                           </span>
                         </div>
                         <p className="text-gray-300 text-lg mb-2">{userName || 'You'}</p>
-                        <p className="text-gray-400">Camera starting...</p>
+                        <p className="text-gray-400">Waiting for participant...</p>
                       </div>
                     </div>
                   )}
@@ -392,15 +446,19 @@ const VideoCall = ({ sessionId, userName }) => {
                       </div>
                     </div>
                   )}
+                  {/* Screen sharing indicator */}
+                  {isScreenSharing && (
+                    <div className="absolute top-4 left-4">
+                      <div className="bg-green-600 p-2 rounded-full">
+                        <Monitor className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
-              // Grid layout when multiple participants
-              <div className={`grid gap-4 h-full ${
-                participants.length + 1 <= 2 ? 'grid-cols-1 md:grid-cols-2' :
-                participants.length + 1 <= 4 ? 'grid-cols-2' :
-                'grid-cols-2 lg:grid-cols-3'
-              }`}>
+              // One-on-one layout - side by side
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
                 {/* Local Video */}
                 <div className="relative bg-gray-800 rounded-xl overflow-hidden shadow-lg">
                   {localStream ? (
@@ -438,10 +496,18 @@ const VideoCall = ({ sessionId, userName }) => {
                       </div>
                     </div>
                   )}
+                  {/* Screen sharing indicator */}
+                  {isScreenSharing && (
+                    <div className="absolute top-3 left-3">
+                      <div className="bg-green-600 p-1 rounded-full">
+                        <Monitor className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Remote Videos */}
-                {Array.from(remoteStreams.entries()).map(([userId, stream]) => {
+                {/* Remote Video - Only show first participant for one-on-one */}
+                {Array.from(remoteStreams.entries()).slice(0, 1).map(([userId, stream]) => {
                   const participant = participants.find(p => p.userId === userId);
                   const name = participant?.userName || `User ${userId.slice(-4)}`;
                   
@@ -467,28 +533,28 @@ const VideoCall = ({ sessionId, userName }) => {
                   );
                 })}
 
-                {/* Placeholder for participants without video */}
-                {participants.filter(p => !remoteStreams.has(p.userId)).map((participant) => (
-                  <div key={participant.userId} className="relative bg-gray-800 rounded-xl overflow-hidden shadow-lg">
+                {/* Show connecting state if no remote stream yet */}
+                {remoteStreams.size === 0 && participants.length > 0 && (
+                  <div className="relative bg-gray-800 rounded-xl overflow-hidden shadow-lg">
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800">
                       <div className="text-center">
                         <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
                           <span className="text-white text-lg font-bold">
-                            {participant.userName?.charAt(0).toUpperCase() || 'U'}
+                            {participants[0]?.userName?.charAt(0).toUpperCase() || 'U'}
                           </span>
                         </div>
-                        <p className="text-gray-300 text-sm">{participant.userName || 'User'}</p>
+                        <p className="text-gray-300 text-sm">{participants[0]?.userName || 'Participant'}</p>
                         <p className="text-gray-500 text-xs">Connecting...</p>
                       </div>
                     </div>
                     {/* User name overlay */}
                     <div className="absolute bottom-3 left-3">
                       <div className="bg-black bg-opacity-75 text-white px-2 py-1 rounded text-xs font-medium">
-                        {participant.userName || 'User'}
+                        {participants[0]?.userName || 'Participant'}
                       </div>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
@@ -524,8 +590,13 @@ const VideoCall = ({ sessionId, userName }) => {
 
               {/* Screen Share */}
               <button
-                className="p-3 rounded-full bg-gray-600 hover:bg-gray-500 text-white transition-all duration-200"
-                title="Share screen"
+                onClick={toggleScreenShare}
+                className={`p-3 rounded-full transition-all duration-200 ${
+                  isScreenSharing 
+                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                    : 'bg-gray-600 hover:bg-gray-500 text-white'
+                }`}
+                title={isScreenSharing ? 'Stop sharing' : 'Share screen'}
               >
                 <Monitor className="w-5 h-5" />
               </button>

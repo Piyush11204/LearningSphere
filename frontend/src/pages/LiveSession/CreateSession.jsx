@@ -7,7 +7,7 @@ const CreateSession = () => {
     title: '',
     description: '',
     scheduledTime: '',
-    maxParticipants: 20
+    maxParticipants: 2 // Limited to 2 for one-on-one sessions
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ const CreateSession = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12">
       <div className="container mx-auto max-w-md bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">Create Live Session</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">Create 1-on-1 Live Session</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
@@ -74,11 +74,9 @@ const CreateSession = () => {
             type="number"
             name="maxParticipants"
             value={formData.maxParticipants}
-            onChange={handleChange}
-            placeholder="Max Participants"
-            min={1}
-            max={100}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            readOnly
+            className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+            title="One-on-one sessions are limited to 2 participants"
           />
           <button
             type="submit"

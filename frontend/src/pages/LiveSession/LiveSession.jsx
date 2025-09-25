@@ -69,7 +69,7 @@ const Session = () => {
       {!isJoined && !session?.isActive ? (
         <div className="container mx-auto px-4 py-12 max-w-2xl">
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{session?.title}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">1-on-1 Live Session</h1>
             <p className="text-gray-600 mb-6">{session?.description}</p>
             
             <div className="grid md:grid-cols-2 gap-6 mb-8">

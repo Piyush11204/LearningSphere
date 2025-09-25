@@ -26,7 +26,10 @@ import {
   Target,
   Lightbulb,
   X,
-  AlertCircle
+  AlertCircle,
+  BarChart3,
+  FileText,
+  Download
 } from 'lucide-react';
 import { API_URLS } from '../config/api';
 
@@ -37,6 +40,9 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [verificationMessage, setVerificationMessage] = useState(null);
+  const [user, setUser] = useState(null);
+  const [exams, setExams] = useState([]);
+  const [examsLoading, setExamsLoading] = useState(true);
 
   // Check for email verification parameters
   useEffect(() => {
@@ -94,8 +100,94 @@ const Home = () => {
     fetchLiveSessions();
   }, []);
 
-  // Featured courses will be fetched from API
-  const featuredCourses = [];
+  // Fetch user profile if logged in
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        const username = localStorage.getItem('username');
+
+        // If we have user data in localStorage, use it directly
+        if (token && userId) {
+          setUser({
+            _id: userId,
+            name: username || 'User',
+            email: username || '', // username is stored as email in login
+            profile: {
+              name: username || 'User'
+            }
+          });
+          return;
+        }
+
+        // Otherwise, fetch from API
+        if (token) {
+          const response = await fetch(`${API_URLS.AUTH}/profile`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData.user);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        // Try to use localStorage data as fallback
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        const username = localStorage.getItem('username');
+
+        if (token && userId) {
+          setUser({
+            _id: userId,
+            name: username || 'User',
+            email: username || '',
+            profile: {
+              name: username || 'User'
+            }
+          });
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  // Fetch available exams
+  useEffect(() => {
+    const fetchExams = async () => {
+      try {
+        setExamsLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URLS.EXAMS}`, {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Show all available exams on homepage
+          setExams(data.exams || []);
+        } else {
+          setExams([]);
+        }
+      } catch (error) {
+        console.error('Error fetching exams:', error);
+        setExams([]);
+      } finally {
+        setExamsLoading(false);
+      }
+    };
+
+    fetchExams();
+  }, []);
 
   // Testimonials will be fetched from API
   const testimonials = [];
@@ -199,26 +291,59 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Unlock Your Future with 
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> Growora Learning</span>
+              {user ? (
+                <>
+                  Welcome back,{' '}
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    {user.profile?.name || user.name || 'Learner'}
+                  </span>
+                  !
+                </>
+              ) : (
+                <>
+                  Unlock Your Future with{' '}
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> Growora Learning</span>
+                </>
+              )}
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Connect with expert mentors, join interactive sessions, and accelerate your learning journey. 
-              Growora makes quality education accessible to everyone, everywhere.
+              {user 
+                ? "Continue your learning journey with expert mentors, interactive sessions, and AI-powered assessments."
+                : "Connect with expert mentors, join interactive sessions, and accelerate your learning journey. Growora makes quality education accessible to everyone, everywhere."
+              }
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link 
-                to="/register" 
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg text-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
-              >
-                Get Started Free
-              </Link>
-              <Link 
-                to="/sessions" 
-                className="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg text-lg font-medium hover:border-blue-600 hover:text-blue-600 transition-colors duration-200"
-              >
-                Explore Sessions
-              </Link>
+              {user ? (
+                <>
+                  <Link 
+                    to="/progress" 
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg text-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+                  >
+                    Go to Dashboard
+                  </Link>
+                  <Link 
+                    to="/student/reports" 
+                    className="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg text-lg font-medium hover:border-blue-600 hover:text-blue-600 transition-colors duration-200"
+                  >
+                    View AI Reports
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    to="/register" 
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg text-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+                  >
+                    Get Started Free
+                  </Link>
+                  <Link 
+                    to="/sessions" 
+                    className="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg text-lg font-medium hover:border-blue-600 hover:text-blue-600 transition-colors duration-200"
+                  >
+                    Explore Sessions
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -353,57 +478,89 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Courses Section */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* Exams Section */}
+      <section className="py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Featured Courses
+              Available Exams
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Comprehensive courses designed by industry experts to help you master new skills
+              Test your knowledge with AI-powered assessments created by experts. Earn badges, gain XP, and track your progress.
             </p>
           </div>
 
-          {featuredCourses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {featuredCourses.map((course) => (
-                <div key={course.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          {examsLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : exams.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {exams.map((exam) => (
+                <div key={exam._id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div className="relative">
-                    <img src={course.image} alt={course.title} className="w-full h-48 object-cover" />
-                    <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      {course.category}
+                    <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <BookOpen className="w-8 h-8 mx-auto mb-2" />
+                        <div className="text-sm font-semibold">
+                          {exam.subject || 'General'}
+                        </div>
+                      </div>
                     </div>
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-900 px-3 py-1 rounded-full text-sm font-medium">
-                      ⭐ {course.rating}
+                    <div className="absolute top-4 right-4">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        exam.status === 'live' ? 'bg-green-100 text-green-800' :
+                        exam.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {exam.status === 'live' ? '🔴 LIVE' : exam.status === 'ongoing' ? '⏳ ONGOING' : '📅 SCHEDULED'}
+                      </span>
                     </div>
                   </div>
 
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{course.title}</h3>
-
-                    <div className="flex items-center space-x-3 mb-4">
-                      <img src={course.avatar} alt={course.instructor} className="w-10 h-10 rounded-full" />
-                      <div>
-                        <p className="font-medium text-gray-900">{course.instructor}</p>
-                        <p className="text-sm text-gray-600">{course.students} students</p>
-                      </div>
-                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{exam.title}</h3>
+                    <p className="text-gray-600 mb-4 line-clamp-3">{exam.description}</p>
 
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-4 text-sm text-gray-600">
                         <div className="flex items-center space-x-1">
                           <Clock className="w-4 h-4" />
-                          <span>{course.duration}</span>
+                          <span>{exam.duration} min</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Users className="w-4 h-4" />
+                          <span>{exam.questions?.length || 0} Qs</span>
                         </div>
                       </div>
                     </div>
 
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-sm text-gray-600">
+                        <div>Scheduled: {new Date(exam.scheduledDate).toLocaleDateString()}</div>
+                        <div>Invigilator: {exam.invigilator?.profile?.name || exam.invigilator?.email || 'Admin'}</div>
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold text-gray-900">₹{course.price.toLocaleString('en-IN')}</div>
-                      <button className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:shadow-md transition-all">
-                        Enroll
-                      </button>
+                      <div className="text-lg font-bold text-gray-900">
+                        {exam.results?.length || 0} attempts
+                      </div>
+                      <Link
+                        to={`/exam/${exam._id}`}
+                        className={`inline-flex items-center px-4 py-2 rounded-lg font-semibold transition-all ${
+                          exam.status === 'live' || exam.status === 'ongoing'
+                            ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white hover:shadow-md'
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        }`}
+                        onClick={(e) => {
+                          if (exam.status !== 'live' && exam.status !== 'ongoing') {
+                            e.preventDefault();
+                          }
+                        }}
+                      >
+                        {exam.status === 'live' || exam.status === 'ongoing' ? 'Take Exam' : 'Not Available'}
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -412,70 +569,159 @@ const Home = () => {
           ) : (
             <div className="text-center py-12">
               <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">No Courses Available</h3>
-              <p className="text-gray-500">Check back later for new courses</p>
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">No Exams Available</h3>
+              <p className="text-gray-500">Check back later for new exams</p>
             </div>
           )}
 
-          <div className="text-center mt-12">
-            <Link to="/courses" className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all">
-              <span>Explore All Courses</span>
+          <div className="text-center">
+            <Link to="/student/exams" className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300">
+              <BookOpen className="w-5 h-5" />
+              <span>View All Exams</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Exams Section */}
-      <section className="py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
+      {/* AI Reports Section */}
+      <section className="py-20 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Challenge Yourself with AI-Powered Exams
+              AI-Powered Performance Reports
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Test your knowledge with intelligent assessments created by experts. Earn badges, gain XP, and track your progress.
+              Get detailed insights into your learning progress with our advanced AI analytics and personalized recommendations.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <div className="text-center p-8 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <BookOpen className="w-8 h-8 text-white" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <BarChart3 className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Comprehensive Analytics</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Detailed performance reports with score distributions, subject-wise analysis, and learning trends.
+                  </p>
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">AI-Generated Questions</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Experience intelligent questions tailored to your skill level and learning progress.
-              </p>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Progress Tracking</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Monitor your improvement over time with XP growth charts and achievement milestones.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Lightbulb className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">AI Recommendations</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Personalized study recommendations and learning paths based on your performance data.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Download className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Export & Share</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Download detailed reports in multiple formats and share your achievements with others.
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="text-center p-8 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Award className="w-8 h-8 text-white" />
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Your AI Report</h3>
+                <p className="text-gray-600 mb-6">
+                  {user ? 'Access your personalized performance report' : 'Sign in to unlock detailed analytics'}
+                </p>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Gamified Learning</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Earn XP points, unlock badges, and compete on leaderboards as you master new skills.
-              </p>
-            </div>
 
-            <div className="text-center p-8 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
-              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <TrendingUp className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Detailed Analytics</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Get comprehensive performance reports with insights to help you improve and excel.
-              </p>
-            </div>
-          </div>
+              {user ? (
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-900">Performance Summary</p>
+                        <p className="text-sm text-gray-600">Latest exam results & trends</p>
+                      </div>
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
 
-          <div className="text-center">
-            <Link to="/student/exams" className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300">
-              <BookOpen className="w-5 h-5" />
-              <span>Explore Exams</span>
-              <ArrowRight className="w-5 h-5" />
-            </Link>
+                  <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-900">Learning Analytics</p>
+                        <p className="text-sm text-gray-600">Subject-wise performance</p>
+                      </div>
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-900">Recommendations</p>
+                        <p className="text-sm text-gray-600">AI-powered study suggestions</p>
+                      </div>
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
+
+                  <Link
+                    to="/student/reports"
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-center block"
+                  >
+                    View My AI Report
+                  </Link>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                    <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-4">
+                      Sign in to access personalized AI reports and detailed performance analytics
+                    </p>
+                    <div className="space-y-3">
+                      <Link
+                        to="/login"
+                        className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:shadow-md transition-all"
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        to="/register"
+                        className="block w-full border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition-all"
+                      >
+                        Create Account
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
