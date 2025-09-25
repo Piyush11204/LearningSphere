@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# Block access to admin areas
+Disallow: /admin/
+Disallow: /api/
+
+# Block access to user-specific content
+Disallow: /profile
+Disallow: /progress
+Disallow: /reports
+
+# Allow access to public content
+Allow: /about
+Allow: /contact
+Allow: /sessions
+Allow: /live-sessions
+
+# Sitemap
+Sitemap: https://growora.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1

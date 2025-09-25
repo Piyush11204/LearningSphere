@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+
 const Header = ({ isAuthenticated, username, onLogout }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -90,6 +91,7 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
           </nav>
 
           <div className="flex items-center space-x-4">
+            
             {isAuthenticated ? (
               <>
                
@@ -245,6 +247,7 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
               <Link to="/contact" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-base font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
                 Contact
               </Link>
+              
               {!isAuthenticated && (
                 <div className="border-t border-gray-200 pt-3 mt-3">
                   <Link to="/login" className="block text-gray-700 hover:text-blue-600 px-3 py-2 text-base font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
