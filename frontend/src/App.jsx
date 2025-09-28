@@ -41,6 +41,7 @@ import PracticeExamResults from './pages/PracticeExam/PracticeExamResults';
 import SectionalTestSelection from './pages/SectionalTest/SectionalTestSelection';
 import TakeSectionalTest from './pages/SectionalTest/TakeSectionalTest';
 import SectionalTestResults from './pages/SectionalTest/SectionalTestResults';
+import SectionSummary from './pages/SectionalTest/SectionSummary';
 // Admin imports
 import AdminCreateExam from './pages/Admin/AdminCreateExam';
 import { useState, useEffect } from 'react';
@@ -123,6 +124,7 @@ function App() {
             {/* Sectional Test Routes - Progressive difficulty testing */}
             <Route path="/sectional-tests" element={<SectionalTestSelection />} />
             <Route path="/sectional-test/take/:sessionId" element={<TakeSectionalTest />} />
+            <Route path="/sectional-test/section-summary/:sessionId" element={<SectionSummary />} />
             <Route path="/sectional-test/results/:sessionId" element={<SectionalTestResults />} />
             {/* Alternative paths for consistency */}
             <Route path="/student/exams" element={<StudentExams />} />

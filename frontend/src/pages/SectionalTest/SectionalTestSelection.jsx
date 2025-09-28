@@ -107,8 +107,6 @@ const SectionalTestSelection = () => {
 
       // Get the first selected section to start with
       const selectedSectionKeys = Object.keys(selectedSections).filter(key => selectedSections[key]);
-      const firstSectionKey = selectedSectionKeys[0];
-      const firstSection = sections.find(s => s.key === firstSectionKey);
 
       // Map frontend difficulty keys to backend difficulty values
       const difficultyMap = {
@@ -118,7 +116,16 @@ const SectionalTestSelection = () => {
         difficult: 'Difficult'
       };
 
-      // Start the sectional test with the first section
+      // Prepare all selected sections for the backend
+      const selectedSectionsData = selectedSectionKeys.map(key => {
+        const section = sections.find(s => s.key === key);
+        return {
+          sectionId: section.id,
+          difficulty: difficultyMap[key]
+        };
+      });
+
+      // Start the sectional test with all selected sections
       const response = await fetch(`${API_URLS.PRACTICE}/sectional/start`, {
         method: 'POST',
         headers: {
@@ -126,8 +133,7 @@ const SectionalTestSelection = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          sectionId: firstSection.id,
-          difficulty: difficultyMap[firstSectionKey],
+          sections: selectedSectionsData,
           sectionIndex: 0
         })
       });

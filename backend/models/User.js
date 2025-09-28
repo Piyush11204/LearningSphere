@@ -386,23 +386,24 @@ userSchema.methods.getJWTToken = function() {
 // Update sectional test statistics
 userSchema.methods.updateSectionalTestStats = function() {
   const history = this.sectionalTestHistory;
-  if (history.length === 0) return;
+  if (!history || history.length === 0) return;
 
   this.sectionalTestStats.totalSessions = history.length;
-  this.sectionalTestStats.totalSectionsCompleted = history.reduce((sum, session) => sum + session.completedSections, 0);
-  this.sectionalTestStats.totalSectionsPassed = history.reduce((sum, session) => sum + session.passedSections, 0);
-  this.sectionalTestStats.totalXpEarned = history.reduce((sum, session) => sum + session.xpEarned, 0);
+  this.sectionalTestStats.totalSectionsCompleted = history.reduce((sum, session) => sum + (session.completedSections || 0), 0);
+  this.sectionalTestStats.totalSectionsPassed = history.reduce((sum, session) => sum + (session.passedSections || 0), 0);
+  this.sectionalTestStats.totalXpEarned = history.reduce((sum, session) => sum + (session.xpEarned || 0), 0);
   
   // Calculate average accuracy across all sections
   const totalAccuracy = history.reduce((sum, session) => {
-    return sum + session.sections.reduce((sectionSum, section) => sectionSum + section.accuracy, 0) / session.sections.length;
+    if (!session.sections || session.sections.length === 0) return sum;
+    return sum + session.sections.reduce((sectionSum, section) => sectionSum + (section.accuracy || 0), 0) / session.sections.length;
   }, 0);
-  this.sectionalTestStats.averageAccuracy = Math.round((totalAccuracy / history.length) * 100) / 100;
+  this.sectionalTestStats.averageAccuracy = history.length > 0 ? Math.round((totalAccuracy / history.length) * 100) / 100 : 0;
   
   // Calculate current streak (consecutive sessions with at least one section passed)
   let currentStreak = 0;
   for (let i = history.length - 1; i >= 0; i--) {
-    if (history[i].passedSections > 0) {
+    if ((history[i].passedSections || 0) > 0) {
       currentStreak++;
     } else {
       break;
@@ -410,7 +411,7 @@ userSchema.methods.updateSectionalTestStats = function() {
   }
   
   this.sectionalTestStats.currentStreak = currentStreak;
-  if (currentStreak > this.sectionalTestStats.longestStreak) {
+  if (currentStreak > (this.sectionalTestStats.longestStreak || 0)) {
     this.sectionalTestStats.longestStreak = currentStreak;
   }
 
@@ -423,16 +424,16 @@ userSchema.methods.updateSectionalTestStats = function() {
   };
 
   history.forEach(session => {
+    if (!session.sections) return;
     session.sections.forEach(section => {
-      if (section.completed) {
-        const diff = section.difficulty.toLowerCase();
-        if (difficultyStats[diff]) {
-          difficultyStats[diff].completed++;
-          if (section.passed) {
-            difficultyStats[diff].passed++;
-          }
-          difficultyStats[diff].accuracy += section.accuracy;
+      if (!section || !section.completed) return;
+      const diff = (section.difficulty || 'easy').toLowerCase();
+      if (difficultyStats[diff]) {
+        difficultyStats[diff].completed++;
+        if (section.passed) {
+          difficultyStats[diff].passed++;
         }
+        difficultyStats[diff].accuracy += section.accuracy || 0;
       }
     });
   });
@@ -449,8 +450,15 @@ userSchema.methods.updateSectionalTestStats = function() {
 
 // Award badges based on sectional test milestones
 userSchema.methods.awardSectionalTestBadges = function() {
-  const totalSessions = this.sectionalTestStats.totalSessions;
-  const totalSectionsPassed = this.sectionalTestStats.totalSectionsPassed;
+  if (!this.sectionalTestStats) return [];
+  
+  // Ensure badges array exists
+  if (!this.badges) {
+    this.badges = [];
+  }
+  
+  const totalSessions = this.sectionalTestStats.totalSessions || 0;
+  const totalSectionsPassed = this.sectionalTestStats.totalSectionsPassed || 0;
   const badgesToAward = [];
 
   // First Sectional Test Badge
@@ -501,9 +509,9 @@ userSchema.methods.awardSectionalTestBadges = function() {
   }
 
   // Difficulty-specific badges
-  const difficultyStats = this.sectionalTestStats.difficultyStats;
+  const difficultyStats = this.sectionalTestStats.difficultyStats || {};
   
-  if (difficultyStats.difficult.passed >= 5 && !this.badges.some(badge => badge.name === 'Difficulty Conqueror')) {
+  if ((difficultyStats.difficult?.passed || 0) >= 5 && !this.badges.some(badge => badge.name === 'Difficulty Conqueror')) {
     badgesToAward.push({
       name: 'Difficulty Conqueror',
       description: 'Passed 5 difficult sections',
@@ -512,8 +520,8 @@ userSchema.methods.awardSectionalTestBadges = function() {
     });
   }
 
-  if (difficultyStats.veryEasy.passed >= 10 && difficultyStats.easy.passed >= 10 && 
-      difficultyStats.moderate.passed >= 10 && difficultyStats.difficult.passed >= 10 &&
+  if ((difficultyStats.veryEasy?.passed || 0) >= 10 && (difficultyStats.easy?.passed || 0) >= 10 && 
+      (difficultyStats.moderate?.passed || 0) >= 10 && (difficultyStats.difficult?.passed || 0) >= 10 &&
       !this.badges.some(badge => badge.name === 'Well-Rounded Scholar')) {
     badgesToAward.push({
       name: 'Well-Rounded Scholar',
@@ -549,6 +557,30 @@ userSchema.methods.calculateSectionalTestXP = function(session) {
   }
   
   return baseXP;
+};
+
+// Update experience points
+userSchema.methods.updateExperiencePoints = function(xpAmount, source) {
+  if (!this.experiencePoints) {
+    this.experiencePoints = {
+      total: 0,
+      fromPractice: 0,
+      fromExams: 0,
+      level: 1
+    };
+  }
+
+  this.experiencePoints.total += xpAmount;
+  
+  if (source === 'practice') {
+    this.experiencePoints.fromPractice += xpAmount;
+  } else if (source === 'exam') {
+    this.experiencePoints.fromExams += xpAmount;
+  }
+
+  // Calculate new level (every 1000 XP = 1 level)
+  const newLevel = Math.floor(this.experiencePoints.total / 1000) + 1;
+  this.experiencePoints.level = newLevel;
 };
 
 module.exports = mongoose.model('User', userSchema);

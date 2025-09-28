@@ -1,80 +1,109 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Trophy, Target, Clock, TrendingUp, Award, ArrowLeft, Share2 } from 'lucide-react';
+import { Trophy, Target, Clock, TrendingUp, Award, ArrowLeft, Share2, AlertCircle } from 'lucide-react';
+import { API_URLS } from '../../config/api';
 
 const SectionalTestResults = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const getSectionName = useCallback((sectionId) => {
+    const sectionNames = {
+      'veryEasy': 'Very Easy',
+      'easy': 'Easy',
+      'moderate': 'Moderate',
+      'difficult': 'Difficult'
+    };
+    return sectionNames[sectionId] || sectionId;
+  }, []);
+
+  const generateRecommendations = useCallback((sections) => {
+    const recommendations = [];
+    const validSections = sections || [];
+    const passedSections = validSections.filter(s => s && s.passed);
+    const failedSections = validSections.filter(s => s && !s.passed);
+
+    if (failedSections.length > 0) {
+      recommendations.push(`Focus more on ${failedSections.map(s => getSectionName(s.sectionId)).join(', ')} concepts`);
+    }
+
+    if (passedSections.length > 0) {
+      recommendations.push(`Excellent performance in ${passedSections.map(s => getSectionName(s.sectionId)).join(', ')}!`);
+    }
+
+    if (recommendations.length === 0) {
+      recommendations.push('Great job! Keep practicing to maintain your performance.');
+    }
+
+    return recommendations;
+  }, [getSectionName]);
 
   useEffect(() => {
-    // In a real app, fetch results from API
-    // For demo, we'll simulate results
-    const mockResults = {
-      sessionId,
-      totalScore: 85,
-      totalQuestions: 50,
-      correctAnswers: 42,
-      timeTaken: 28 * 60, // 28 minutes in seconds
-      sections: [
-        {
-          name: 'Mathematics',
-          score: 90,
-          questions: 10,
-          correct: 9,
-          timeSpent: 8 * 60,
-          difficulty: 'Medium'
-        },
-        {
-          name: 'Physics',
-          score: 80,
-          questions: 10,
-          correct: 8,
-          timeSpent: 7 * 60,
-          difficulty: 'Hard'
-        },
-        {
-          name: 'Chemistry',
-          score: 85,
-          questions: 10,
-          correct: 8,
-          timeSpent: 6 * 60,
-          difficulty: 'Medium'
-        },
-        {
-          name: 'Biology',
-          score: 90,
-          questions: 10,
-          correct: 9,
-          timeSpent: 7 * 60,
-          difficulty: 'Easy'
-        },
-        {
-          name: 'English',
-          score: 80,
-          questions: 10,
-          correct: 8,
-          timeSpent: 6 * 60,
-          difficulty: 'Medium'
+    const fetchResults = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate('/login');
+          return;
         }
-      ],
-      xpEarned: 250,
-      badgesEarned: ['Section Master', 'Time Efficient'],
-      recommendations: [
-        'Focus more on Physics concepts',
-        'Practice time management for Chemistry',
-        'Excellent performance in Biology!'
-      ],
-      percentile: 78,
-      rank: 1250
+
+        const response = await fetch(`${API_URLS.PRACTICE}/sectional/results/${sessionId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Transform the data to match the expected format
+          const transformedResults = {
+            sessionId: data.sessionId,
+            totalScore: (data.sections?.length || 0) > 0 ?
+              Math.round(((data.sections.filter(s => s && s.passed).length || 0) / (data.sections.length || 1)) * 100) : 0,
+            totalQuestions: (data.sections || []).reduce((total, section) => total + (section?.total || 0), 0),
+            correctAnswers: (data.sections || []).reduce((total, section) => total + (section?.correct || 0), 0),
+            timeTaken: (data.duration || 0) * 60, // Convert minutes to seconds
+            sections: (data.sections || []).map(section => ({
+              name: getSectionName(section.sectionId),
+              score: (section.total || 0) > 0 ? Math.round(((section.correct || 0) / (section.total || 0)) * 100) : 0,
+              questions: section.total || 0,
+              correct: section.correct || 0,
+              timeSpent: data.duration * 60 / (data.sections?.length || 1), // Distribute time equally
+              difficulty: section.difficulty || 'Easy'
+            })),
+            xpEarned: data.xpEarned || 0,
+            badgesEarned: (data.newBadges || []).map(badge => badge.name),
+            recommendations: generateRecommendations(data.sections),
+            percentile: 78, // This would need to be calculated based on user performance
+            rank: 1250 // This would need to be calculated based on user performance
+          };
+
+          setResults(transformedResults);
+        } else {
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+          setError(errorData.message || `Failed to load results (${response.status})`);
+        }
+      } catch (error) {
+        console.error('Error fetching results:', error);
+        setError('Failed to load test results. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    setTimeout(() => {
-      setResults(mockResults);
-      setIsLoading(false);
-    }, 1000);
-  }, [sessionId]);
+    if (sessionId) {
+      fetchResults();
+    }
+  }, [sessionId, navigate, getSectionName, generateRecommendations]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -107,19 +136,27 @@ const SectionalTestResults = () => {
     );
   }
 
-  if (!results) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center text-gray-600">
-          <Target className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-2xl font-bold mb-4">Results Not Found</h2>
-          <p className="mb-8">Unable to load test results. Please try again.</p>
-          <button
-            onClick={() => navigate('/sectional-tests')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Back to Sectional Tests
-          </button>
+        <div className="text-center text-gray-600 max-w-md mx-auto p-8">
+          <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+          <h2 className="text-2xl font-bold mb-4">Error Loading Results</h2>
+          <p className="mb-8">{error}</p>
+          <div className="space-y-4">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors block w-full"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => navigate('/sectional-tests')}
+              className="text-gray-600 hover:text-gray-800 underline"
+            >
+              Back to Sectional Tests
+            </button>
+          </div>
         </div>
       </div>
     );

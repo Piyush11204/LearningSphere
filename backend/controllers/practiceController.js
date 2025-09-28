@@ -454,17 +454,27 @@ const getUserPracticeSessions = async (req, res) => {
 // Start a new sectional test
 const startSectionalTest = async (req, res) => {
   try {
-    const { sectionId, difficulty, sectionIndex } = req.body;
+    const { sections: selectedSections, sectionIndex } = req.body;
 
-    // Get 10 questions for this section
+    if (!selectedSections || !Array.isArray(selectedSections) || selectedSections.length === 0) {
+      return res.status(400).json({ message: 'No sections selected' });
+    }
+
+    // Get the current section to start with
+    const currentSectionData = selectedSections[sectionIndex || 0];
+    if (!currentSectionData) {
+      return res.status(400).json({ message: 'Invalid section index' });
+    }
+
+    // Get 10 questions for the current section
     const questions = await Question.find({
       isActive: true,
-      difficulty: difficulty
+      difficulty: currentSectionData.difficulty
     }).sort({ createdAt: -1 }).limit(10);
 
     if (!questions || questions.length < 10) {
       return res.status(404).json({
-        message: `Not enough ${difficulty} questions available. Found ${questions?.length || 0}, need 10.`
+        message: `Not enough ${currentSectionData.difficulty} questions available. Found ${questions?.length || 0}, need 10.`
       });
     }
 
@@ -479,23 +489,23 @@ const startSectionalTest = async (req, res) => {
       questions: questions.map((q, index) => ({
         questionId: q._id,
         answeredAt: null,
-        sectionIndex: sectionIndex,
+        sectionIndex: sectionIndex || 0,
         questionIndex: index
       })),
       currentQuestionIndex: 0,
-      currentDifficulty: difficulty,
+      currentDifficulty: currentSectionData.difficulty,
       status: 'active',
       isSectional: true,
-      currentSection: sectionId,
-      sections: [{
-        sectionId: sectionId,
-        difficulty: difficulty,
-        questions: questions.map(q => q._id),
+      currentSection: currentSectionData.sectionId,
+      sections: selectedSections.map((section, idx) => ({
+        sectionId: section.sectionId,
+        difficulty: section.difficulty,
+        questions: idx === (sectionIndex || 0) ? questions.map(q => q._id) : [], // Only load questions for current section
         correct: 0,
         total: 0,
         completed: false,
         passed: false
-      }]
+      }))
     });
 
     await session.save();
@@ -515,7 +525,9 @@ const startSectionalTest = async (req, res) => {
       timeRemaining: 30 * 60, // 30 minutes in seconds
       currentScore: 0,
       questionNumber: 1,
-      totalQuestions: 10
+      totalQuestions: 10,
+      currentSection: currentSectionData.sectionId,
+      sections: session.sections
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -693,6 +705,110 @@ const getSectionalQuestion = async (req, res) => {
   }
 };
 
+// Switch to next section in sectional test
+const switchSectionalSection = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { sectionIndex } = req.body;
+
+    const session = await PracticeSession.findById(sessionId);
+    if (!session || session.userId.toString() !== req.user.id) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    if (!session.isSectional) {
+      return res.status(400).json({ message: 'This endpoint is only for sectional test sessions' });
+    }
+
+    if (session.status !== 'active') {
+      return res.status(400).json({ message: 'Session is not active' });
+    }
+
+    // Check if the requested section exists
+    if (!session.sections[sectionIndex]) {
+      return res.status(400).json({ message: 'Section not found' });
+    }
+
+    const targetSection = session.sections[sectionIndex];
+
+    // Check if section is already completed
+    if (targetSection.completed) {
+      return res.status(400).json({ message: 'Section already completed' });
+    }
+
+    // Get questions for this section if not already loaded
+    if (!targetSection.questions || targetSection.questions.length === 0) {
+      const questions = await Question.find({
+        isActive: true,
+        difficulty: targetSection.difficulty
+      }).sort({ createdAt: -1 }).limit(10);
+
+      if (!questions || questions.length < 10) {
+        return res.status(404).json({
+          message: `Not enough ${targetSection.difficulty} questions available. Found ${questions?.length || 0}, need 10.`
+        });
+      }
+
+      targetSection.questions = questions.map(q => q._id);
+
+      // Add questions to session.questions array
+      const existingQuestionCount = session.questions.length;
+      questions.forEach((q, index) => {
+        session.questions.push({
+          questionId: q._id,
+          answeredAt: null,
+          sectionIndex: sectionIndex,
+          questionIndex: index
+        });
+      });
+    }
+
+    // Update session for new section
+    session.currentSection = targetSection.sectionId;
+    session.currentQuestionIndex = session.questions.findIndex(q => q.sectionIndex === sectionIndex && q.questionIndex === 0);
+    session.currentDifficulty = targetSection.difficulty;
+
+    // Reset timer for new section
+    session.startTime = new Date();
+    session.endTime = new Date(session.startTime.getTime() + 30 * 60000); // 30 minutes
+
+    await session.save();
+
+    // Get the first question of the new section
+    const firstQuestionIndex = session.questions.findIndex(q => q.sectionIndex === sectionIndex && q.questionIndex === 0);
+    const firstQuestion = session.questions[firstQuestionIndex];
+
+    if (!firstQuestion || !firstQuestion.questionId) {
+      return res.status(500).json({ message: 'Failed to load first question of section' });
+    }
+
+    // Populate the question
+    await session.populate('questions.questionId');
+
+    res.json({
+      sessionId: session._id,
+      question: {
+        id: firstQuestion.questionId.id,
+        question_text: firstQuestion.questionId.question_text,
+        option_a: firstQuestion.questionId.option_a,
+        option_b: firstQuestion.questionId.option_b,
+        option_c: firstQuestion.questionId.option_c,
+        option_d: firstQuestion.questionId.option_d,
+        difficulty: firstQuestion.questionId.difficulty,
+        tags: firstQuestion.questionId.tags
+      },
+      timeRemaining: 30 * 60, // 30 minutes in seconds
+      currentScore: targetSection.correct,
+      questionNumber: 1,
+      totalQuestions: 10,
+      currentSection: targetSection.sectionId,
+      sections: session.sections
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // End sectional test
 const endSectionalTest = async (req, res) => {
   try {
@@ -731,6 +847,11 @@ const getSectionalTestResults = async (req, res) => {
       return res.status(404).json({ message: 'Session not found' });
     }
 
+    // Check if this is a sectional test
+    if (!session.isSectional || !session.sections || session.sections.length === 0) {
+      return res.status(400).json({ message: 'Invalid sectional test session' });
+    }
+
     // Format questions with answers
     const questions = session.questions
       .filter(q => q.answeredAt) // Only answered questions
@@ -749,6 +870,10 @@ const getSectionalTestResults = async (req, res) => {
     const User = require('../models/User');
     const user = await User.findById(req.user.id);
 
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     // Ensure experiencePoints is initialized
     if (!user.experiencePoints) {
       user.experiencePoints = {
@@ -760,26 +885,55 @@ const getSectionalTestResults = async (req, res) => {
       await user.save();
     }
 
+    // Ensure sectionalTestStats is initialized
+    if (!user.sectionalTestStats) {
+      user.sectionalTestStats = {
+        totalSessions: 0,
+        totalSectionsCompleted: 0,
+        totalSectionsPassed: 0,
+        averageAccuracy: 0,
+        totalXpEarned: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        difficultyStats: {
+          veryEasy: { completed: 0, passed: 0, accuracy: 0 },
+          easy: { completed: 0, passed: 0, accuracy: 0 },
+          moderate: { completed: 0, passed: 0, accuracy: 0 },
+          difficult: { completed: 0, passed: 0, accuracy: 0 }
+        }
+      };
+    }
+
+    // Ensure badges array is initialized
+    if (!user.badges) {
+      user.badges = [];
+    }
+
     // Add sectional test session to user history
     const sectionalSessionData = {
       sessionId: session._id,
-      sections: session.sections.map(section => ({
-        sectionId: section.sectionId,
-        difficulty: section.difficulty,
-        correct: section.correct,
-        total: section.total,
-        accuracy: section.total > 0 ? Math.round((section.correct / section.total) * 100) : 0,
-        passed: section.passed,
-        completed: section.completed
+      sections: (session.sections || []).map(section => ({
+        sectionId: section.sectionId || '',
+        difficulty: section.difficulty || 'Easy',
+        correct: section.correct || 0,
+        total: section.total || 0,
+        accuracy: (section.total || 0) > 0 ? Math.round(((section.correct || 0) / (section.total || 0)) * 100) : 0,
+        passed: section.passed || false,
+        completed: section.completed || false
       })),
-      totalSections: session.sections.length,
-      completedSections: session.sections.filter(s => s.completed).length,
-      passedSections: session.sections.filter(s => s.passed).length,
+      totalSections: (session.sections || []).length,
+      completedSections: (session.sections || []).filter(s => s && s.completed).length,
+      passedSections: (session.sections || []).filter(s => s && s.passed).length,
       xpEarned: session.xpEarned || 0,
-      duration: session.duration,
-      status: session.status,
+      duration: session.duration || 0,
+      status: session.status || 'completed',
       completedAt: new Date()
     };
+
+    // Initialize sectionalTestHistory if it doesn't exist
+    if (!user.sectionalTestHistory) {
+      user.sectionalTestHistory = [];
+    }
 
     user.sectionalTestHistory.push(sectionalSessionData);
 
@@ -800,20 +954,20 @@ const getSectionalTestResults = async (req, res) => {
       sessionId: session._id,
       startTime: session.startTime,
       endTime: session.endTime,
-      duration: session.duration,
-      sections: session.sections,
-      xpEarned: session.xpEarned,
-      status: session.status,
+      duration: session.duration || 0,
+      sections: session.sections || [],
+      xpEarned: session.xpEarned || 0,
+      status: session.status || 'completed',
       questions,
       currentXP: user.experiencePoints?.total || 0,
       currentLevel: user.experiencePoints?.level || 1,
-      newBadges: newBadges,
+      newBadges: newBadges || [],
       sectionalStats: {
-        totalSessions: user.sectionalTestStats.totalSessions,
-        totalSectionsCompleted: user.sectionalTestStats.totalSectionsCompleted,
-        totalSectionsPassed: user.sectionalTestStats.totalSectionsPassed,
-        averageAccuracy: user.sectionalTestStats.averageAccuracy,
-        currentStreak: user.sectionalTestStats.currentStreak
+        totalSessions: user.sectionalTestStats?.totalSessions || 0,
+        totalSectionsCompleted: user.sectionalTestStats?.totalSectionsCompleted || 0,
+        totalSectionsPassed: user.sectionalTestStats?.totalSectionsPassed || 0,
+        averageAccuracy: user.sectionalTestStats?.averageAccuracy || 0,
+        currentStreak: user.sectionalTestStats?.currentStreak || 0
       }
     });
   } catch (error) {
@@ -830,6 +984,7 @@ module.exports = {
   getPracticeSessionResults,
   startSectionalTest,
   getSectionalQuestion,
+  switchSectionalSection,
   endSectionalTest,
   getSectionalTestResults
 };

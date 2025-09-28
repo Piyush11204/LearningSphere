@@ -28,7 +28,6 @@ const TakeSectionalTest = () => {
   const [error, setError] = useState(null);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [selectedSections, setSelectedSections] = useState({});
-  const [completedSections, setCompletedSections] = useState([]);
 
   useEffect(() => {
     // Get data from navigation state
@@ -37,9 +36,20 @@ const TakeSectionalTest = () => {
       setSelectedSections(state.selectedSections || {});
       setSections(state.sections || []);
       setCurrentSection(state.currentSectionIndex || 0);
+
+      // Use the session data if available (first question already loaded)
+      if (state.sessionData) {
+        setCurrentQuestion(state.sessionData.question);
+        setTimeRemaining(state.sessionData.timeRemaining);
+        setQuestionNumber(state.sessionData.questionNumber || 1);
+        setTotalQuestions(state.sessionData.totalQuestions || 10);
+        setCurrentSection(state.sessionData.currentSection || 0);
+        setIsLoading(false);
+        return;
+      }
     }
 
-    // Load initial question
+    // Only load question if we don't have session data
     loadQuestion();
 
     // Timer
@@ -135,64 +145,29 @@ const TakeSectionalTest = () => {
         const data = await response.json();
         
         if (data.sectionCompleted) {
-          // Section completed, check if there are more sections
-          const nextSectionIndex = currentSection + 1;
+          // Section completed, navigate to section summary
           const selectedSectionKeys = Object.keys(selectedSections).filter(key => selectedSections[key]);
-          
-          if (nextSectionIndex < selectedSectionKeys.length) {
-            // Start next section
-            const nextSectionKey = selectedSectionKeys[nextSectionIndex];
-            const nextSection = sections.find(s => s.key === nextSectionKey);
-            
-            const difficultyMap = {
-              veryEasy: 'Very easy',
-              easy: 'Easy',
-              moderate: 'Moderate',
-              difficult: 'Difficult'
-            };
-            
-            // Start next section
-            const startResponse = await fetch(`${API_URLS.PRACTICE}/sectional/start`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+          const nextSectionIndex = currentSection + 1;
+          const hasNextSection = nextSectionIndex < selectedSectionKeys.length;
+
+          // Navigate to section summary with section data
+          navigate(`/sectional-test/section-summary/${sessionId}`, {
+            state: {
+              sectionData: {
+                sectionInfo: sections[currentSection] || {},
+                score: data.accuracy || 0,
+                correct: data.sectionCorrect || 0,
+                total: data.sectionTotal || 0,
+                passed: data.passed || false,
+                nextSectionIndex: nextSectionIndex,
+                hasNextSection: hasNextSection
               },
-              body: JSON.stringify({
-                sectionId: nextSection.id,
-                difficulty: difficultyMap[nextSectionKey],
-                sectionIndex: nextSectionIndex
-              })
-            });
-            
-            if (startResponse.ok) {
-              const startData = await startResponse.json();
-              setCurrentQuestion(startData.question);
-              setTimeRemaining(startData.timeRemaining);
-              setQuestionNumber(1);
-              setCurrentSection(nextSectionIndex);
-              setSelectedAnswer('');
-              setCompletedSections(prev => [...prev, {
-                sectionId: data.sectionId || currentSection,
-                correct: data.sectionCorrect,
-                total: data.sectionTotal,
-                accuracy: data.accuracy,
-                passed: data.passed
-              }]);
-            } else {
-              setError('Failed to start next section');
+              questions: [], // We'll need to get questions from the API
+              selectedSections: selectedSections,
+              sections: sections,
+              currentSectionIndex: currentSection
             }
-          } else {
-            // All sections completed
-            setCompletedSections(prev => [...prev, {
-              sectionId: data.sectionId || currentSection,
-              correct: data.sectionCorrect,
-              total: data.sectionTotal,
-              accuracy: data.accuracy,
-              passed: data.passed
-            }]);
-            navigate(`/sectional-test/results/${sessionId}`);
-          }
+          });
         } else {
           // Continue with next question in current section
           setCurrentQuestion(data.question);
