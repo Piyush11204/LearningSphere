@@ -24,6 +24,8 @@ import TutorProfile from './pages/Tutor/TutorProfile';
 import TutorStudents from './pages/Tutor/TutorStudents';
 import TutorEarnings from './pages/Tutor/TutorEarnings';
 import TutorSchedule from './pages/Tutor/TutorSchedule';
+import QuestionsManagement from './pages/Tutor/QuestionsManagement';
+import PracticeExamsManagement from './pages/Tutor/PracticeExamsManagement';
 // Progress imports
 import Progress from './pages/Progress';
 // Exam imports (using only the Exam folder)
@@ -31,6 +33,10 @@ import StudentExams from './pages/Exam/StudentExams';
 import TakeExamStudent from './pages/Exam/TakeExam';
 import ExamResults from './pages/Exam/ExamResults';
 import StudentReports from './pages/Exam/StudentReports';
+// Practice Exam imports
+import PracticeExams from './pages/PracticeExam/PracticeExams';
+import TakePracticeExam from './pages/PracticeExam/TakePracticeExam';
+import PracticeExamResults from './pages/PracticeExam/PracticeExamResults';
 // Admin imports
 import AdminCreateExam from './pages/Admin/AdminCreateExam';
 import { useState, useEffect } from 'react';
@@ -68,7 +74,7 @@ function App() {
   };
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="flex flex-col min-h-screen">
         <Header isAuthenticated={isAuthenticated} username={username} onLogout={handleLogout} />
         <main className="flex-grow">
@@ -95,6 +101,8 @@ function App() {
             <Route path="/tutor/students" element={<TutorStudents />} />
             <Route path="/tutor/earnings" element={<TutorEarnings />} />
             <Route path="/tutor/schedule" element={<TutorSchedule />} />
+            <Route path="/tutor/questions" element={<QuestionsManagement />} />
+            <Route path="/tutor/practice-exams" element={<PracticeExamsManagement />} />
             <Route path="/create-exam" element={<AdminCreateExam />} />
             <Route path="/tutor/create-exam" element={<AdminCreateExam />} />
             {/* Progress Routes */}
@@ -104,6 +112,10 @@ function App() {
             <Route path="/exam/:id" element={<TakeExamStudent />} />
             <Route path="/exam/:id/results" element={<ExamResults />} />
             <Route path="/reports" element={<StudentReports />} />
+            {/* Practice Exam Routes - Adaptive learning system */}
+            <Route path="/practice-exams" element={<PracticeExams />} />
+            <Route path="/practice-exam/take/:sessionId" element={<TakePracticeExam />} />
+            <Route path="/practice-exam/results/:sessionId" element={<PracticeExamResults />} />
             {/* Alternative paths for consistency */}
             <Route path="/student/exams" element={<StudentExams />} />
             <Route path="/student/exam/:id" element={<TakeExamStudent />} />

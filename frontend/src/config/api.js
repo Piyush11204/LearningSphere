@@ -13,7 +13,9 @@ export const API_URLS = {
   CONTACT: `${API_BASE_URL}/api/contact`,
   AUTH: `${API_BASE_URL}/api/auth`,
   EXAMS: `${API_BASE_URL}/api/exams`,
-  REPORTS: `${API_BASE_URL}/api/reports`
+  REPORTS: `${API_BASE_URL}/api/reports`,
+  PRACTICE: `${API_BASE_URL}/api/practice`,
+  QUESTIONS: `${API_BASE_URL}/api/questions`
 };
 
 export default API_URLS;

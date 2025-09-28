@@ -65,6 +65,8 @@ app.use('/api/livesessions', require('./routes/liveSessions'));
 app.use('/api/contact', require('./routes/contact'));
 app.use('/api/exams', require('./routes/exams'));
 app.use('/api/reports', require('./routes/reports'));
+app.use('/api/questions', require('./routes/questions'));
+app.use('/api/practice', require('./routes/practice'));
 
 // Socket.io integration
 require('./sockets/sessionSockets')(io);

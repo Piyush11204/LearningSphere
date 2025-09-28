@@ -15,11 +15,11 @@ const ExamProgress = () => {
     try {
       const [progressResponse, userResponse] = await Promise.all([
         api.get('/progress/my'),
-        api.get('/users/profile')
+        api.get('/auth/profile')
       ]);
       
       setProgress(progressResponse.data);
-      setUser(userResponse.data);
+      setUser(userResponse.data.user);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching data:', error);

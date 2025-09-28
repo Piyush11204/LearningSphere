@@ -435,6 +435,68 @@ const TutorDashboard = () => {
           )}
         </div>
         </div>
+
+        {/* Questions Management Section */}
+        <div className="bg-white shadow rounded-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Question Bank Management</h3>
+            <button
+              onClick={() => navigate('/tutor/questions')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              <BookOpen className="w-4 h-4 mr-2" />
+              Manage Questions
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <BookOpen className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-blue-600">0</div>
+              <div className="text-sm text-gray-600">Total Questions</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-green-600">0</div>
+              <div className="text-sm text-gray-600">Active Questions</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-purple-600">0%</div>
+              <div className="text-sm text-gray-600">Avg Success Rate</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Practice Exams Management Section */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Practice Exams Management</h3>
+            <button
+              onClick={() => navigate('/tutor/practice-exams')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
+            >
+              <Target className="w-4 h-4 mr-2" />
+              Manage Practice Exams
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <Target className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-purple-600">0</div>
+              <div className="text-sm text-gray-600">Practice Sessions</div>
+            </div>
+            <div className="text-center p-4 bg-orange-50 rounded-lg">
+              <Users className="w-8 h-8 text-orange-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-orange-600">0</div>
+              <div className="text-sm text-gray-600">Students Practicing</div>
+            </div>
+            <div className="text-center p-4 bg-pink-50 rounded-lg">
+              <Award className="w-8 h-8 text-pink-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-pink-600">0</div>
+              <div className="text-sm text-gray-600">Badges Awarded</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

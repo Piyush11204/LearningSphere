@@ -218,3 +218,18 @@ exports.logout = (req, res) => {
     res.status(500).json({ msg: 'Server error during logout', error: error.message });
   }
 };
+
+// Get user profile
+exports.getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ msg: 'Server error getting profile', error: error.message });
+  }
+};

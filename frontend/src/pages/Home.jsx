@@ -43,6 +43,12 @@ const Home = () => {
   const [user, setUser] = useState(null);
   const [exams, setExams] = useState([]);
   const [examsLoading, setExamsLoading] = useState(true);
+  const [practiceStats, setPracticeStats] = useState({
+    totalSessions: 0,
+    completedSessions: 0,
+    totalXPEarned: 0,
+    avgAccuracy: 0
+  });
 
   // Check for email verification parameters
   useEffect(() => {
@@ -158,28 +164,73 @@ const Home = () => {
     fetchUserProfile();
   }, []);
 
+  // Fetch practice exam stats
+  useEffect(() => {
+    const fetchPracticeStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const response = await fetch(`${API_URLS.PRACTICE}/history`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const sessions = await response.json();
+            // Calculate practice stats
+            const completedSessions = sessions.filter(s => s.status === 'completed');
+            const totalXPEarned = sessions.reduce((acc, s) => acc + (s.xpEarned || 0), 0);
+            const avgAccuracy = completedSessions.length > 0
+              ? completedSessions.reduce((acc, s) => acc + s.accuracy, 0) / completedSessions.length
+              : 0;
+
+            setPracticeStats({
+              totalSessions: sessions.length,
+              completedSessions: completedSessions.length,
+              totalXPEarned,
+              avgAccuracy: Math.round(avgAccuracy)
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching practice stats:', error);
+        // Use default stats
+        setPracticeStats({
+          totalSessions: 0,
+          completedSessions: 0,
+          totalXPEarned: 0,
+          avgAccuracy: 0
+        });
+      }
+    };
+
+    fetchPracticeStats();
+  }, []);
+
   // Fetch available exams
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        setExamsLoading(true);
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URLS.EXAMS}`, {
           headers: {
-            'Authorization': token ? `Bearer ${token}` : '',
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
 
         if (response.ok) {
-          const data = await response.json();
-          // Show all available exams on homepage
-          setExams(data.exams || []);
+          const examsData = await response.json();
+          setExams(examsData.exams || []);
         } else {
+          // If API fails, use empty array
           setExams([]);
         }
       } catch (error) {
         console.error('Error fetching exams:', error);
+        // Use empty array as fallback
         setExams([]);
       } finally {
         setExamsLoading(false);
@@ -583,6 +634,190 @@ const Home = () => {
               <span>View All Exams</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Practice Exams Section */}
+      <section className="py-20 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Practice Exams with AI
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Sharpen your skills with adaptive practice exams that adjust to your learning pace and award XP for progress.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-12">
+            <div className="space-y-8">
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Adaptive Difficulty</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Questions automatically adjust based on your performance, ensuring optimal challenge and learning.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Earn XP & Badges</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Gain experience points and unlock achievements as you complete practice sessions and improve.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Track Progress</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Monitor your improvement with detailed analytics and performance insights over time.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Flexible Timing</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Practice at your own pace with customizable session durations and instant feedback.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <BarChart3 className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Your Practice Stats</h3>
+                <p className="text-gray-600 mb-6">
+                  {user ? 'Track your practice exam progress' : 'Sign in to start practicing'}
+                </p>
+              </div>
+
+              {user ? (
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-900">Practice Sessions</p>
+                        <p className="text-sm text-gray-600">Total completed</p>
+                      </div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {practiceStats.completedSessions}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-900">XP Earned</p>
+                        <p className="text-sm text-gray-600">From practice</p>
+                      </div>
+                      <div className="text-2xl font-bold text-green-600">
+                        {practiceStats.totalXPEarned}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-900">Average Accuracy</p>
+                        <p className="text-sm text-gray-600">Performance metric</p>
+                      </div>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {practiceStats.avgAccuracy}%
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link
+                    to="/practice-exams"
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-center block"
+                  >
+                    Start Practice Session
+                  </Link>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                    <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-4">
+                      Sign in to access adaptive practice exams and track your progress
+                    </p>
+                    <div className="space-y-3">
+                      <Link
+                        to="/login"
+                        className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:shadow-md transition-all"
+                      >
+                        Sign In to Practice
+                      </Link>
+                      <Link
+                        to="/register"
+                        className="block w-full border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition-all"
+                      >
+                        Create Free Account
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* How It Works */}
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">How Practice Exams Work</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">1</span>
+                  </div>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Start Session</h4>
+                <p className="text-gray-600">Begin with questions matched to your skill level</p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">2</span>
+                  </div>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Adaptive Learning</h4>
+                <p className="text-gray-600">AI adjusts difficulty based on your answers in real-time</p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">3</span>
+                  </div>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Earn Rewards</h4>
+                <p className="text-gray-600">Complete sessions to earn XP and unlock achievements</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
