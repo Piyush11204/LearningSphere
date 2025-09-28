@@ -37,6 +37,10 @@ import StudentReports from './pages/Exam/StudentReports';
 import PracticeExams from './pages/PracticeExam/PracticeExams';
 import TakePracticeExam from './pages/PracticeExam/TakePracticeExam';
 import PracticeExamResults from './pages/PracticeExam/PracticeExamResults';
+// Sectional Test imports
+import SectionalTestSelection from './pages/SectionalTest/SectionalTestSelection';
+import TakeSectionalTest from './pages/SectionalTest/TakeSectionalTest';
+import SectionalTestResults from './pages/SectionalTest/SectionalTestResults';
 // Admin imports
 import AdminCreateExam from './pages/Admin/AdminCreateExam';
 import { useState, useEffect } from 'react';
@@ -116,6 +120,10 @@ function App() {
             <Route path="/practice-exams" element={<PracticeExams />} />
             <Route path="/practice-exam/take/:sessionId" element={<TakePracticeExam />} />
             <Route path="/practice-exam/results/:sessionId" element={<PracticeExamResults />} />
+            {/* Sectional Test Routes - Progressive difficulty testing */}
+            <Route path="/sectional-tests" element={<SectionalTestSelection />} />
+            <Route path="/sectional-test/take/:sessionId" element={<TakeSectionalTest />} />
+            <Route path="/sectional-test/results/:sessionId" element={<SectionalTestResults />} />
             {/* Alternative paths for consistency */}
             <Route path="/student/exams" element={<StudentExams />} />
             <Route path="/student/exam/:id" element={<TakeExamStudent />} />

@@ -822,6 +822,197 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Sectional Tests Section */}
+      <section className="py-20 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Sectional Tests with Progressive Difficulty
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Master each difficulty level progressively. Choose your sections, achieve 40% accuracy to advance, and earn XP for each completed section.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-12">
+            <div className="space-y-8">
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Progressive Difficulty</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Start with Very Easy sections and work your way up to Difficult. Each section contains 10 carefully selected questions.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">40% Pass Requirement</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Achieve at least 40% accuracy in each section to unlock the next difficulty level and continue your progress.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Lightbulb className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Study Recommendations</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Get personalized study suggestions when you don't pass a section, helping you focus on areas that need improvement.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">XP & Achievement System</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Earn 50 XP for each completed section and unlock special badges for sectional test milestones and achievements.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Sectional Test Progress</h3>
+                <p className="text-gray-600 mb-6">
+                  {user ? 'Track your sectional test achievements' : 'Sign in to start sectional testing'}
+                </p>
+              </div>
+
+              {user ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4">
+                      <div className="text-center">
+                        <p className="font-semibold text-gray-900 text-lg">0</p>
+                        <p className="text-sm text-gray-600">Sections Passed</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4">
+                      <div className="text-center">
+                        <p className="font-semibold text-gray-900 text-lg">0 XP</p>
+                        <p className="text-sm text-gray-600">From Sections</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-900">Difficulty Levels</p>
+                        <p className="text-sm text-gray-600">Very Easy → Difficult</p>
+                      </div>
+                      <div className="flex space-x-1">
+                        <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+                        <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+                        <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+                        <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link
+                    to="/sectional-tests"
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-center block"
+                  >
+                    Start Sectional Test
+                  </Link>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                    <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-4">
+                      Sign in to access progressive sectional tests and track your difficulty progression
+                    </p>
+                    <div className="space-y-3">
+                      <Link
+                        to="/login"
+                        className="block w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 rounded-lg font-semibold hover:shadow-md transition-all"
+                      >
+                        Sign In to Test
+                      </Link>
+                      <Link
+                        to="/register"
+                        className="block w-full border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:border-green-600 hover:text-green-600 transition-all"
+                      >
+                        Create Free Account
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* How Sectional Tests Work */}
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">How Sectional Tests Work</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">1</span>
+                  </div>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Select Sections</h4>
+                <p className="text-gray-600">Choose which difficulty sections you want to test</p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">2</span>
+                  </div>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Take Test</h4>
+                <p className="text-gray-600">Answer 10 questions per section within 30 minutes</p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">3</span>
+                  </div>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Pass or Study</h4>
+                <p className="text-gray-600">Score 40%+ to pass, or get study recommendations</p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-8 h-8 bg-cyan-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">4</span>
+                  </div>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Earn Rewards</h4>
+                <p className="text-gray-600">Gain XP and unlock badges for your achievements</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* AI Reports Section */}
       <section className="py-20 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

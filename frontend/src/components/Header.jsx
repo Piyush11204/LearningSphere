@@ -75,6 +75,12 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
             )}
+            {isAuthenticated && (
+              <Link to="/sectional-tests" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors relative group">
+                Sectional Tests
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+            )}
             <Link to="/live-sessions" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors relative group">
               Live Sessions
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
@@ -233,6 +239,11 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
               {isAuthenticated && (
                 <Link to="/student/exams" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-base font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
                   Exams
+                </Link>
+              )}
+              {isAuthenticated && (
+                <Link to="/sectional-tests" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-base font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                  Sectional Tests
                 </Link>
               )}
               <Link to="/live-sessions" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-base font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>

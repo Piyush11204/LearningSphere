@@ -5,23 +5,26 @@ const {
   startPracticeSession,
   getNextQuestion,
   endPracticeSession,
-  getUserPracticeSessions
+  getUserPracticeSessions,
+  getPracticeSessionResults,
+  startSectionalTest,
+  getSectionalQuestion,
+  endSectionalTest,
+  getSectionalTestResults
 } = require('../controllers/practiceController');
 
 
-// Start new practice session
+// Regular practice sessions
 router.post('/start',auth, startPracticeSession);
-
-// Get next question / submit answer
 router.post('/:sessionId/next',auth, getNextQuestion);
-
-// End practice session
 router.post('/:sessionId/end',auth, endPracticeSession);
-
-// Get practice session results
-router.get('/results/:sessionId',auth, require('../controllers/practiceController').getPracticeSessionResults);
-
-// Get user's practice sessions
+router.get('/results/:sessionId',auth, getPracticeSessionResults);
 router.get('/history',auth, getUserPracticeSessions);
+
+// Sectional tests
+router.post('/sectional/start', auth, startSectionalTest);
+router.post('/sectional/:sessionId/next', auth, getSectionalQuestion);
+router.post('/sectional/:sessionId/end', auth, endSectionalTest);
+router.get('/sectional/results/:sessionId', auth, getSectionalTestResults);
 
 module.exports = router;

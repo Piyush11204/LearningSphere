@@ -125,6 +125,124 @@ const userSchema = new mongoose.Schema({
       default: 0
     }
   },
+  // Sectional Test tracking
+  sectionalTestHistory: [{
+    sessionId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'PracticeSession' 
+    },
+    sections: [{
+      sectionId: {
+        type: String,
+        required: true
+      },
+      difficulty: {
+        type: String,
+        required: true
+      },
+      correct: {
+        type: Number,
+        required: true
+      },
+      total: {
+        type: Number,
+        required: true
+      },
+      accuracy: {
+        type: Number,
+        required: true
+      },
+      passed: {
+        type: Boolean,
+        required: true
+      },
+      completed: {
+        type: Boolean,
+        required: true
+      }
+    }],
+    totalSections: {
+      type: Number,
+      required: true
+    },
+    completedSections: {
+      type: Number,
+      required: true
+    },
+    passedSections: {
+      type: Number,
+      required: true
+    },
+    xpEarned: {
+      type: Number,
+      default: 0
+    },
+    duration: { 
+      type: Number, 
+      required: true 
+    }, // in minutes
+    status: { 
+      type: String, 
+      enum: ['completed', 'expired'], 
+      required: true 
+    },
+    completedAt: { 
+      type: Date, 
+      default: Date.now 
+    }
+  }],
+  sectionalTestStats: {
+    totalSessions: { 
+      type: Number, 
+      default: 0 
+    },
+    totalSectionsCompleted: { 
+      type: Number, 
+      default: 0 
+    },
+    totalSectionsPassed: { 
+      type: Number, 
+      default: 0 
+    },
+    averageAccuracy: { 
+      type: Number, 
+      default: 0 
+    },
+    totalXpEarned: { 
+      type: Number, 
+      default: 0 
+    },
+    currentStreak: {
+      type: Number,
+      default: 0
+    },
+    longestStreak: {
+      type: Number,
+      default: 0
+    },
+    difficultyStats: {
+      veryEasy: {
+        completed: { type: Number, default: 0 },
+        passed: { type: Number, default: 0 },
+        accuracy: { type: Number, default: 0 }
+      },
+      easy: {
+        completed: { type: Number, default: 0 },
+        passed: { type: Number, default: 0 },
+        accuracy: { type: Number, default: 0 }
+      },
+      moderate: {
+        completed: { type: Number, default: 0 },
+        passed: { type: Number, default: 0 },
+        accuracy: { type: Number, default: 0 }
+      },
+      difficult: {
+        completed: { type: Number, default: 0 },
+        passed: { type: Number, default: 0 },
+        accuracy: { type: Number, default: 0 }
+      }
+    }
+  },
   // Badges and achievements
   badges: [{
     name: {
@@ -265,84 +383,142 @@ userSchema.methods.getJWTToken = function() {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
-// Update practice exam statistics
-userSchema.methods.updatePracticeExamStats = function() {
-  const history = this.practiceExamHistory;
+// Update sectional test statistics
+userSchema.methods.updateSectionalTestStats = function() {
+  const history = this.sectionalTestHistory;
   if (history.length === 0) return;
 
-  this.practiceExamStats.totalSessions = history.length;
-  this.practiceExamStats.totalQuestionsAnswered = history.reduce((sum, session) => sum + session.totalQuestions, 0);
-  this.practiceExamStats.totalCorrectAnswers = history.reduce((sum, session) => sum + session.correctAnswers, 0);
-  this.practiceExamStats.totalXpEarned = history.reduce((sum, session) => sum + session.xpEarned, 0);
+  this.sectionalTestStats.totalSessions = history.length;
+  this.sectionalTestStats.totalSectionsCompleted = history.reduce((sum, session) => sum + session.completedSections, 0);
+  this.sectionalTestStats.totalSectionsPassed = history.reduce((sum, session) => sum + session.passedSections, 0);
+  this.sectionalTestStats.totalXpEarned = history.reduce((sum, session) => sum + session.xpEarned, 0);
   
-  // Calculate average accuracy
-  const totalAccuracy = history.reduce((sum, session) => sum + session.accuracy, 0);
-  this.practiceExamStats.averageAccuracy = Math.round((totalAccuracy / history.length) * 100) / 100;
+  // Calculate average accuracy across all sections
+  const totalAccuracy = history.reduce((sum, session) => {
+    return sum + session.sections.reduce((sectionSum, section) => sectionSum + section.accuracy, 0) / session.sections.length;
+  }, 0);
+  this.sectionalTestStats.averageAccuracy = Math.round((totalAccuracy / history.length) * 100) / 100;
   
-  // Calculate current streak (consecutive sessions with >50% accuracy)
+  // Calculate current streak (consecutive sessions with at least one section passed)
   let currentStreak = 0;
   for (let i = history.length - 1; i >= 0; i--) {
-    if (history[i].accuracy >= 50) {
+    if (history[i].passedSections > 0) {
       currentStreak++;
     } else {
       break;
     }
   }
   
-  this.practiceExamStats.currentStreak = currentStreak;
-  if (currentStreak > this.practiceExamStats.longestStreak) {
-    this.practiceExamStats.longestStreak = currentStreak;
+  this.sectionalTestStats.currentStreak = currentStreak;
+  if (currentStreak > this.sectionalTestStats.longestStreak) {
+    this.sectionalTestStats.longestStreak = currentStreak;
   }
+
+  // Update difficulty-specific stats
+  const difficultyStats = {
+    veryEasy: { completed: 0, passed: 0, accuracy: 0 },
+    easy: { completed: 0, passed: 0, accuracy: 0 },
+    moderate: { completed: 0, passed: 0, accuracy: 0 },
+    difficult: { completed: 0, passed: 0, accuracy: 0 }
+  };
+
+  history.forEach(session => {
+    session.sections.forEach(section => {
+      if (section.completed) {
+        const diff = section.difficulty.toLowerCase();
+        if (difficultyStats[diff]) {
+          difficultyStats[diff].completed++;
+          if (section.passed) {
+            difficultyStats[diff].passed++;
+          }
+          difficultyStats[diff].accuracy += section.accuracy;
+        }
+      }
+    });
+  });
+
+  // Calculate average accuracy for each difficulty
+  Object.keys(difficultyStats).forEach(diff => {
+    if (difficultyStats[diff].completed > 0) {
+      difficultyStats[diff].accuracy = Math.round((difficultyStats[diff].accuracy / difficultyStats[diff].completed) * 100) / 100;
+    }
+  });
+
+  this.sectionalTestStats.difficultyStats = difficultyStats;
 };
 
-// Award badges based on practice exam milestones
-userSchema.methods.awardPracticeBadges = function() {
-  const totalSessions = this.practiceExamStats.totalSessions;
+// Award badges based on sectional test milestones
+userSchema.methods.awardSectionalTestBadges = function() {
+  const totalSessions = this.sectionalTestStats.totalSessions;
+  const totalSectionsPassed = this.sectionalTestStats.totalSectionsPassed;
   const badgesToAward = [];
 
-  // First Practice Exam Badge
-  if (totalSessions >= 1 && !this.badges.some(badge => badge.name === 'First Practice')) {
+  // First Sectional Test Badge
+  if (totalSessions >= 1 && !this.badges.some(badge => badge.name === 'Sectional Pioneer')) {
     badgesToAward.push({
-      name: 'First Practice',
-      description: 'Completed your first practice exam',
+      name: 'Sectional Pioneer',
+      description: 'Completed your first sectional test',
       icon: '🎯',
       category: 'practice'
     });
   }
 
-  // Practice Warrior Badges
-  if (totalSessions >= 10 && !this.badges.some(badge => badge.name === 'Practice Warrior I')) {
+  // Section Master Badges
+  if (totalSectionsPassed >= 10 && !this.badges.some(badge => badge.name === 'Section Master I')) {
     badgesToAward.push({
-      name: 'Practice Warrior I',
-      description: 'Completed 10 practice exams',
+      name: 'Section Master I',
+      description: 'Passed 10 sectional test sections',
       icon: '⚔️',
       category: 'practice'
     });
   }
 
-  if (totalSessions >= 25 && !this.badges.some(badge => badge.name === 'Practice Warrior II')) {
+  if (totalSectionsPassed >= 25 && !this.badges.some(badge => badge.name === 'Section Master II')) {
     badgesToAward.push({
-      name: 'Practice Warrior II',
-      description: 'Completed 25 practice exams',
+      name: 'Section Master II',
+      description: 'Passed 25 sectional test sections',
       icon: '🛡️',
       category: 'practice'
     });
   }
 
-  if (totalSessions >= 50 && !this.badges.some(badge => badge.name === 'Practice Warrior III')) {
+  if (totalSectionsPassed >= 50 && !this.badges.some(badge => badge.name === 'Section Master III')) {
     badgesToAward.push({
-      name: 'Practice Warrior III',
-      description: 'Completed 50 practice exams',
+      name: 'Section Master III',
+      description: 'Passed 50 sectional test sections',
       icon: '👑',
       category: 'practice'
     });
   }
 
-  if (totalSessions >= 100 && !this.badges.some(badge => badge.name === 'Practice Legend')) {
+  if (totalSectionsPassed >= 100 && !this.badges.some(badge => badge.name === 'Sectional Legend')) {
     badgesToAward.push({
-      name: 'Practice Legend',
-      description: 'Completed 100 practice exams',
+      name: 'Sectional Legend',
+      description: 'Passed 100 sectional test sections',
       icon: '🏆',
+      category: 'practice'
+    });
+  }
+
+  // Difficulty-specific badges
+  const difficultyStats = this.sectionalTestStats.difficultyStats;
+  
+  if (difficultyStats.difficult.passed >= 5 && !this.badges.some(badge => badge.name === 'Difficulty Conqueror')) {
+    badgesToAward.push({
+      name: 'Difficulty Conqueror',
+      description: 'Passed 5 difficult sections',
+      icon: '🔥',
+      category: 'practice'
+    });
+  }
+
+  if (difficultyStats.veryEasy.passed >= 10 && difficultyStats.easy.passed >= 10 && 
+      difficultyStats.moderate.passed >= 10 && difficultyStats.difficult.passed >= 10 &&
+      !this.badges.some(badge => badge.name === 'Well-Rounded Scholar')) {
+    badgesToAward.push({
+      name: 'Well-Rounded Scholar',
+      description: 'Passed 10 sections of each difficulty level',
+      icon: '🎓',
       category: 'practice'
     });
   }
@@ -352,44 +528,27 @@ userSchema.methods.awardPracticeBadges = function() {
   return badgesToAward;
 };
 
-// Calculate experience points for practice session
-userSchema.methods.calculatePracticeXP = function(session) {
-  let baseXP = 10; // Base XP for attempting
+// Calculate experience points for sectional test session
+userSchema.methods.calculateSectionalTestXP = function(session) {
+  let baseXP = 0;
   
-  // XP based on accuracy
-  if (session.accuracy >= 90) baseXP += 50;
-  else if (session.accuracy >= 80) baseXP += 40;
-  else if (session.accuracy >= 70) baseXP += 30;
-  else if (session.accuracy >= 60) baseXP += 20;
-  else if (session.accuracy >= 50) baseXP += 10;
+  // XP for each completed section (50 XP per section as implemented in controller)
+  baseXP += session.completedSections * 50;
   
-  // XP based on questions answered
-  baseXP += Math.floor(session.totalQuestions / 5) * 5;
+  // Bonus XP for passing sections
+  baseXP += session.passedSections * 25;
+  
+  // Bonus for completing all selected sections
+  if (session.completedSections === session.totalSections) {
+    baseXP += 100;
+  }
   
   // Bonus for streaks
-  if (this.practiceExamStats.currentStreak > 0) {
-    baseXP += Math.min(this.practiceExamStats.currentStreak * 2, 20);
+  if (this.sectionalTestStats.currentStreak > 0) {
+    baseXP += Math.min(this.sectionalTestStats.currentStreak * 10, 50);
   }
   
   return baseXP;
-};
-
-// Update experience points and level
-userSchema.methods.updateExperiencePoints = function(xpGained, source = 'practice') {
-  this.experiencePoints.total += xpGained;
-  
-  if (source === 'practice') {
-    this.experiencePoints.fromPractice += xpGained;
-  } else if (source === 'exam') {
-    this.experiencePoints.fromExams += xpGained;
-  }
-  
-  // Calculate new level (every 1000 XP = 1 level)
-  const newLevel = Math.floor(this.experiencePoints.total / 1000) + 1;
-  if (newLevel > this.experiencePoints.level) {
-    this.experiencePoints.level = newLevel;
-    // Could add level up badges here
-  }
 };
 
 module.exports = mongoose.model('User', userSchema);
