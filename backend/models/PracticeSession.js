@@ -36,6 +36,12 @@ const practiceSessionSchema = new mongoose.Schema({
     },
     answeredAt: {
       type: Date
+    },
+    sectionIndex: {
+      type: Number // For sectional tests
+    },
+    questionIndex: {
+      type: Number // For sectional tests
     }
   }],
   currentQuestionIndex: {
@@ -67,7 +73,46 @@ const practiceSessionSchema = new mongoose.Schema({
   xpEarned: {
     type: Number,
     default: 0
-  }
+  },
+  // Sectional test specific fields
+  isSectional: {
+    type: Boolean,
+    default: false
+  },
+  currentSection: {
+    type: String // Section ID for sectional tests
+  },
+  sections: [{
+    sectionId: {
+      type: String,
+      required: true
+    },
+    difficulty: {
+      type: String,
+      enum: ['Very easy', 'Easy', 'Moderate', 'Difficult'],
+      required: true
+    },
+    questions: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Question'
+    }],
+    correct: {
+      type: Number,
+      default: 0
+    },
+    total: {
+      type: Number,
+      default: 0
+    },
+    completed: {
+      type: Boolean,
+      default: false
+    },
+    passed: {
+      type: Boolean,
+      default: false
+    }
+  }]
 }, {
   timestamps: true
 });

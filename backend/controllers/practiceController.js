@@ -536,6 +536,12 @@ const getSectionalQuestion = async (req, res) => {
       return res.status(404).json({ message: 'Session not found' });
     }
 
+    // Ensure this is a sectional test session
+    if (!session.isSectional) {
+      console.log('Session is not a sectional test session');
+      return res.status(400).json({ message: 'This endpoint is only for sectional test sessions' });
+    }
+
     if (session.status !== 'active') {
       return res.status(400).json({ message: 'Session is not active' });
     }
@@ -545,6 +551,15 @@ const getSectionalQuestion = async (req, res) => {
       session.status = 'expired';
       await session.save();
       return res.status(400).json({ message: 'Session has expired' });
+    }
+
+    // Ensure sectional test fields are initialized
+    if (!session.sections) {
+      session.sections = [];
+    }
+    if (!session.currentSection) {
+      console.log('Session missing currentSection, this should not happen for sectional tests');
+      return res.status(400).json({ message: 'Invalid sectional test session' });
     }
 
     const currentQuestionIndex = session.currentQuestionIndex;
@@ -570,12 +585,17 @@ const getSectionalQuestion = async (req, res) => {
       currentQuestion.timeTaken = timeTaken;
       currentQuestion.answeredAt = new Date();
 
-      // Update section stats
-      const currentSection = session.sections.find(s => s.sectionId === session.currentSection);
-      if (currentSection) {
-        currentSection.correct += isCorrect ? 1 : 0;
-        currentSection.total += 1;
-      }
+    // Update section stats
+    const currentSection = session.sections.find(s => s.sectionId === session.currentSection);
+    if (!currentSection) {
+      console.log('Current section not found in session sections');
+      return res.status(400).json({ message: 'Invalid sectional test session - section not found' });
+    }
+
+    if (currentSection) {
+      currentSection.correct += isCorrect ? 1 : 0;
+      currentSection.total += 1;
+    }
 
       // Update question statistics
       try {
@@ -600,6 +620,11 @@ const getSectionalQuestion = async (req, res) => {
 
     // Check if section is completed
     const currentSection = session.sections.find(s => s.sectionId === session.currentSection);
+    if (!currentSection) {
+      console.log('Current section not found when checking completion');
+      return res.status(400).json({ message: 'Invalid sectional test session - section not found' });
+    }
+
     if (currentSection && currentSection.total >= 10) {
       // Section completed
       const accuracy = (currentSection.correct / currentSection.total) * 100;
