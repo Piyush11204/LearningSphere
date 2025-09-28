@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://learningsphere-1fgj.onrender.com';
+const API_BASE_URL = 'https://learningsphere-1fgj.onrender.com';
 
 export const API_URLS = {
   BASE: API_BASE_URL,
