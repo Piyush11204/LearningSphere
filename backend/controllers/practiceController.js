@@ -726,7 +726,7 @@ const switchSectionalSection = async (req, res) => {
 
     // Check if the requested section exists
     if (!session.sections[sectionIndex]) {
-      return res.status(400).json({ message: 'Section not found' });
+      return res.status(400).json({ message: `Section not found at index ${sectionIndex}. Available sections: ${session.sections.length}` });
     }
 
     const targetSection = session.sections[sectionIndex];

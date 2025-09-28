@@ -28,6 +28,8 @@ const TakeSectionalTest = () => {
   const [error, setError] = useState(null);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [selectedSections, setSelectedSections] = useState({});
+  const [sectionTransition, setSectionTransition] = useState(false);
+  const [transitionMessage, setTransitionMessage] = useState('');
 
   useEffect(() => {
     // Get data from navigation state
@@ -100,7 +102,7 @@ const TakeSectionalTest = () => {
         setCurrentQuestion(data.question);
         setTimeRemaining(data.timeRemaining);
         setQuestionNumber(data.questionNumber || 1);
-        setCurrentSection(data.currentSection || 0);
+        // Don't update currentSection from API - maintain it as index in frontend
         setSections(data.sections || []);
         if (data.totalQuestions) {
           setTotalQuestions(data.totalQuestions);
@@ -145,35 +147,77 @@ const TakeSectionalTest = () => {
         const data = await response.json();
         
         if (data.sectionCompleted) {
-          // Section completed, navigate to section summary
+          // Check if there are more sections to complete
           const selectedSectionKeys = Object.keys(selectedSections).filter(key => selectedSections[key]);
           const nextSectionIndex = currentSection + 1;
-          const hasNextSection = nextSectionIndex < selectedSectionKeys.length;
+          
+          if (nextSectionIndex < selectedSectionKeys.length) {
+            // Show transition message
+            const nextSectionKey = selectedSectionKeys[nextSectionIndex];
+            const sectionNames = {
+              veryEasy: 'Very Easy',
+              easy: 'Easy',
+              moderate: 'Moderate',
+              difficult: 'Difficult'
+            };
+            setTransitionMessage(`Section completed! Moving to ${sectionNames[nextSectionKey]} section...`);
+            setSectionTransition(true);
+            
+            console.log('Switching to next section:', {
+              currentSection,
+              nextSectionIndex,
+              selectedSectionKeys,
+              sectionsLength: sections.length
+            });
+            
+            // Automatically switch to next section after a brief delay
+            setTimeout(async () => {
+              const nextSectionResponse = await fetch(`${API_URLS.PRACTICE}/sectional/${sessionId}/switch`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  sectionIndex: nextSectionIndex
+                })
+              });
 
-          // Navigate to section summary with section data
-          navigate(`/sectional-test/section-summary/${sessionId}`, {
-            state: {
-              sectionData: {
-                sectionInfo: sections[currentSection] || {},
-                score: data.accuracy || 0,
-                correct: data.sectionCorrect || 0,
-                total: data.sectionTotal || 0,
-                passed: data.passed || false,
-                nextSectionIndex: nextSectionIndex,
-                hasNextSection: hasNextSection
-              },
-              questions: [], // We'll need to get questions from the API
-              selectedSections: selectedSections,
-              sections: sections,
-              currentSectionIndex: currentSection
-            }
-          });
+              if (nextSectionResponse.ok) {
+                const nextSectionData = await nextSectionResponse.json();
+                
+                // Update state for next section
+                setCurrentQuestion(nextSectionData.question);
+                setTimeRemaining(nextSectionData.timeRemaining);
+                setQuestionNumber(nextSectionData.questionNumber || 1);
+                setCurrentSection(nextSectionIndex);
+                setSections(nextSectionData.sections || sections);
+                setSelectedAnswer('');
+                setSectionTransition(false);
+                setTransitionMessage('');
+              } else {
+                const errorData = await nextSectionResponse.json().catch(() => ({ message: 'Unknown error' }));
+                console.error('Switch section error:', errorData);
+                setError(`Failed to switch to next section: ${errorData.message || 'Unknown error'}`);
+                setSectionTransition(false);
+                setTransitionMessage('');
+              }
+            }, 2000); // 2 second delay to show transition message
+          } else {
+            // All sections completed, navigate to final results
+            navigate(`/sectional-test/results/${sessionId}`, {
+              state: {
+                selectedSections: selectedSections,
+                sections: sections
+              }
+            });
+          }
         } else {
           // Continue with next question in current section
           setCurrentQuestion(data.question);
           setTimeRemaining(data.timeRemaining);
           setQuestionNumber(data.questionNumber || questionNumber + 1);
-          setCurrentSection(data.currentSection || currentSection);
+          // Don't update currentSection from API
           setSelectedAnswer('');
         }
       } else {
@@ -221,6 +265,18 @@ const TakeSectionalTest = () => {
 
   const getCurrentSectionInfo = () => {
     return sections[currentSection] || {};
+  };
+
+  const getCurrentSectionName = () => {
+    const selectedSectionKeys = Object.keys(selectedSections).filter(key => selectedSections[key]);
+    const currentKey = selectedSectionKeys[currentSection];
+    const sectionNames = {
+      veryEasy: 'Very Easy',
+      easy: 'Easy',
+      moderate: 'Moderate',
+      difficult: 'Difficult'
+    };
+    return sectionNames[currentKey] || 'Current Section';
   };
 
   if (isLoading) {
@@ -274,7 +330,7 @@ const TakeSectionalTest = () => {
             <div>
               <h2 className="text-lg font-semibold">Sectional Test</h2>
               <p className="text-sm text-gray-300">
-                Section {currentSection + 1} of {sections.length}: {getCurrentSectionInfo().title || 'Current Section'}
+                Section {currentSection + 1} of {Object.keys(selectedSections).filter(key => selectedSections[key]).length}: {getCurrentSectionInfo().title || getCurrentSectionName()}
               </p>
             </div>
           </div>
@@ -371,21 +427,35 @@ const TakeSectionalTest = () => {
 
             <button
               onClick={handleAnswerSubmit}
-              disabled={!selectedAnswer}
+              disabled={!selectedAnswer || sectionTransition}
               className={`flex items-center space-x-3 px-8 py-4 rounded-xl font-semibold transition-all duration-300 ${
-                selectedAnswer
+                selectedAnswer && !sectionTransition
                   ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:shadow-lg transform hover:scale-105'
                   : 'bg-gray-600 cursor-not-allowed'
               }`}
             >
               <span>
-                Next Question
+                {questionNumber === totalQuestions ? 'Complete Section' : 'Next Question'}
               </span>
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>
         </div>
       </div>
+
+      {/* Section Transition Overlay */}
+      {sectionTransition && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 text-center max-w-md mx-4">
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Section Completed!</h3>
+            <p className="text-gray-600 mb-4">{transitionMessage}</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
