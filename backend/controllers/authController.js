@@ -9,7 +9,7 @@ const { transporter, sendEmail } = require('../config/nodemailer');
 // Verify reCAPTCHA token
 const verifyRecaptcha = async (token) => {
   try {
-    const secretKey = '6LfKC9grAAAAAJVEe1Bp36-1jcYJu2yM8hzveKbd';
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
     const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
       params: {
         secret: secretKey,
