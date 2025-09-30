@@ -342,6 +342,19 @@ const PracticeExams = () => {
                           Continue
                         </Link>
                       )}
+                      {session.status === 'expired' && (
+                        <div className="flex items-center space-x-3">
+                          <span className="bg-red-100 text-red-800 px-3 py-2 rounded-lg text-sm font-medium">
+                            Expired
+                          </span>
+                          <Link
+                            to={`/practice-exam/results/${session._id}`}
+                            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                          >
+                            View Results
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

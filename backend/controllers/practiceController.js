@@ -4,6 +4,17 @@ const startPracticeSession = async (req, res) => {
   try {
     const { duration = 60 } = req.body; // Default 60 minutes
 
+    // First, expire any active sessions that have passed their endTime
+    const currentTime = new Date();
+    await PracticeSession.updateMany(
+      {
+        userId: req.user.id,
+        status: 'active',
+        endTime: { $lt: currentTime }
+      },
+      { status: 'expired' }
+    );
+
     const startTime = new Date();
     const endTime = new Date(startTime.getTime() + duration * 60000);
 
@@ -346,6 +357,13 @@ const getPracticeSessionResults = async (req, res) => {
       return res.status(404).json({ message: 'Session not found' });
     }
 
+    // Check if session has expired and update status if needed
+    const currentTime = new Date();
+    if (session.status === 'active' && currentTime > session.endTime) {
+      session.status = 'expired';
+      await session.save();
+    }
+
     // Format questions with answers - include all questions but mark answered status properly
     const questions = session.questions.map(q => ({
       question_text: q.questionId.question_text,
@@ -477,6 +495,15 @@ const getUserPracticeSessions = async (req, res) => {
       userId: req.user.id
     }).sort({ createdAt: -1 }).limit(10);
 
+    // Check and expire sessions that have passed their endTime
+    const currentTime = new Date();
+    for (const session of sessions) {
+      if (session.status === 'active' && currentTime > session.endTime) {
+        session.status = 'expired';
+        await session.save();
+      }
+    }
+
     // Add calculated fields for each session
     const sessionsWithStats = sessions.map(session => ({
       ...session.toObject(),
@@ -523,6 +550,17 @@ const startSectionalTest = async (req, res) => {
     if (!selectedSections || !Array.isArray(selectedSections) || selectedSections.length === 0) {
       return res.status(400).json({ message: 'No sections selected' });
     }
+
+    // First, expire any active sessions that have passed their endTime
+    const currentTime = new Date();
+    await PracticeSession.updateMany(
+      {
+        userId: req.user.id,
+        status: 'active',
+        endTime: { $lt: currentTime }
+      },
+      { status: 'expired' }
+    );
 
     // Get the current section to start with
     const currentSectionData = selectedSections[sectionIndex || 0];
@@ -648,6 +686,7 @@ const getSectionalQuestion = async (req, res) => {
     console.log('Current question index:', currentQuestionIndex);
     console.log('Current question exists:', !!currentQuestion);
     console.log('Current question populated:', !!(currentQuestion && currentQuestion.questionId));
+    console.log('Current question text preview:', currentQuestion?.questionId?.question_text?.substring(0, 50));
 
     // Update current question with user's answer
     if (userAnswer) {
@@ -723,7 +762,7 @@ const getSectionalQuestion = async (req, res) => {
       if (currentSection.passed) {
         const currentSectionIndex = session.sections.findIndex(s => s.sectionId === session.currentSection);
         const nextSectionIndex = currentSectionIndex + 1;
-        
+
         if (nextSectionIndex < session.sections.length) {
           // There are more sections, return section completion info
           return res.json({
@@ -764,7 +803,7 @@ const getSectionalQuestion = async (req, res) => {
             // Update streak
             const today = new Date();
             const lastActivity = progress.streak.lastActivity;
-            
+
             if (lastActivity) {
               const daysDiff = Math.floor((today - lastActivity) / (1000 * 60 * 60 * 24));
               if (daysDiff === 1) {
@@ -782,7 +821,7 @@ const getSectionalQuestion = async (req, res) => {
 
             // Check and award badges
             const newProgressBadges = progress.checkAndAwardBadges();
-            
+
             // Update level after badge XP is added
             progress.currentLevel = Math.floor(progress.experiencePoints / 1000) + 1;
 
@@ -841,21 +880,15 @@ const getSectionalQuestion = async (req, res) => {
           });
         }
       } else {
-        // Section not passed, end the test
-        session.status = 'completed';
-        const completedSections = session.sections.filter(s => s.completed && s.passed);
-        session.xpEarned = completedSections.length * 50;
-        await session.save();
-
+        // Section not passed (accuracy < 40%), user must retake this section
         return res.json({
           sectionCompleted: true,
           sectionCorrect: currentSection.correct,
           sectionTotal: currentSection.total,
           accuracy: accuracy,
           passed: currentSection.passed,
-          testCompleted: true,
-          xpEarned: session.xpEarned,
-          completedSections: completedSections.length
+          mustRetake: true, // Indicate user must retake this section
+          currentSectionIndex: session.sections.findIndex(s => s.sectionId === session.currentSection)
         });
       }
     }
@@ -895,7 +928,7 @@ const getSectionalQuestion = async (req, res) => {
       },
       timeRemaining,
       currentScore: currentSection ? currentSection.correct : 0,
-      questionNumber: nextQuestion.questionIndex + 1,
+      questionNumber: nextQuestionIndex + 1,
       totalQuestions: 10
     });
   } catch (error) {
@@ -1011,6 +1044,120 @@ const switchSectionalSection = async (req, res) => {
   }
 };
 
+// Retake a failed section in sectional test
+const retakeSectionalSection = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { sectionIndex } = req.body;
+
+    const session = await PracticeSession.findById(sessionId);
+    if (!session || session.userId.toString() !== req.user.id) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    if (!session.isSectional) {
+      return res.status(400).json({ message: 'This endpoint is only for sectional test sessions' });
+    }
+
+    if (session.status !== 'active') {
+      return res.status(400).json({ message: 'Session is not active' });
+    }
+
+    // Check if the requested section exists
+    if (!session.sections[sectionIndex]) {
+      return res.status(400).json({ message: `Section not found at index ${sectionIndex}. Available sections: ${session.sections.length}` });
+    }
+
+    const targetSection = session.sections[sectionIndex];
+
+    // Check if section is completed but failed (must retake)
+    if (!targetSection.completed || targetSection.passed) {
+      return res.status(400).json({ message: 'Section is not eligible for retake' });
+    }
+
+    // Get new questions for this section
+    const allQuestions = await Question.find({
+      isActive: true,
+      difficulty: targetSection.difficulty
+    });
+
+    if (!allQuestions || allQuestions.length < 10) {
+      return res.status(404).json({
+        message: `Not enough ${targetSection.difficulty} questions available. Found ${allQuestions?.length || 0}, need 10.`
+      });
+    }
+
+    // Shuffle the questions array and take first 10
+    const shuffledQuestions = allQuestions.sort(() => 0.5 - Math.random());
+    const newQuestions = shuffledQuestions.slice(0, 10);
+
+    // Remove old questions for this section from session.questions
+    session.questions = session.questions.filter(q => q.sectionIndex !== sectionIndex);
+
+    // Reset section stats
+    targetSection.questions = newQuestions.map(q => q._id);
+    targetSection.correct = 0;
+    targetSection.total = 0;
+    targetSection.completed = false;
+    targetSection.passed = false;
+
+    // Add new questions to session.questions array
+    newQuestions.forEach((q, index) => {
+      session.questions.push({
+        questionId: q._id,
+        answeredAt: null,
+        sectionIndex: sectionIndex,
+        questionIndex: index
+      });
+    });
+
+    // Update session for retaking this section
+    session.currentSection = targetSection.sectionId;
+    session.currentQuestionIndex = session.questions.findIndex(q => q.sectionIndex === sectionIndex && q.questionIndex === 0);
+    session.currentDifficulty = targetSection.difficulty;
+
+    // Reset timer for retake
+    session.startTime = new Date();
+    session.endTime = new Date(session.startTime.getTime() + 30 * 60000); // 30 minutes
+
+    await session.save();
+
+    // Get the first question of the retaken section
+    const firstQuestionIndex = session.questions.findIndex(q => q.sectionIndex === sectionIndex && q.questionIndex === 0);
+    const firstQuestion = session.questions[firstQuestionIndex];
+
+    if (!firstQuestion || !firstQuestion.questionId) {
+      return res.status(500).json({ message: 'Failed to load first question of retaken section' });
+    }
+
+    // Populate the question
+    await session.populate('questions.questionId');
+
+    res.json({
+      sessionId: session._id,
+      question: {
+        id: firstQuestion.questionId.id,
+        question_text: firstQuestion.questionId.question_text,
+        option_a: firstQuestion.questionId.option_a,
+        option_b: firstQuestion.questionId.option_b,
+        option_c: firstQuestion.questionId.option_c,
+        option_d: firstQuestion.questionId.option_d,
+        difficulty: firstQuestion.questionId.difficulty,
+        tags: firstQuestion.questionId.tags
+      },
+      timeRemaining: 30 * 60, // 30 minutes in seconds
+      currentScore: 0, // Reset score for retake
+      questionNumber: 1,
+      totalQuestions: 10,
+      currentSection: targetSection.sectionId,
+      sections: session.sections,
+      isRetake: true // Indicate this is a retake
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // End sectional test
 const endSectionalTest = async (req, res) => {
   try {
@@ -1019,6 +1166,10 @@ const endSectionalTest = async (req, res) => {
     const session = await PracticeSession.findById(sessionId);
     if (!session || session.userId.toString() !== req.user.id) {
       return res.status(404).json({ message: 'Session not found' });
+    }
+
+    if (!session.isSectional) {
+      return res.status(400).json({ message: 'This endpoint is only for sectional test sessions' });
     }
 
     session.status = 'completed';
@@ -1188,6 +1339,7 @@ module.exports = {
   startSectionalTest,
   getSectionalQuestion,
   switchSectionalSection,
+  retakeSectionalSection,
   endSectionalTest,
   getSectionalTestResults
 };

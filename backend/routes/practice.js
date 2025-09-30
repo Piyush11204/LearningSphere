@@ -11,6 +11,7 @@ const {
   startSectionalTest,
   getSectionalQuestion,
   switchSectionalSection,
+  retakeSectionalSection,
   endSectionalTest,
   getSectionalTestResults
 } = require('../controllers/practiceController');
@@ -28,6 +29,7 @@ router.get('/sectional/history',auth, getUserSectionalTestHistory);
 router.post('/sectional/start', auth, startSectionalTest);
 router.post('/sectional/:sessionId/next', auth, getSectionalQuestion);
 router.post('/sectional/:sessionId/switch', auth, switchSectionalSection);
+router.post('/sectional/:sessionId/retake', auth, retakeSectionalSection);
 router.post('/sectional/:sessionId/end', auth, endSectionalTest);
 router.get('/sectional/results/:sessionId', auth, getSectionalTestResults);
 

@@ -316,7 +316,17 @@ const TakePracticeExam = () => {
   }
 
   return (
-    <div ref={fullscreenRef} className="min-h-screen bg-gray-900 text-white">
+    <div ref={fullscreenRef} className="min-h-screen bg-gray-900 text-white select-none" style={{
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
+      MozUserSelect: 'none',
+      msUserSelect: 'none',
+      WebkitTouchCallout: 'none',
+      WebkitUserDrag: 'none',
+      KhtmlUserDrag: 'none',
+      MozUserDrag: 'none',
+      msUserDrag: 'none'
+    }}>
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between">

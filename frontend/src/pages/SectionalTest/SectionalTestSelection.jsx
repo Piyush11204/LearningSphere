@@ -69,11 +69,29 @@ const SectionalTestSelection = () => {
     }
   ];
 
+  // Fullscreen enforcement removed - only enforced during actual test taking
+
   const handleSectionToggle = (sectionKey) => {
-    setSelectedSections(prev => ({
-      ...prev,
-      [sectionKey]: !prev[sectionKey]
-    }));
+    setSelectedSections(prev => {
+      const newState = {
+        ...prev,
+        [sectionKey]: !prev[sectionKey]
+      };
+
+      // If moderate is being selected, also select easy and very easy
+      if (sectionKey === 'moderate' && !prev.moderate) {
+        newState.easy = true;
+        newState.veryEasy = true;
+      }
+
+      // If moderate is being deselected, also deselect easy and very easy
+      if (sectionKey === 'moderate' && prev.moderate) {
+        newState.easy = false;
+        newState.veryEasy = false;
+      }
+
+      return newState;
+    });
   };
 
   const getSelectedCount = () => {

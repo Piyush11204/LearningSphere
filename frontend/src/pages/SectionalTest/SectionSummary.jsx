@@ -7,7 +7,8 @@ import {
   ArrowRight,
   Home,
   Target,
-  Clock
+  Clock,
+  RotateCcw
 } from 'lucide-react';
 import { API_URLS } from '../../config/api';
 
@@ -69,6 +70,43 @@ const SectionSummary = () => {
     }
   };
 
+  const handleRetake = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      // Retake the current section
+      const response = await fetch(`${API_URLS.PRACTICE}/sectional/${sessionId}/retake`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sectionIndex: sectionData.currentSectionIndex
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Navigate back to test with new section data
+        navigate(`/sectional-test/take/${sessionId}`, {
+          state: {
+            sessionData: data,
+            selectedSections: location.state?.selectedSections,
+            sections: location.state?.sections,
+            currentSectionIndex: sectionData.currentSectionIndex
+          },
+          replace: true
+        });
+      } else {
+        setError('Failed to retake section');
+      }
+    } catch (error) {
+      console.error('Error retaking section:', error);
+      setError('Network error occurred');
+    }
+  };
+
   const handleFinishTest = () => {
     navigate(`/sectional-test/results/${sessionId}`);
   };
@@ -116,7 +154,7 @@ const SectionSummary = () => {
     );
   }
 
-  const { sectionInfo, score, correct, total, passed, hasNextSection } = sectionData;
+  const { sectionInfo, score, correct, total, passed, hasNextSection, mustRetake } = sectionData;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -191,38 +229,44 @@ const SectionSummary = () => {
               ></div>
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              {score >= 80 ? 'Excellent work!' : score >= 60 ? 'Good job!' : score >= 40 ? 'Keep practicing!' : 'Focus on improvement!'}
+              {score >= 80 ? 'Excellent work!' : score >= 60 ? 'Good job!' : score >= 40 ? 'Keep practicing!' : 'You need at least 40% to pass this section.'}
             </p>
+            {!passed && mustRetake && (
+              <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <p className="text-sm text-orange-800">
+                  <RotateCcw className="w-4 h-4 inline mr-2" />
+                  You need to score at least 40% to pass this section. Please retake it to continue.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          {passed ? (
-            hasNextSection ? (
-              <button
-                onClick={handleContinue}
-                className="bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
-              >
-                <span>Continue to Next Section</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate('/sectional-tests')}
-                className="bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
-              >
-                <span>Start New Test</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            )
+          {mustRetake ? (
+            <button
+              onClick={handleRetake}
+              className="bg-orange-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-orange-700 transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
+            >
+              <RotateCcw className="w-5 h-5" />
+              <span>Retake This Section</span>
+            </button>
+          ) : hasNextSection ? (
+            <button
+              onClick={handleContinue}
+              className="bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
+            >
+              <span>Continue to Next Section</span>
+              <ArrowRight className="w-5 h-5" />
+            </button>
           ) : (
             <button
               onClick={handleFinishTest}
-              className="bg-red-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
+              className="bg-green-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
             >
-              <XCircle className="w-5 h-5" />
-              <span>View Results</span>
+              <Trophy className="w-5 h-5" />
+              <span>View Final Results</span>
             </button>
           )}
 

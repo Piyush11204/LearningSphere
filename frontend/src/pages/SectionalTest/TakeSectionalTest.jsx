@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Clock,
@@ -7,7 +7,8 @@ import {
   AlertCircle,
   ArrowRight,
   Maximize,
-  Minimize
+  Minimize,
+  AlertTriangle
 } from 'lucide-react';
 import { API_URLS } from '../../config/api';
 
@@ -24,10 +25,157 @@ const TakeSectionalTest = () => {
   const [questionNumber, setQuestionNumber] = useState(1);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [currentSection, setCurrentSection] = useState(0);
+  const [showWarning, setShowWarning] = useState(false);
+  const [fullscreenAttempts, setFullscreenAttempts] = useState(0);
+  const [warningCountdown, setWarningCountdown] = useState(0);
   
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const fullscreenRef = useRef(null);
+  const warningTimeoutRef = useRef(null);
+  const maxFullscreenAttempts = 3;
+
+  // Fullscreen enforcement functions
+  const enterFullscreen = useCallback(async () => {
+    try {
+      if (fullscreenRef.current) {
+        if (fullscreenRef.current.requestFullscreen) {
+          await fullscreenRef.current.requestFullscreen();
+        } else if (fullscreenRef.current.webkitRequestFullscreen) {
+          await fullscreenRef.current.webkitRequestFullscreen();
+        } else if (fullscreenRef.current.msRequestFullscreen) {
+          await fullscreenRef.current.msRequestFullscreen();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to enter fullscreen:', error);
+    }
+  }, []);
+
+  const exitFullscreen = useCallback(async () => {
+    try {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        await document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        await document.msExitFullscreen();
+      }
+    } catch (error) {
+      console.error('Failed to exit fullscreen:', error);
+    }
+  }, []);
+
+  const checkFullscreen = useCallback(() => {
+    const isCurrentlyFullscreen = !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.msFullscreenElement
+    );
+    setIsFullscreen(isCurrentlyFullscreen);
+    return isCurrentlyFullscreen;
+  }, []);
+
+  const handleFullscreenChange = useCallback(() => {
+    const isCurrentlyFullscreen = checkFullscreen();
+    
+    if (!isCurrentlyFullscreen && !sessionEnded) {
+      setFullscreenAttempts(prev => {
+        const newAttempts = prev + 1;
+        if (newAttempts >= maxFullscreenAttempts) {
+          // End session if too many fullscreen exits
+          setSessionEnded(true);
+          setError('Session ended due to multiple fullscreen exits. Please restart the test.');
+          return newAttempts;
+        } else {
+          // Show warning and force fullscreen
+          setShowWarning(true);
+          setWarningCountdown(10);
+          
+          if (warningTimeoutRef.current) {
+            clearTimeout(warningTimeoutRef.current);
+          }
+          
+          warningTimeoutRef.current = setTimeout(() => {
+            setShowWarning(false);
+            enterFullscreen();
+          }, 10000);
+          
+          return newAttempts;
+        }
+      });
+    } else if (isCurrentlyFullscreen) {
+      setFullscreenAttempts(0);
+      setShowWarning(false);
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current);
+      }
+    }
+  }, [checkFullscreen, sessionEnded, maxFullscreenAttempts, enterFullscreen]);
+
+  // Initialize fullscreen when questions are loaded (not on component mount)
+  useEffect(() => {
+    // Remove automatic fullscreen initialization - only manual toggle allowed
+    // Add fullscreen change listeners
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    // Check fullscreen status periodically
+    const fullscreenCheckInterval = setInterval(() => {
+      checkFullscreen();
+    }, 1000);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+      clearInterval(fullscreenCheckInterval);
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current);
+      }
+    };
+  }, [handleFullscreenChange, checkFullscreen]);
+
+  // Warning countdown effect
+  useEffect(() => {
+    if (showWarning && warningCountdown > 0) {
+      const countdownInterval = setInterval(() => {
+        setWarningCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      return () => clearInterval(countdownInterval);
+    }
+  }, [showWarning, warningCountdown]);
+
+  const getCurrentSectionInfo = useCallback(() => {
+    if (!sections || sections.length === 0) {
+      return { title: 'Loading...', difficulty: 'Unknown' };
+    }
+    return sections[currentSection] || { title: 'Unknown Section', difficulty: 'Unknown' };
+  }, [sections, currentSection]);
+
+  const getCurrentSectionName = useCallback(() => {
+    if (!selectedSections) {
+      return 'Loading...';
+    }
+    const selectedSectionKeys = Object.keys(selectedSections).filter(key => selectedSections[key]);
+    const currentKey = selectedSectionKeys[currentSection];
+    const sectionNames = {
+      veryEasy: 'Very Easy',
+      easy: 'Easy',
+      moderate: 'Moderate',
+      difficult: 'Difficult'
+    };
+    return sectionNames[currentKey] || 'Current Section';
+  }, [selectedSections, currentSection]);
 
   const loadQuestion = useCallback(async () => {
     try {
@@ -70,63 +218,10 @@ const TakeSectionalTest = () => {
     }
   }, [sessionId, navigate]);
 
-  const handleTimeUp = useCallback(() => {
-    if (selectedAnswer) {
-      handleAnswerSubmit();
-    } else {
-      handleAnswerSubmit();
-    }
-  }, [selectedAnswer]); // Note: handleAnswerSubmit is defined below, so we handle it carefully
-
-  useEffect(() => {
-    const state = location.state;
-    if (state) {
-      setSelectedSections(state.selectedSections || {});
-      setSections(state.sections || []);
-      setCurrentSection(state.currentSectionIndex || 0);
-
-      if (state.sessionData) {
-        setCurrentQuestion(state.sessionData.question || null);
-        setTimeRemaining(state.sessionData.timeRemaining || 0);
-        setQuestionNumber(state.sessionData.questionNumber || 1);
-        setTotalQuestions(state.sessionData.totalQuestions || 10);
-        setCurrentSection(state.sessionData.currentSection || 0);
-        setIsLoading(false);
-        return;
-      }
-    }
-
-    loadQuestion();
-
-    const timer = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev <= 1) {
-          handleTimeUp();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, [location.state, loadQuestion, handleTimeUp]);
-
-  const handleAnswerSelect = (answer) => {
-    setSelectedAnswer(answer);
-  };
-
-  const handleAnswerSubmit = async () => {
-    if (!selectedAnswer) return;
-
+  const handleTimeUp = useCallback(async () => {
+    // Auto-submit current answer or empty answer if time is up
+    const answerToSubmit = selectedAnswer || '';
+    
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
@@ -137,7 +232,7 @@ const TakeSectionalTest = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userAnswer: selectedAnswer,
+          userAnswer: answerToSubmit,
           timeTaken: 0
         })
       });
@@ -188,7 +283,143 @@ const TakeSectionalTest = () => {
         } else {
           setCurrentQuestion(data.question || null);
           setTimeRemaining(data.timeRemaining || 0);
-          setQuestionNumber(data.questionNumber || questionNumber + 1);
+          setQuestionNumber(data.questionNumber || 1);
+          setSelectedAnswer('');
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('API Error:', errorData);
+        setError(errorData.message || `Failed to submit answer (${response.status})`);
+      }
+    } catch (error) {
+      console.error('Error submitting answer:', error);
+      setError('Network error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedAnswer, sessionId, navigate, selectedSections, sections, currentSection, getCurrentSectionInfo, getCurrentSectionName]);
+
+  useEffect(() => {
+    const state = location.state;
+    if (state) {
+      setSelectedSections(state.selectedSections || {});
+      setSections(state.sections || []);
+      setCurrentSection(state.currentSectionIndex || 0);
+
+      if (state.sessionData) {
+        setCurrentQuestion(state.sessionData.question || null);
+        setTimeRemaining(state.sessionData.timeRemaining || 0);
+        setQuestionNumber(state.sessionData.questionNumber || 1);
+        setTotalQuestions(state.sessionData.totalQuestions || 10);
+        setCurrentSection(state.sessionData.currentSection || 0);
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    loadQuestion();
+  }, [location.state, loadQuestion]);
+
+  // Separate timer effect that runs continuously
+  useEffect(() => {
+    if (timeRemaining > 0 && !sessionEnded) {
+      const timer = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            handleTimeUp();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [timeRemaining, sessionEnded, handleTimeUp]);
+
+  // Fullscreen change listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const handleAnswerSelect = (answer) => {
+    setSelectedAnswer(answer);
+  };
+
+  const handleAnswerSubmit = async () => {
+    if (!selectedAnswer) return;
+
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URLS.PRACTICE}/sectional/${sessionId}/next`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userAnswer: selectedAnswer,
+          timeTaken: 0
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Answer submission response:', data);
+        
+        if (data.sectionCompleted) {
+          const sectionInfo = getCurrentSectionInfo();
+          const sectionData = {
+            sectionInfo: {
+              title: sectionInfo.title || getCurrentSectionName(),
+              difficulty: sectionInfo.difficulty || 'Unknown'
+            },
+            score: Math.round((data.sectionCorrect / data.sectionTotal) * 100),
+            correct: data.sectionCorrect,
+            total: data.sectionTotal,
+            passed: data.passed,
+            hasNextSection: data.hasNextSection || false,
+            nextSectionIndex: data.nextSectionIndex
+          };
+
+          if (data.testCompleted) {
+            navigate(`/sectional-test/results/${sessionId}`, {
+              state: {
+                selectedSections,
+                sections
+              }
+            });
+          } else {
+            navigate(`/sectional-test/section-summary/${sessionId}`, {
+              state: {
+                sectionData,
+                selectedSections,
+                sections,
+                currentSectionIndex: currentSection
+              }
+            });
+          }
+          return;
+        } else if (data.testCompleted) {
+          navigate(`/sectional-test/results/${sessionId}`, {
+            state: {
+              selectedSections,
+              sections
+            }
+          });
+        } else {
+          setCurrentQuestion(data.question || null);
+          setTimeRemaining(data.timeRemaining || 0);
+          setQuestionNumber(data.questionNumber || 1);
           setSelectedAnswer('');
         }
       } else {
@@ -222,22 +453,6 @@ const TakeSectionalTest = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getCurrentSectionInfo = () => {
-    return sections[currentSection] || {};
-  };
-
-  const getCurrentSectionName = () => {
-    const selectedSectionKeys = Object.keys(selectedSections).filter(key => selectedSections[key]);
-    const currentKey = selectedSectionKeys[currentSection];
-    const sectionNames = {
-      veryEasy: 'Very Easy',
-      easy: 'Easy',
-      moderate: 'Moderate',
-      difficult: 'Difficult'
-    };
-    return sectionNames[currentKey] || 'Current Section';
   };
 
   if (isLoading) {
@@ -292,7 +507,19 @@ const TakeSectionalTest = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div 
+      ref={fullscreenRef}
+      className="min-h-screen bg-gray-900 text-white"
+      style={{
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none',
+        WebkitTouchCallout: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        pointerEvents: 'auto'
+      }}
+    >
       <div className="bg-gray-800 p-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -407,6 +634,23 @@ const TakeSectionalTest = () => {
           </div>
         </div>
       </div>
+
+      {/* Fullscreen Warning Overlay */}
+      {showWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+          <div className="bg-red-900 border-2 border-red-500 rounded-2xl p-8 max-w-md w-full mx-4 text-center">
+            <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-white mb-4">Fullscreen Required</h3>
+            <p className="text-red-200 mb-6">
+              You must remain in fullscreen mode to continue the test. 
+              The test will resume automatically in {warningCountdown} seconds.
+            </p>
+            <div className="text-sm text-red-300">
+              Attempt {fullscreenAttempts} of {maxFullscreenAttempts}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
