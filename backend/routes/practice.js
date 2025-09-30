@@ -7,6 +7,7 @@ const {
   endPracticeSession,
   getUserPracticeSessions,
   getPracticeSessionResults,
+  getUserSectionalTestHistory,
   startSectionalTest,
   getSectionalQuestion,
   switchSectionalSection,
@@ -21,6 +22,7 @@ router.post('/:sessionId/next',auth, getNextQuestion);
 router.post('/:sessionId/end',auth, endPracticeSession);
 router.get('/results/:sessionId',auth, getPracticeSessionResults);
 router.get('/history',auth, getUserPracticeSessions);
+router.get('/sectional/history',auth, getUserSectionalTestHistory);
 
 // Sectional tests
 router.post('/sectional/start', auth, startSectionalTest);

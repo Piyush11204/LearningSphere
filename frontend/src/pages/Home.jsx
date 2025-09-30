@@ -13,17 +13,13 @@ import {
   Phone,
   Mail,
   MapPin,
-  ChevronDown,
-  ChevronUp,
-  Video,
-  Calendar,
+  Heart,
+  Target,
   User,
   TrendingUp,
   Shield,
   Zap,
   Globe,
-  Heart,
-  Target,
   Lightbulb,
   X,
   AlertCircle,
@@ -35,9 +31,6 @@ import { API_URLS } from '../config/api';
 
 const Home = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeFaq, setActiveFaq] = useState(null);
-  const [liveSessions, setLiveSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [verificationMessage, setVerificationMessage] = useState(null);
   const [user, setUser] = useState(null);
@@ -73,38 +66,6 @@ const Home = () => {
       }, 10000);
     }
   }, [searchParams, setSearchParams]);
-
-  // Fetch live sessions from API
-  useEffect(() => {
-    const fetchLiveSessions = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URLS.LIVE_SESSIONS}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const sessions = await response.json();
-          // Take only first 3 sessions for display
-          setLiveSessions(sessions.slice(0, 3));
-        } else {
-          // If API fails, use empty array
-          setLiveSessions([]);
-        }
-      } catch (error) {
-        console.error('Error fetching live sessions:', error);
-        // Use empty array as fallback
-        setLiveSessions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLiveSessions();
-  }, []);
 
   // Fetch user profile if logged in
   useEffect(() => {
@@ -243,42 +204,6 @@ const Home = () => {
   // Testimonials will be fetched from API
   const testimonials = [];
 
-  // FAQ data will be fetched from API
-  const faqs = [
-    {
-      question: "How does LearingSphere's matching system work?",
-      answer: "Our AI-powered matching system analyzes your profile, interests, skills, and learning goals to connect you with the most suitable tutors. We consider factors like teaching style, subject expertise, availability, and past success rates to ensure the best learning experience."
-    },
-    {
-      question: "What types of sessions are available?",
-      answer: "We offer both one-on-one sessions and live group sessions. One-on-one sessions provide personalized attention, while live group sessions allow you to learn with peers and benefit from group discussions and collaborative learning."
-    },
-    {
-      question: "How does the gamification system work?",
-      answer: "Earn XP points by joining sessions, completing learning milestones, and achieving badges. Track your progress, compete on leaderboards, and unlock achievements as you advance through your learning journey."
-    },
-    {
-      question: "Are the sessions recorded?",
-      answer: "Yes, all sessions are recorded and made available to participants for future reference. You can access recordings anytime through your dashboard to review materials and reinforce your learning."
-    },
-    {
-      question: "What if I need to reschedule a session?",
-      answer: "You can reschedule sessions up to 24 hours in advance through your dashboard. Our tutors are flexible and will work with you to find a mutually convenient time."
-    },
-    {
-      question: "How do I become a tutor on LearingSphere?",
-      answer: "To become a tutor, you need to apply through our tutor registration process. You'll need to provide your credentials, teaching experience, and undergo a verification process to ensure quality education for our learners."
-    },
-    {
-      question: "What payment methods are accepted?",
-      answer: "We accept various payment methods including credit/debit cards, UPI, net banking, and digital wallets. All transactions are secure and processed through encrypted payment gateways."
-    },
-    {
-      question: "Is there a refund policy?",
-      answer: "Yes, we offer a 24-hour refund policy for sessions. If you're not satisfied with the session quality, you can request a refund within 24 hours of session completion."
-    }
-  ];
-
   useEffect(() => {
     if (testimonials.length > 0) {
       const interval = setInterval(() => {
@@ -287,10 +212,6 @@ const Home = () => {
       return () => clearInterval(interval);
     }
   }, [testimonials.length]);
-
-  const toggleFaq = (index) => {
-    setActiveFaq(activeFaq === index ? null : index);
-  };
 
   const dismissVerificationMessage = () => {
     setVerificationMessage(null);
@@ -437,100 +358,7 @@ const Home = () => {
         <div className="absolute bottom-0 left-0 -mb-20 -ml-16 w-96 h-96 bg-gradient-to-tr from-purple-400 to-pink-600 rounded-full opacity-10 animate-pulse"></div>
       </section>
 
-      {/* Live Sessions Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Live Sessions Happening Now
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Join interactive live sessions with expert instructors and learn in real-time
-            </p>
-          </div>
 
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          ) : liveSessions.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {liveSessions.map((session) => (
-                <div key={session._id} className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="relative">
-                    <div className="h-48 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                      <div className="text-center text-white">
-                        <Video className="w-12 h-12 mx-auto mb-2" />
-                        <div className="flex items-center justify-center space-x-2">
-                          <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                          <span className="font-semibold">LIVE NOW</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                      {session.participants?.length || 0} watching
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                        {session.tutor?.profile?.name?.charAt(0) || session.tutorId?.profile?.name?.charAt(0) || 'T'}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{session.tutor?.profile?.name || session.tutorId?.profile?.name || 'Tutor'}</h3>
-                        <p className="text-sm text-gray-600">{session.tutor?.email || session.tutorId?.email || ''}</p>
-                      </div>
-                    </div>
-
-                    <h4 className="text-xl font-bold text-gray-900 mb-3">{session.title}</h4>
-                    <p className="text-gray-600 mb-4">{session.description}</p>
-
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <div className="flex items-center space-x-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{new Date(session.scheduledTime).toLocaleTimeString('en-IN', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Users className="w-4 h-4" />
-                          <span>{session.maxParticipants || 50}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Link 
-                        to={`/session/${session._id}`} 
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all inline-block text-center"
-                      >
-                        Join Now
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <Video className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">No Live Sessions Available</h3>
-              <p className="text-gray-500">Check back later for upcoming live sessions</p>
-            </div>
-          )}
-
-          <div className="text-center mt-12">
-            <Link to="/sessions" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-8 py-3 rounded-xl hover:bg-gray-800 transition-colors">
-              <span>View All Live Sessions</span>
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Exams Section */}
       <section className="py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
@@ -1307,44 +1135,7 @@ const Home = () => {
         </section>
       )}
 
-      {/* FAQ Section */}
-      {faqs.length > 0 && (
-        <section className="py-20 bg-white">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                Frequently Asked Questions
-              </h2>
-              <p className="text-xl text-gray-600">
-                Everything you need to know about LearingSphere
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {faqs.map((faq, index) => (
-                <div key={index} className="bg-gray-50 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => toggleFaq(index)}
-                    className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-100 transition-colors"
-                  >
-                    <span className="text-lg font-medium text-gray-900">{faq.question}</span>
-                    {activeFaq === index ? (
-                      <ChevronUp className="w-5 h-5 text-gray-500" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-500" />
-                    )}
-                  </button>
-                  {activeFaq === index && (
-                    <div className="px-6 pb-4">
-                      <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}      {/* Contact Section */}
+      {/* Contact Section */}
       <section className="py-20 bg-gradient-to-br from-gray-900 to-blue-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">

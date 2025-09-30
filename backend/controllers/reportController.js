@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Exam = require('../models/Exam');
 const { generateReport } = require('../services/geminiService');
 const Progress = require('../models/Progress');
+const PracticeSession = require('../models/PracticeSession');
 const mongoose = require('mongoose');
 
 // Generate student performance report (admin or self)
@@ -50,17 +51,62 @@ const generateStudentReport = async (req, res, next) => {
       };
     }).filter(item => item !== null); // Remove null entries
 
+    // Get practice session history
+    const practiceSessions = await PracticeSession.find({
+      userId: userId,
+      status: 'completed'
+    }).sort({ createdAt: -1 }).limit(20);
+
+    const practiceHistory = practiceSessions.map(session => ({
+      sessionId: session._id,
+      startTime: session.startTime,
+      endTime: session.endTime,
+      duration: session.duration,
+      score: session.score,
+      totalQuestions: session.totalQuestions,
+      correctAnswers: session.correctAnswers,
+      accuracy: session.totalQuestions > 0 ? Math.round((session.correctAnswers / session.totalQuestions) * 100) : 0,
+      xpEarned: session.xpEarned,
+      difficulty: session.currentDifficulty,
+      isSectional: session.isSectional
+    }));
+
+    // Get sectional test history from user model
+    const sectionalHistory = (user.sectionalTestHistory || []).slice(-20).map(session => ({
+      sessionId: session.sessionId,
+      completedAt: session.completedAt,
+      totalSections: session.totalSections,
+      completedSections: session.completedSections,
+      passedSections: session.passedSections,
+      xpEarned: session.xpEarned,
+      duration: session.duration,
+      status: session.status,
+      sections: session.sections?.map(section => ({
+        sectionId: section.sectionId,
+        difficulty: section.difficulty,
+        correct: section.correct,
+        total: section.total,
+        accuracy: section.accuracy,
+        passed: section.passed
+      })) || []
+    }));
+
     // Prepare data for Gemini
     const reportData = {
       username: user.profile?.name || user.email,
       examHistory: examHistory,
+      practiceHistory: practiceHistory,
+      sectionalHistory: sectionalHistory,
       examCount: progress?.examsCompleted || 0,
+      practiceSessionsCount: practiceSessions.length,
+      sectionalTestsCount: sectionalHistory.length,
       averageScore: progress?.examAverageScore || 0,
       totalSessions: progress?.sessionsCompleted || 0,
       totalHours: progress?.totalHours || 0,
       currentLevel: progress?.currentLevel || 1,
       experiencePoints: progress?.experiencePoints || 0,
-      badges: progress?.badges?.length || 0
+      badges: progress?.badges?.length || 0,
+      sectionalTestStats: user.sectionalTestStats || {}
     };
 
     const report = await generateReport(reportData);

@@ -21,7 +21,8 @@ import {
   AlertCircle,
   Download,
   FileText,
-  LineChart
+  LineChart,
+  User 
 } from 'lucide-react';
 import {
   LineChart as RechartsLineChart,
@@ -43,6 +44,8 @@ import {
 const Learner = () => {
   const [progress, setProgress] = useState(null);
   const [examHistory, setExamHistory] = useState([]);
+  const [practiceHistory, setPracticeHistory] = useState([]);
+  const [sectionalHistory, setSectionalHistory] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -120,6 +123,32 @@ const Learner = () => {
           setExamHistory(examHistoryData.examHistory || []);
         }
 
+        // Fetch practice history
+        const practiceHistoryResponse = await fetch('https://learningsphere-1fgj.onrender.com/api/practice/history', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (practiceHistoryResponse.ok) {
+          const practiceHistoryData = await practiceHistoryResponse.json();
+          setPracticeHistory(practiceHistoryData || []);
+        }
+
+        // Fetch sectional test history
+        const sectionalHistoryResponse = await fetch('https://learningsphere-1fgj.onrender.com/api/practice/sectional/history', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (sectionalHistoryResponse.ok) {
+          const sectionalHistoryData = await sectionalHistoryResponse.json();
+          setSectionalHistory(sectionalHistoryData || []);
+        }
+
         setLoading(false);
       } catch (error) {
         console.error('Error fetching progress data:', error);
@@ -184,15 +213,6 @@ const Learner = () => {
     }));
   };
 
-  const generateActivityData = () => {
-    // Generate mock weekly activity data
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days.map(day => ({
-      day,
-      hours: Math.floor(Math.random() * 4) + 1
-    }));
-  };
-
   const generateBadgeDistributionData = () => {
     const categories = ['experience', 'session', 'achievement', 'admin'];
     const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
@@ -232,9 +252,13 @@ const Learner = () => {
           level: progress.currentLevel,
           sessionsCompleted: progress.sessionsCompleted,
           examsTaken: examHistory.length,
+          practiceSessions: practiceHistory.length,
+          sectionalTests: sectionalHistory.length,
           badgesEarned: progress.badges?.length || 0
         },
         examHistory: examHistory.slice(-5),
+        practiceHistory: practiceHistory.slice(-5),
+        sectionalHistory: sectionalHistory.slice(-5),
         recentActivity: generateRecentActivityData()
       };
 
@@ -249,12 +273,26 @@ Total XP: ${reportData.summary.totalXP}
 Current Level: ${reportData.summary.level}
 Sessions Completed: ${reportData.summary.sessionsCompleted}
 Exams Taken: ${reportData.summary.examsTaken}
+Practice Sessions: ${reportData.summary.practiceSessions}
+Sectional Tests: ${reportData.summary.sectionalTests}
 Badges Earned: ${reportData.summary.badgesEarned}
 
 RECENT EXAMS
 ============
 ${reportData.examHistory.map(exam => 
   `${exam.title}: ${exam.score}% (${exam.correctAnswers}/${exam.totalQuestions}) - ${exam.passed ? 'PASSED' : 'FAILED'}`
+).join('\n')}
+
+RECENT PRACTICE SESSIONS
+========================
+${reportData.practiceHistory.map(session => 
+  `Session: ${session.correctAnswers}/${session.totalQuestions} correct (${session.accuracy}%) - ${session.xpEarned} XP`
+).join('\n')}
+
+RECENT SECTIONAL TESTS
+======================
+${reportData.sectionalHistory.map(test => 
+  `Test: ${test.completedSections}/${test.totalSections} sections passed - ${test.xpEarned} XP`
 ).join('\n')}
 
 RECENT ACTIVITY
@@ -391,66 +429,6 @@ ${reportData.recentActivity.map(activity =>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'overview' && (
           <div className="space-y-8">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Sessions</p>
-                    <p className="text-3xl font-bold text-gray-900">{progress.sessionsCompleted}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {progress.normalSessionsCompleted || 0} normal • {progress.liveSessionsAttended || 0} live
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-6 h-6 text-blue-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Hours</p>
-                    <p className="text-3xl font-bold text-gray-900">{progress.totalHours}h</p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Clock className="w-6 h-6 text-green-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Current Level</p>
-                    <p className="text-3xl font-bold text-gray-900">{progress.currentLevel}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {progress.experiencePoints} XP
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Target className="w-6 h-6 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Learning Streak</p>
-                    <p className="text-3xl font-bold text-gray-900">{progress.streak?.current || 0}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Best: {progress.streak?.longest || 0} days
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Flame className="w-6 h-6 text-orange-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Level Progress */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">

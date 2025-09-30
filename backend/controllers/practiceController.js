@@ -489,6 +489,30 @@ const getUserPracticeSessions = async (req, res) => {
   }
 };
 
+// Get user's sectional test history
+const getUserSectionalTestHistory = async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Return sectional test history from user model
+    const sectionalHistory = user.sectionalTestHistory || [];
+
+    // Sort by completion date (most recent first) and limit to 10
+    const sortedHistory = sectionalHistory
+      .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+      .slice(0, 10);
+
+    res.json(sortedHistory);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // SECTIONAL TEST FUNCTIONS
 
 // Start a new sectional test
@@ -506,17 +530,21 @@ const startSectionalTest = async (req, res) => {
       return res.status(400).json({ message: 'Invalid section index' });
     }
 
-    // Get 10 questions for the current section
-    const questions = await Question.find({
+    // Get 10 random questions for the current section
+    const allQuestions = await Question.find({
       isActive: true,
       difficulty: currentSectionData.difficulty
-    }).sort({ createdAt: -1 }).limit(10);
+    });
 
-    if (!questions || questions.length < 10) {
+    if (!allQuestions || allQuestions.length < 10) {
       return res.status(404).json({
-        message: `Not enough ${currentSectionData.difficulty} questions available. Found ${questions?.length || 0}, need 10.`
+        message: `Not enough ${currentSectionData.difficulty} questions available. Found ${allQuestions?.length || 0}, need 10.`
       });
     }
+
+    // Shuffle the questions array and take first 10
+    const shuffledQuestions = allQuestions.sort(() => 0.5 - Math.random());
+    const questions = shuffledQuestions.slice(0, 10);
 
     const startTime = new Date();
     const endTime = new Date(startTime.getTime() + 30 * 60000); // 30 minutes per section
@@ -908,16 +936,20 @@ const switchSectionalSection = async (req, res) => {
 
     // Get questions for this section if not already loaded
     if (!targetSection.questions || targetSection.questions.length === 0) {
-      const questions = await Question.find({
+      const allQuestions = await Question.find({
         isActive: true,
         difficulty: targetSection.difficulty
-      }).sort({ createdAt: -1 }).limit(10);
+      });
 
-      if (!questions || questions.length < 10) {
+      if (!allQuestions || allQuestions.length < 10) {
         return res.status(404).json({
-          message: `Not enough ${targetSection.difficulty} questions available. Found ${questions?.length || 0}, need 10.`
+          message: `Not enough ${targetSection.difficulty} questions available. Found ${allQuestions?.length || 0}, need 10.`
         });
       }
+
+      // Shuffle the questions array and take first 10
+      const shuffledQuestions = allQuestions.sort(() => 0.5 - Math.random());
+      const questions = shuffledQuestions.slice(0, 10);
 
       targetSection.questions = questions.map(q => q._id);
 
@@ -1152,6 +1184,7 @@ module.exports = {
   endPracticeSession,
   getUserPracticeSessions,
   getPracticeSessionResults,
+  getUserSectionalTestHistory,
   startSectionalTest,
   getSectionalQuestion,
   switchSectionalSection,
