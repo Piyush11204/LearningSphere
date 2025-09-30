@@ -1,9 +1,4 @@
-import { useState, useE  const [selectedSections, setSelectedSections] = useState({});
-  const [sections, setSections] = useState([]);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [sessionEnded, setSessionEnded] = useState(false);eCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Clock,
@@ -17,75 +12,24 @@ import {
 import { API_URLS } from '../../config/api';
 
 const TakeSectionalTest = () => {
-  const { sessionId } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-
+  const [selectedSections, setSelectedSections] = useState({});
+  const [sections, setSections] = useState([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [sessionEnded, setSessionEnded] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [questionNumber, setQuestionNumber] = useState(1);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [currentSection, setCurrentSection] = useState(0);
-  const [sections, setSections] = useState([]);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [sessionEnded, setSessionEnded] = useState(false);
-  const [selectedSections, setSelectedSections] = useState({});
-  const [sections, setSections] = useState([]);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  
+  const { sessionId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  useEffect(() => {
-    // Get data from navigation state
-    const state = location.state;
-    if (state) {
-      setSelectedSections(state.selectedSections || {});
-      setSections(state.sections || []);
-      setCurrentSection(state.currentSectionIndex || 0);
-
-      // Use the session data if available (first question already loaded)
-      if (state.sessionData) {
-        setCurrentQuestion(state.sessionData.question);
-        setTimeRemaining(state.sessionData.timeRemaining);
-        setQuestionNumber(state.sessionData.questionNumber || 1);
-        setTotalQuestions(state.sessionData.totalQuestions || 10);
-        setCurrentSection(state.sessionData.currentSection || 0);
-        setIsLoading(false);
-        return;
-      }
-    }
-
-    // Only load question if we don't have session data
-    loadQuestion();
-
-    // Timer
-    const timer = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev <= 1) {
-          handleTimeUp();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    // Fullscreen change listener
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, [location.state]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const loadQuestion = async () => {
+  const loadQuestion = useCallback(async () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
@@ -95,7 +39,7 @@ const TakeSectionalTest = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ userAnswer: null, timeTaken: 0 }) // Initial load
+        body: JSON.stringify({ userAnswer: null, timeTaken: 0 })
       });
 
       if (response.ok) {
@@ -106,11 +50,9 @@ const TakeSectionalTest = () => {
           return;
         }
 
-        setCurrentQuestion(data.question);
-        setTimeRemaining(data.timeRemaining);
+        setCurrentQuestion(data.question || null);
+        setTimeRemaining(data.timeRemaining || 0);
         setQuestionNumber(data.questionNumber || 1);
-        // Don't update currentSection from API - maintain it as index in frontend
-        setSections(data.sections || []);
         if (data.totalQuestions) {
           setTotalQuestions(data.totalQuestions);
         }
@@ -126,7 +68,57 @@ const TakeSectionalTest = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sessionId, navigate]);
+
+  const handleTimeUp = useCallback(() => {
+    if (selectedAnswer) {
+      handleAnswerSubmit();
+    } else {
+      handleAnswerSubmit();
+    }
+  }, [selectedAnswer]); // Note: handleAnswerSubmit is defined below, so we handle it carefully
+
+  useEffect(() => {
+    const state = location.state;
+    if (state) {
+      setSelectedSections(state.selectedSections || {});
+      setSections(state.sections || []);
+      setCurrentSection(state.currentSectionIndex || 0);
+
+      if (state.sessionData) {
+        setCurrentQuestion(state.sessionData.question || null);
+        setTimeRemaining(state.sessionData.timeRemaining || 0);
+        setQuestionNumber(state.sessionData.questionNumber || 1);
+        setTotalQuestions(state.sessionData.totalQuestions || 10);
+        setCurrentSection(state.sessionData.currentSection || 0);
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    loadQuestion();
+
+    const timer = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          handleTimeUp();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, [location.state, loadQuestion, handleTimeUp]);
 
   const handleAnswerSelect = (answer) => {
     setSelectedAnswer(answer);
@@ -146,7 +138,7 @@ const TakeSectionalTest = () => {
         },
         body: JSON.stringify({
           userAnswer: selectedAnswer,
-          timeTaken: 0 // You can track actual time taken if needed
+          timeTaken: 0
         })
       });
 
@@ -154,7 +146,6 @@ const TakeSectionalTest = () => {
         const data = await response.json();
         
         if (data.sectionCompleted) {
-          // Section completed - show summary page
           const sectionInfo = getCurrentSectionInfo();
           const sectionData = {
             sectionInfo: {
@@ -170,39 +161,34 @@ const TakeSectionalTest = () => {
           };
 
           if (data.testCompleted) {
-            // Test is completely finished - go to final results
             navigate(`/sectional-test/results/${sessionId}`, {
               state: {
-                selectedSections: selectedSections,
-                sections: sections
+                selectedSections,
+                sections
               }
             });
           } else {
-            // Show section summary
             navigate(`/sectional-test/section-summary/${sessionId}`, {
               state: {
-                sectionData: sectionData,
-                selectedSections: selectedSections,
-                sections: sections,
+                sectionData,
+                selectedSections,
+                sections,
                 currentSectionIndex: currentSection
               }
             });
           }
           return;
         } else if (data.testCompleted) {
-          // Test is completely finished
           navigate(`/sectional-test/results/${sessionId}`, {
             state: {
-              selectedSections: selectedSections,
-              sections: sections
+              selectedSections,
+              sections
             }
           });
         } else {
-          // Continue with next question in current section
-          setCurrentQuestion(data.question);
-          setTimeRemaining(data.timeRemaining);
+          setCurrentQuestion(data.question || null);
+          setTimeRemaining(data.timeRemaining || 0);
           setQuestionNumber(data.questionNumber || questionNumber + 1);
-          // Don't update currentSection from API
           setSelectedAnswer('');
         }
       } else {
@@ -215,16 +201,6 @@ const TakeSectionalTest = () => {
       setError('Network error occurred');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleTimeUp = () => {
-    // Auto-submit current answer if selected, otherwise move to next
-    if (selectedAnswer) {
-      handleAnswerSubmit();
-    } else {
-      // Submit with no answer
-      handleAnswerSubmit();
     }
   };
 
@@ -305,9 +281,18 @@ const TakeSectionalTest = () => {
     );
   }
 
+  if (!currentQuestion) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <p className="text-xl">No question available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
       <div className="bg-gray-800 p-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -348,7 +333,6 @@ const TakeSectionalTest = () => {
         </div>
       </div>
 
-      {/* Progress Bar */}
       <div className="bg-gray-800 px-4 pb-4">
         <div className="max-w-4xl mx-auto">
           <div className="w-full bg-gray-700 rounded-full h-2">
@@ -360,16 +344,13 @@ const TakeSectionalTest = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
-          {/* Question */}
           <div className="bg-gray-800 rounded-2xl p-8 mb-8">
             <h3 className="text-2xl font-bold mb-6 leading-relaxed">
               {currentQuestion.question_text}
             </h3>
 
-            {/* Options */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {['a', 'b', 'c', 'd'].map((option) => (
                 <button
@@ -391,7 +372,7 @@ const TakeSectionalTest = () => {
                     </div>
                     <span className="text-lg">
                       <span className="font-semibold mr-2">{option.toUpperCase()}.</span>
-                      {currentQuestion[`option_${option}`]}
+                      {currentQuestion[`option_${option}`] || 'N/A'}
                     </span>
                   </div>
                 </button>
@@ -399,7 +380,6 @@ const TakeSectionalTest = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-400">
               {!isFullscreen && (

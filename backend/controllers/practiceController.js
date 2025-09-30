@@ -280,6 +280,46 @@ const endPracticeSession = async (req, res) => {
     // Update experience points
     user.updateExperiencePoints(session.xpEarned, 'practice');
 
+    // Update Progress model for regular practice session
+    const Progress = require('../models/Progress');
+    let progress = await Progress.findOne({ user: req.user.id });
+    if (!progress) {
+      progress = new Progress({ user: req.user.id });
+    }
+
+    // Add regular practice session
+    progress.sessionsCompleted += 1;
+    progress.normalSessionsCompleted += 1;
+    progress.totalHours += session.duration || 30; // Add time spent
+    progress.experiencePoints += session.xpEarned;
+
+    // Update streak
+    const today = new Date();
+    const lastActivity = progress.streak.lastActivity;
+    
+    if (lastActivity) {
+      const daysDiff = Math.floor((today - lastActivity) / (1000 * 60 * 60 * 24));
+      if (daysDiff === 1) {
+        progress.streak.current += 1;
+        if (progress.streak.current > progress.streak.longest) {
+          progress.streak.longest = progress.streak.current;
+        }
+      } else if (daysDiff > 1) {
+        progress.streak.current = 1;
+      }
+    } else {
+      progress.streak.current = 1;
+    }
+    progress.streak.lastActivity = today;
+
+    // Check and award badges
+    const newProgressBadges = progress.checkAndAwardBadges();
+    
+    // Update level after badge XP is added
+    progress.currentLevel = Math.floor(progress.experiencePoints / 1000) + 1;
+
+    await progress.save();
+
     await user.save();
 
     res.json({
@@ -677,9 +717,49 @@ const getSectionalQuestion = async (req, res) => {
 
           // Award XP and badges for completed sectional test
           const User = require('../models/User');
+          const Progress = require('../models/Progress');
           const user = await User.findById(req.user.id);
 
           if (user) {
+            // Update progress model for sectional test
+            let progress = await Progress.findOne({ user: req.user.id });
+            if (!progress) {
+              progress = new Progress({ user: req.user.id });
+            }
+
+            // Add sectional test as a session
+            progress.sessionsCompleted += 1;
+            progress.normalSessionsCompleted += 1; // Count sectional tests as normal sessions
+            progress.totalHours += session.duration || 30; // Add time spent
+            progress.experiencePoints += session.xpEarned;
+
+            // Update streak
+            const today = new Date();
+            const lastActivity = progress.streak.lastActivity;
+            
+            if (lastActivity) {
+              const daysDiff = Math.floor((today - lastActivity) / (1000 * 60 * 60 * 24));
+              if (daysDiff === 1) {
+                progress.streak.current += 1;
+                if (progress.streak.current > progress.streak.longest) {
+                  progress.streak.longest = progress.streak.current;
+                }
+              } else if (daysDiff > 1) {
+                progress.streak.current = 1;
+              }
+            } else {
+              progress.streak.current = 1;
+            }
+            progress.streak.lastActivity = today;
+
+            // Check and award badges
+            const newProgressBadges = progress.checkAndAwardBadges();
+            
+            // Update level after badge XP is added
+            progress.currentLevel = Math.floor(progress.experiencePoints / 1000) + 1;
+
+            await progress.save();
+
             // Update sectional test history
             if (!user.sectionalTestHistory) {
               user.sectionalTestHistory = [];
@@ -709,7 +789,10 @@ const getSectionalQuestion = async (req, res) => {
             user.updateSectionalTestStats();
 
             // Award sectional test badges
-            const newBadges = user.awardSectionalTestBadges();
+            const newSectionalBadges = user.awardSectionalTestBadges();
+
+            // Combine badges from both models
+            const allNewBadges = [...(newProgressBadges || []), ...(newSectionalBadges || [])];
 
             // Update experience points
             user.updateExperiencePoints(session.xpEarned, 'practice');
