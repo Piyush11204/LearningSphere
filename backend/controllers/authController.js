@@ -52,7 +52,12 @@ exports.registerUser = async (req, res) => {
     res.status(201).json({ 
       msg: 'User registered successfully', 
       token, 
-      user: { id: user._id, email: user.email, role: user.role } 
+      user: { 
+        id: user._id, 
+        email: user.email, 
+        role: user.role,
+        profile: { name: user.profile.name }
+      } 
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -80,7 +85,15 @@ exports.loginUser = async (req, res) => {
     // Generate token
     const token = user.getJWTToken();
 
-    res.json({ token, user: { id: user._id, email: user.email, role: user.role } });
+    res.json({ 
+      token, 
+      user: { 
+        id: user._id, 
+        email: user.email, 
+        role: user.role,
+        profile: { name: user.profile.name }
+      } 
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ msg: 'Server error during login', error: error.message });

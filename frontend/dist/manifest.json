@@ -12,9 +12,15 @@
   "categories": ["education", "productivity", "social"],
   "icons": [
     {
-      "src": "/vite.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/LearningSphereLogo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/LearningSphereLogo.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
@@ -24,21 +30,21 @@
       "short_name": "Dashboard",
       "description": "Access your personalized learning dashboard",
       "url": "/progress",
-      "icons": [{ "src": "/vite.svg", "sizes": "any" }]
+      "icons": [{ "src": "/LearningSphereLogo.png", "sizes": "192x192" }]
     },
     {
       "name": "Live Sessions",
       "short_name": "Sessions",
       "description": "Join live learning sessions",
       "url": "/sessions",
-      "icons": [{ "src": "/vite.svg", "sizes": "any" }]
+      "icons": [{ "src": "/LearningSphereLogo.png", "sizes": "192x192" }]
     },
     {
       "name": "Take Exam",
       "short_name": "Exams",
       "description": "Take AI-powered assessments",
       "url": "/exams",
-      "icons": [{ "src": "/vite.svg", "sizes": "any" }]
+      "icons": [{ "src": "/LearningSphereLogo.png", "sizes": "192x192" }]
     }
   ]
 }

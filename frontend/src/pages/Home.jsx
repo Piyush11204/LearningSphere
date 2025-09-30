@@ -663,56 +663,6 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-12">
-            <div className="space-y-8">
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Target className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Progressive Difficulty</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Start with Very Easy sections and work your way up to Difficult. Each section contains 10 carefully selected questions.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">40% Pass Requirement</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Achieve at least 40% accuracy in each section to unlock the next difficulty level and continue your progress.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Lightbulb className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Study Recommendations</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Get personalized study suggestions when you don't pass a section, helping you focus on areas that need improvement.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Award className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">XP & Achievement System</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Earn 50 XP for each completed section and unlock special badges for sectional test milestones and achievements.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -790,6 +740,56 @@ const Home = () => {
                   </div>
                 </div>
               )}
+            </div>
+
+            <div className="space-y-8">
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Progressive Difficulty</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Start with Very Easy sections and work your way up to Difficult. Each section contains 10 carefully selected questions.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">40% Pass Requirement</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Achieve at least 40% accuracy in each section to unlock the next difficulty level and continue your progress.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Lightbulb className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Study Recommendations</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Get personalized study suggestions when you don't pass a section, helping you focus on areas that need improvement.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">XP & Achievement System</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Earn 50 XP for each completed section and unlock special badges for sectional test milestones and achievements.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 

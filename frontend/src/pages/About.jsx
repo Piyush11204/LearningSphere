@@ -89,9 +89,16 @@ const About = () => {
       <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              About <span className="text-yellow-400">LearingSphere</span>
-            </h1>
+            <div className="flex justify-center items-center mb-6">
+              <img 
+                src="/LearningSphereLogo.png" 
+                alt="LearningSphere Logo" 
+                className="w-16 h-16 object-contain mr-4"
+              />
+              <h1 className="text-5xl md:text-6xl font-bold">
+                About <span className="text-yellow-400">LearingSphere</span>
+              </h1>
+            </div>
             <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-gray-100">
               Empowering learners worldwide through personalized education and meaningful mentor connections
             </p>

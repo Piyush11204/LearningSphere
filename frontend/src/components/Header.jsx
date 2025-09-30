@@ -47,9 +47,11 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:shadow-md transition-shadow">
-                <span className="text-white font-bold text-lg">G</span>
-              </div>
+              <img 
+                src="/LearningSphereLogo.png" 
+                alt="LearningSphere Logo" 
+                className="w-10 h-10 object-contain group-hover:scale-105 transition-transform"
+              />
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 LearingSphere
               </span>
