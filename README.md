@@ -4,8 +4,38 @@
 [![Node.js](https://img.shields.io/badge/Node.js-Express-green.svg)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/Database-MongoDB-brightgreen.svg)](https://mongodb.com/)
 [![Socket.io](https://img.shields.io/badge/WebSocket-Socket.io-black.svg)](https://socket.io/)
+[![Google reCAPTCHA](https://img.shields.io/badge/Security-reCAPTCHA-blue.svg)](https://www.google.com/recaptcha/)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen.svg)](https://learningsphere-1fgj.onrender.com)
 
-LearingSphere is a feature-rich, full-stack learning management platform that connects learners with tutors through personalized matching, gamified progress tracking, and comprehensive session management. Built with modern web technologies and designed for scalability.
+[🚀 **Live Demo**](https://learningsphere-1fgj.onrender.com) | [📖 Documentation](#-complete-feature-documentation) | [🛠️ Installation](#-installation--setup)
+
+LearingSphere is a feature-rich, full-stack learning management platform that connects learners with tutors through personalized matching, gamified progress tracking, and comprehensive session management. Built with modern web technologies and designed for scalability, it features an advanced assessment system with sectional exams, adaptive practice sessions, and AI-powered performance analytics.
+
+## ✨ **Key Features**
+
+### **🎓 Learning Management**
+- **AI-Powered Matching**: Smart learner-tutor pairing based on skills, interests, and availability
+- **Real-time Sessions**: Live video/audio sessions with screen sharing capabilities
+- **Progress Tracking**: Comprehensive analytics with XP, badges, and level progression
+- **Gamification**: Achievement system with leaderboards and streak tracking
+
+### **📚 Advanced Assessment System**
+- **Sectional Exams**: Multi-difficulty testing with adaptive progression
+- **Practice Sessions**: Adaptive learning with real-time feedback
+- **Intelligent Questions**: Bloom's Taxonomy-based question management
+- **Performance Analytics**: Detailed insights with graphs and predictions
+
+### **👥 User Management**
+- **Role-based Access**: Separate dashboards for learners, tutors, and admins
+- **Profile Management**: Comprehensive user profiles with skills and interests
+- **Secure Authentication**: JWT-based auth with Google reCAPTCHA integration
+- **Email Notifications**: Automated reminders and achievement notifications
+
+### **📊 Analytics & Reporting**
+- **Interactive Dashboards**: Real-time progress visualization
+- **Custom Reports**: Downloadable PDF/CSV reports
+- **Performance Prediction**: AI-driven future performance forecasting
+- **Comparative Analysis**: Peer comparison and personal best tracking
 
 ## 🚀 **Core System Architecture**
 
@@ -44,6 +74,7 @@ LearingSphere is a feature-rich, full-stack learning management platform that co
 - ✅ **Role-based Access Control** (Admin, Tutor, Learner)
 - ✅ **Profile Management** with interests, skills, and location
 - ✅ **Account Status Management** (verified/unverified)
+- 🔒 **Google reCAPTCHA Integration** - Advanced bot protection for login forms
 
 ### **User Roles & Permissions**
 - 🎓 **Learner Role**: Access to sessions, progress tracking, matching
@@ -137,7 +168,59 @@ LearingSphere is a feature-rich, full-stack learning management platform that co
 
 ---
 
-## 👨‍💼 **Administrative Dashboard**
+## 🧠 **Advanced Assessment & Testing System**
+
+### **Sectional Exams**
+- 📚 **Multi-Section Testing** - Comprehensive exams divided into difficulty-based sections
+- 🎯 **Adaptive Difficulty** - Very Easy → Easy → Moderate → Difficult progression
+- ⏱️ **Time-Bound Sections** - 30-minute timer per section with automatic progression
+- 📊 **Section-wise Analytics** - Individual performance tracking per difficulty level
+- ✅ **Pass/Fail Criteria** - 40% accuracy threshold per section to advance
+- 🔄 **Section Switching** - Manual navigation between completed sections
+- 🏆 **XP Rewards** - 50 XP per successfully completed section
+- 📈 **Performance Prediction** - AI-driven difficulty adjustment based on user performance
+
+### **Practice Exams**
+- 🎮 **Adaptive Learning** - Dynamic question difficulty based on user performance
+- 📊 **Real-time Feedback** - Instant correctness indication and explanations
+- ⏰ **Flexible Timing** - 60-minute default sessions with customizable duration
+- 📈 **Performance Analytics** - Detailed accuracy tracking and improvement metrics
+- 🎯 **Smart Question Selection** - Algorithm-based question curation
+- 💰 **XP Earning** - 10 XP per correct answer in practice sessions
+- 📚 **Question Bank** - Extensive database with categorized questions
+- 📊 **Progress Tracking** - Historical practice session performance
+
+### **Intelligent Questioning Model**
+- 🏷️ **Advanced Tagging System** - Subject-based and topic-specific categorization
+- 📊 **Question Statistics** - Success rates, attempt counts, and difficulty metrics
+- 🎯 **Bloom's Taxonomy Integration** - Cognitive level classification (Remember, Understand, Apply, Analyze, Evaluate, Create)
+- 🔄 **Dynamic Difficulty Adjustment** - Real-time question difficulty modification
+- 📈 **Performance-based Adaptation** - Question selection based on user proficiency
+- ✅ **Answer Validation** - Automated correctness checking with detailed explanations
+- 📊 **Question Analytics** - Usage statistics and performance insights
+- 👨‍🏫 **Tutor Question Management** - Authorized tutors can create and manage questions
+
+### **Comprehensive Analytics & Insights**
+- 📊 **Performance Prediction** - Machine learning-based future performance forecasting
+- 📈 **Detailed Graphs** - Interactive charts for XP growth, exam performance, and learning trends
+- 🎯 **Personalized Recommendations** - AI-driven study suggestions and improvement areas
+- � **Subject-wise Analysis** - Performance breakdown by topics and difficulty levels
+- 📈 **Progress Visualization** - Multi-dimensional progress tracking with historical data
+- 🎯 **Weakness Identification** - Automated detection of knowledge gaps
+- 📋 **Custom Reports** - Downloadable PDF and CSV reports with comprehensive analytics
+- 📊 **Comparative Analysis** - Performance comparison with peers and personal bests
+
+### **Advanced Gamification Features**
+- 🏆 **Dynamic Badge System** - 10+ achievement badges with XP rewards
+- 📊 **Level Progression** - 1000 XP per level with visual progress indicators
+- 🔥 **Streak Tracking** - Daily learning streaks with longest streak records
+- 🥇 **Global Leaderboards** - Real-time rankings with multiple categories
+- 📈 **XP Visualization** - Interactive charts showing experience point growth
+- 🎯 **Achievement Milestones** - Major progress markers and celebrations
+- 📱 **Real-time Updates** - Instant progress reflection and badge notifications
+- 🎨 **Customizable Profiles** - Personalized user dashboards with achievement showcases
+
+---
 
 ### **User Management**
 - ✅ **User Overview** - Complete user statistics and management
@@ -228,25 +311,42 @@ LearingSphere is a feature-rich, full-stack learning management platform that co
 ## 📊 **Progress Tracking & Analytics**
 
 ### **Learner Progress Dashboard**
-- 📈 **XP Progression** - Experience points over time
-- 🏅 **Badge Collection** - Earned badges showcase
-- 📊 **Session Statistics** - Completed sessions, hours
-- 🎯 **Goal Tracking** - Personal learning goals
-- 🔥 **Streak Visualization** - Learning streak calendar
-- 📱 **Mobile Progress View** - Progress on-the-go
+- 📈 **XP Progression** - Experience points over time with interactive line charts
+- 🏅 **Badge Collection** - Earned badges showcase with achievement timelines
+- 📊 **Session Statistics** - Completed sessions, hours, and performance metrics
+- 🎯 **Goal Tracking** - Personal learning goals with progress indicators
+- 🔥 **Streak Visualization** - Learning streak calendar with longest streak records
+- 📱 **Mobile Progress View** - Progress on-the-go with responsive design
+- 📊 **Performance Prediction** - AI-driven forecasting of future performance trends
+- 📈 **Detailed Analytics** - Comprehensive graphs showing learning patterns and improvements
+
+### **Advanced Analytics Features**
+- 📊 **Interactive Charts** - Recharts-powered visualizations for XP growth, exam scores, and activity trends
+- 🎯 **Subject Performance Analysis** - Detailed breakdown by topics with accuracy percentages
+- 📈 **Score Distribution Graphs** - Visual representation of performance across different ranges
+- 📊 **Badge Distribution Charts** - Pie charts showing achievement categories
+- 📈 **Time-based Progress Tracking** - Historical data visualization over 30-day periods
+- 🎯 **Weakness Detection** - Automated identification of knowledge gaps and improvement areas
+- 📋 **Custom Report Generation** - Downloadable PDF and CSV reports with comprehensive data
+- 📊 **Comparative Analytics** - Performance comparison with personal bests and peer averages
 
 ### **Tutor Analytics Dashboard**
-- 👥 **Student Overview** - Managed learner statistics
-- 📊 **Session Analytics** - Teaching session metrics
-- 💰 **Earnings Tracking** - Revenue and payment history
-- ⭐ **Rating & Reviews** - Student feedback compilation
-- 📈 **Performance Trends** - Teaching effectiveness metrics
+- 👥 **Student Overview** - Managed learner statistics and progress tracking
+- 📊 **Session Analytics** - Teaching session metrics with detailed performance data
+- 💰 **Earnings Tracking** - Revenue and payment history with financial analytics
+- ⭐ **Rating & Reviews** - Student feedback compilation with sentiment analysis
+- 📈 **Performance Trends** - Teaching effectiveness metrics over time
+- 📊 **Student Progress Monitoring** - Individual learner advancement tracking
+- 🎯 **Custom Recommendations** - AI-suggested teaching strategies based on student performance
+- 📈 **Engagement Analytics** - Student participation and interaction metrics
 
 ### **Global Analytics**
-- 🌍 **Platform Statistics** - System-wide metrics
-- 📊 **User Engagement** - Activity and retention rates
-- 🎯 **Matching Success** - Algorithm performance metrics
-- 📈 **Growth Metrics** - User acquisition and retention
+- 🌍 **Platform Statistics** - System-wide metrics and usage patterns
+- 📊 **User Engagement** - Activity and retention rates with trend analysis
+- 🎯 **Matching Success** - Algorithm performance metrics and success rates
+- 📈 **Growth Metrics** - User acquisition and retention with predictive modeling
+- 📊 **Performance Insights** - Comprehensive analytics for platform optimization
+- 🎯 **Learning Effectiveness** - Measurement of educational outcomes and improvements
 
 ---
 
@@ -260,6 +360,9 @@ LearingSphere is a feature-rich, full-stack learning management platform that co
   - **Progress** - XP, badges, and achievements
   - **Reviews** - Feedback and rating system
   - **Matches** - Matching algorithm results
+  - **Questions** - Intelligent question bank with statistics
+  - **PracticeSession** - Adaptive practice exam tracking
+  - **Exam** - Comprehensive exam management
 
 ### **API Architecture**
 - 🔗 **RESTful API Design** - Standard HTTP methods
@@ -272,6 +375,11 @@ LearingSphere is a feature-rich, full-stack learning management platform that co
   - Matching system (`/api/matching`)
   - Review system (`/api/reviews`)
   - Admin operations (`/api/admin`)
+  - Contact system (`/api/contact`)
+  - **Exam Management** (`/api/exams`) - Full exam lifecycle management
+  - **Practice Sessions** (`/api/practice`) - Adaptive practice exam system
+  - **Question Bank** (`/api/questions`) - Intelligent question management
+  - **Reports & Analytics** (`/api/reports`) - Comprehensive reporting system
 
 ### **Security Features**
 - 🔒 **Password Encryption** - BCrypt hashing
@@ -395,11 +503,156 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 ---
 
+## 🖼️ **Screenshots**
+
+### **Dashboard Overview**
+
+![Dashboard](https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=LearningSphere+Dashboard)
+
+### **Gamified Progress Tracking**
+
+![Progress Dashboard](https://via.placeholder.com/800x400/10B981/FFFFFF?text=Gamified+Progress+Tracking)
+
+### **Sectional Exam Interface**
+
+![Sectional Exams](https://via.placeholder.com/800x400/F59E0B/FFFFFF?text=Sectional+Exam+Interface)
+
+### **Real-time Video Sessions**
+
+![Video Sessions](https://via.placeholder.com/800x400/EF4444/FFFFFF?text=Real-time+Video+Sessions)
+
+### **Analytics & Reports**
+
+![Analytics Dashboard](https://via.placeholder.com/800x400/8B5CF6/FFFFFF?text=Analytics+%26+Reports)
+
+---
+
+## 🚀 **Getting Started**
+
+### **Quick Start**
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/Piyush11204/LearningSphere.git
+   cd LearningSphere
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   # Backend
+   cd backend
+   npm install
+
+   # Frontend
+   cd ../frontend
+   npm install
+   ```
+
+3. **Set up environment variables**
+   - Copy `.env.example` to `.env` in the backend directory
+   - Configure your MongoDB, JWT, email, and Cloudinary settings
+
+4. **Start the development servers**
+
+   ```bash
+   # Backend (Terminal 1)
+   cd backend
+   npm start
+
+   # Frontend (Terminal 2)
+   cd frontend
+   npm run dev
+   ```
+
+5. **Access the application**
+   - Frontend: `http://localhost:5173`
+   - Backend API: `https://learningsphere-1fgj.onrender.com`
+
+### **First Time Setup**
+
+1. **Register as an Admin** - First user registered becomes admin
+2. **Create Tutors** - Add tutor accounts through admin panel
+3. **Set up Questions** - Tutors can add questions to the question bank
+4. **Create Exams** - Admins can schedule exams and sectional tests
+5. **Start Learning** - Learners can now browse tutors and take exams
+
+### **Production Deployment**
+
+- **Backend**: Deploy to services like Heroku, Railway, or Render
+- **Frontend**: Deploy to Vercel, Netlify, or GitHub Pages
+- **Database**: Use MongoDB Atlas for cloud database
+- **File Storage**: Configure Cloudinary for media uploads
+
+---
+
+## 📡 **API Documentation**
+
+### **Core Endpoints**
+
+#### **Authentication**
+
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/profile` - Get user profile
+
+#### **User Management API**
+
+- `GET /api/users` - Get all users (Admin only)
+- `PUT /api/users/:id` - Update user profile
+- `DELETE /api/users/:id` - Delete user (Admin only)
+
+#### **Sessions & Live Learning**
+
+- `GET /api/sessions` - Get all sessions
+- `POST /api/sessions` - Create new session
+- `GET /api/sessions/:id` - Get session details
+- `PUT /api/sessions/:id` - Update session
+- `DELETE /api/sessions/:id` - Delete session
+
+#### **Matching System**
+
+- `POST /api/matching/find-tutors` - Find matching tutors
+- `GET /api/matching/history` - Get matching history
+
+#### **Progress Tracking API**
+
+- `GET /api/progress/:userId` - Get user progress
+- `POST /api/progress` - Update progress
+- `GET /api/progress/analytics` - Get progress analytics
+
+#### **Reviews & Ratings**
+
+- `GET /api/reviews/:tutorId` - Get tutor reviews
+- `POST /api/reviews` - Submit review
+- `PUT /api/reviews/:id` - Update review
+
+#### **Admin Panel**
+
+- `GET /api/admin/stats` - Get platform statistics
+- `GET /api/admin/users` - Manage users
+- `GET /api/admin/sessions` - Manage sessions
+- `GET /api/admin/contacts` - Handle contact messages
+
+### **WebSocket Events**
+
+- `join-session` - Join a live session
+- `leave-session` - Leave a live session
+- `send-message` - Send chat message
+- `receive-message` - Receive chat message
+- `start-video` - Start video call
+- `end-video` - End video call
+
+---
+
 ## 🤝 **Contributing**
 
 LearingSphere welcomes contributions! Please read our contributing guidelines and submit pull requests for any improvements.
 
 ### **Development Workflow**
+
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
