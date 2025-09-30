@@ -4,7 +4,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { transporter, sendEmail } = require('../config/nodemailer');
-const { sendVerificationEmail } = require('../utils/emailTemplates');
 
 // Register new user
 exports.registerUser = async (req, res) => {
@@ -47,20 +46,14 @@ exports.registerUser = async (req, res) => {
 
     console.log(`New user ${email} registered and awarded Noobie badge with ${noobieBadge.xpReward} XP`);
 
-    // Send verification email
-    const verificationToken = crypto.randomBytes(20).toString('hex');
-    user.resetPasswordToken = verificationToken;  // Reuse for verification
-    await user.save();
+    // Generate token for immediate login
+    const token = user.getJWTToken();
 
-    const verifyUrl = `${req.protocol}://${req.get('host')}/api/auth/verify/${verificationToken}`;
-    
-    try {
-      await sendVerificationEmail(email, verifyUrl);
-    } catch (emailError) {
-      console.log('Email verification not sent (no config)');
-    }
-
-    res.status(201).json({ msg: 'User registered. Please verify your email.' });
+    res.status(201).json({ 
+      msg: 'User registered successfully', 
+      token, 
+      user: { id: user._id, email: user.email, role: user.role } 
+    });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ msg: 'Server error during registration', error: error.message });
@@ -84,11 +77,6 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
 
-    // Check verification
-    if (!user.isVerified) {
-      return res.status(400).json({ msg: 'Please verify your email first' });
-    }
-
     // Generate token
     const token = user.getJWTToken();
 
@@ -96,35 +84,6 @@ exports.loginUser = async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ msg: 'Server error during login', error: error.message });
-  }
-};
-
-// Verify email
-exports.verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.params;
-    const user = await User.findOne({ resetPasswordToken: token });
-
-    if (!user) {
-      // Redirect to frontend with error query parameter
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-      return res.redirect(`${frontendUrl}/?verification=error&message=Invalid%20token`);
-    }
-
-    user.isVerified = true;
-    user.resetPasswordToken = undefined;
-    await user.save();
-
-    console.log(`Email verified successfully for user: ${user.email}`);
-
-    // Redirect to frontend with success query parameter
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    res.redirect(`${frontendUrl}/?verification=success&message=Email%20verified%20successfully`);
-  } catch (error) {
-    console.error('Verification error:', error);
-    // Redirect to frontend with error query parameter
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    res.redirect(`${frontendUrl}/?verification=error&message=Server%20error%20during%20verification`);
   }
 };
 

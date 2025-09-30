@@ -67,8 +67,9 @@ const SectionalTestResults = () => {
           // Transform the data to match the expected format
           const transformedResults = {
             sessionId: data.sessionId,
-            totalScore: (data.sections?.length || 0) > 0 ?
-              Math.round(((data.sections.filter(s => s && s.passed).length || 0) / (data.sections.length || 1)) * 100) : 0,
+            totalScore: (data.sections || []).length > 0 ?
+              Math.round(((data.sections.reduce((total, section) => total + (section?.correct || 0), 0) || 0) / 
+                         (data.sections.reduce((total, section) => total + (section?.total || 0), 0) || 1)) * 100) : 0,
             totalQuestions: (data.sections || []).reduce((total, section) => total + (section?.total || 0), 0),
             correctAnswers: (data.sections || []).reduce((total, section) => total + (section?.correct || 0), 0),
             timeTaken: (data.duration || 0) * 60, // Convert minutes to seconds

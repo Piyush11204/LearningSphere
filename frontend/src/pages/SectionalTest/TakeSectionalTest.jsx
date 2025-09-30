@@ -1,4 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useE  const [selectedSections, setSelectedSections] = useState({});
+  const [sections, setSections] = useState([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [sessionEnded, setSessionEnded] = useState(false);eCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Clock,
@@ -28,8 +33,10 @@ const TakeSectionalTest = () => {
   const [error, setError] = useState(null);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [selectedSections, setSelectedSections] = useState({});
-  const [sectionTransition, setSectionTransition] = useState(false);
-  const [transitionMessage, setTransitionMessage] = useState('');
+  const [sections, setSections] = useState([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Get data from navigation state
@@ -147,71 +154,49 @@ const TakeSectionalTest = () => {
         const data = await response.json();
         
         if (data.sectionCompleted) {
-          // Check if there are more sections to complete
-          const selectedSectionKeys = Object.keys(selectedSections).filter(key => selectedSections[key]);
-          const nextSectionIndex = currentSection + 1;
-          
-          if (nextSectionIndex < selectedSectionKeys.length) {
-            // Show transition message
-            const nextSectionKey = selectedSectionKeys[nextSectionIndex];
-            const sectionNames = {
-              veryEasy: 'Very Easy',
-              easy: 'Easy',
-              moderate: 'Moderate',
-              difficult: 'Difficult'
-            };
-            setTransitionMessage(`Section completed! Moving to ${sectionNames[nextSectionKey]} section...`);
-            setSectionTransition(true);
-            
-            console.log('Switching to next section:', {
-              currentSection,
-              nextSectionIndex,
-              selectedSectionKeys,
-              sectionsLength: sections.length
-            });
-            
-            // Automatically switch to next section after a brief delay
-            setTimeout(async () => {
-              const nextSectionResponse = await fetch(`${API_URLS.PRACTICE}/sectional/${sessionId}/switch`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  sectionIndex: nextSectionIndex
-                })
-              });
+          // Section completed - show summary page
+          const sectionInfo = getCurrentSectionInfo();
+          const sectionData = {
+            sectionInfo: {
+              title: sectionInfo.title || getCurrentSectionName(),
+              difficulty: sectionInfo.difficulty || 'Unknown'
+            },
+            score: Math.round((data.sectionCorrect / data.sectionTotal) * 100),
+            correct: data.sectionCorrect,
+            total: data.sectionTotal,
+            passed: data.passed,
+            hasNextSection: data.hasNextSection || false,
+            nextSectionIndex: data.nextSectionIndex
+          };
 
-              if (nextSectionResponse.ok) {
-                const nextSectionData = await nextSectionResponse.json();
-                
-                // Update state for next section
-                setCurrentQuestion(nextSectionData.question);
-                setTimeRemaining(nextSectionData.timeRemaining);
-                setQuestionNumber(nextSectionData.questionNumber || 1);
-                setCurrentSection(nextSectionIndex);
-                setSections(nextSectionData.sections || sections);
-                setSelectedAnswer('');
-                setSectionTransition(false);
-                setTransitionMessage('');
-              } else {
-                const errorData = await nextSectionResponse.json().catch(() => ({ message: 'Unknown error' }));
-                console.error('Switch section error:', errorData);
-                setError(`Failed to switch to next section: ${errorData.message || 'Unknown error'}`);
-                setSectionTransition(false);
-                setTransitionMessage('');
-              }
-            }, 2000); // 2 second delay to show transition message
-          } else {
-            // All sections completed, navigate to final results
+          if (data.testCompleted) {
+            // Test is completely finished - go to final results
             navigate(`/sectional-test/results/${sessionId}`, {
               state: {
                 selectedSections: selectedSections,
                 sections: sections
               }
             });
+          } else {
+            // Show section summary
+            navigate(`/sectional-test/section-summary/${sessionId}`, {
+              state: {
+                sectionData: sectionData,
+                selectedSections: selectedSections,
+                sections: sections,
+                currentSectionIndex: currentSection
+              }
+            });
           }
+          return;
+        } else if (data.testCompleted) {
+          // Test is completely finished
+          navigate(`/sectional-test/results/${sessionId}`, {
+            state: {
+              selectedSections: selectedSections,
+              sections: sections
+            }
+          });
         } else {
           // Continue with next question in current section
           setCurrentQuestion(data.question);
@@ -427,9 +412,9 @@ const TakeSectionalTest = () => {
 
             <button
               onClick={handleAnswerSubmit}
-              disabled={!selectedAnswer || sectionTransition}
+              disabled={!selectedAnswer}
               className={`flex items-center space-x-3 px-8 py-4 rounded-xl font-semibold transition-all duration-300 ${
-                selectedAnswer && !sectionTransition
+                selectedAnswer
                   ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:shadow-lg transform hover:scale-105'
                   : 'bg-gray-600 cursor-not-allowed'
               }`}
@@ -442,20 +427,6 @@ const TakeSectionalTest = () => {
           </div>
         </div>
       </div>
-
-      {/* Section Transition Overlay */}
-      {sectionTransition && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 text-center max-w-md mx-4">
-            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Section Completed!</h3>
-            <p className="text-gray-600 mb-4">{transitionMessage}</p>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

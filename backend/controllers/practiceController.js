@@ -643,8 +643,6 @@ const getSectionalQuestion = async (req, res) => {
       currentSection.completed = true;
       currentSection.passed = accuracy >= 40;
 
-      await session.save();
-
       console.log('Section completed:', {
         sectionId: currentSection.sectionId,
         correct: currentSection.correct,
@@ -653,13 +651,102 @@ const getSectionalQuestion = async (req, res) => {
         passed: currentSection.passed
       });
 
-      return res.json({
-        sectionCompleted: true,
-        sectionCorrect: currentSection.correct,
-        sectionTotal: currentSection.total,
-        accuracy: accuracy,
-        passed: currentSection.passed
-      });
+      // If section passed, prepare for next section but don't auto-switch
+      if (currentSection.passed) {
+        const currentSectionIndex = session.sections.findIndex(s => s.sectionId === session.currentSection);
+        const nextSectionIndex = currentSectionIndex + 1;
+        
+        if (nextSectionIndex < session.sections.length) {
+          // There are more sections, return section completion info
+          return res.json({
+            sectionCompleted: true,
+            sectionCorrect: currentSection.correct,
+            sectionTotal: currentSection.total,
+            accuracy: accuracy,
+            passed: currentSection.passed,
+            hasNextSection: true,
+            nextSectionIndex: nextSectionIndex,
+            currentSectionIndex: currentSectionIndex
+          });
+        } else {
+          // No more sections, end the test and award XP/badges
+          session.status = 'completed';
+          const completedSections = session.sections.filter(s => s.completed && s.passed);
+          session.xpEarned = completedSections.length * 50;
+          await session.save();
+
+          // Award XP and badges for completed sectional test
+          const User = require('../models/User');
+          const user = await User.findById(req.user.id);
+
+          if (user) {
+            // Update sectional test history
+            if (!user.sectionalTestHistory) {
+              user.sectionalTestHistory = [];
+            }
+
+            user.sectionalTestHistory.push({
+              sessionId: session._id,
+              sections: session.sections.map(section => ({
+                sectionId: section.sectionId,
+                difficulty: section.difficulty,
+                correct: section.correct,
+                total: section.total,
+                accuracy: (section.total > 0) ? Math.round((section.correct / section.total) * 100) : 0,
+                passed: section.passed,
+                completed: section.completed
+              })),
+              totalSections: session.sections.length,
+              completedSections: completedSections.length,
+              passedSections: completedSections.length,
+              xpEarned: session.xpEarned,
+              duration: session.duration,
+              status: 'completed',
+              completedAt: new Date()
+            });
+
+            // Update sectional test stats
+            user.updateSectionalTestStats();
+
+            // Award sectional test badges
+            const newBadges = user.awardSectionalTestBadges();
+
+            // Update experience points
+            user.updateExperiencePoints(session.xpEarned, 'practice');
+
+            await user.save();
+          }
+
+          return res.json({
+            sectionCompleted: true,
+            sectionCorrect: currentSection.correct,
+            sectionTotal: currentSection.total,
+            accuracy: accuracy,
+            passed: currentSection.passed,
+            testCompleted: true,
+            xpEarned: session.xpEarned,
+            completedSections: completedSections.length,
+            newBadges: user ? user.badges.slice(-5) : [] // Last 5 badges (likely the new ones)
+          });
+        }
+      } else {
+        // Section not passed, end the test
+        session.status = 'completed';
+        const completedSections = session.sections.filter(s => s.completed && s.passed);
+        session.xpEarned = completedSections.length * 50;
+        await session.save();
+
+        return res.json({
+          sectionCompleted: true,
+          sectionCorrect: currentSection.correct,
+          sectionTotal: currentSection.total,
+          accuracy: accuracy,
+          passed: currentSection.passed,
+          testCompleted: true,
+          xpEarned: session.xpEarned,
+          completedSections: completedSections.length
+        });
+      }
     }
 
     // Get next question in current section
@@ -697,7 +784,7 @@ const getSectionalQuestion = async (req, res) => {
       },
       timeRemaining,
       currentScore: currentSection ? currentSection.correct : 0,
-      questionNumber: nextQuestionIndex + 1,
+      questionNumber: nextQuestion.questionIndex + 1,
       totalQuestions: 10
     });
   } catch (error) {

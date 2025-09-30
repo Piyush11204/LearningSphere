@@ -17,8 +17,13 @@ const Register = ({ setIsAuthenticated, setUsername }) => {
       });
       const data = await response.json();
       if (response.ok) {
-        alert(data.msg);
-        navigate('/login');
+        // Auto-login after successful registration
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userId', data.user.id);
+        localStorage.setItem('username', data.user.email);
+        setIsAuthenticated(true);
+        setUsername(data.user.email);
+        navigate('/');
       } else {
         alert(data.msg);
       }
