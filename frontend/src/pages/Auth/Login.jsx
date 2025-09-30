@@ -1,18 +1,30 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const Login = ({ setIsAuthenticated, setUsername }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [recaptchaToken, setRecaptchaToken] = useState('');
   const navigate = useNavigate();
+
+  const handleRecaptchaChange = (token) => {
+    setRecaptchaToken(token);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!recaptchaToken) {
+      alert('Please complete the reCAPTCHA verification');
+      return;
+    }
+
     try {
       const response = await fetch('https://learningsphere-1fgj.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, recaptchaToken }),
       });
       const data = await response.json();
       if (response.ok) {
@@ -64,6 +76,12 @@ const Login = ({ setIsAuthenticated, setUsername }) => {
               placeholder="Enter your password"
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               required
+            />
+          </div>
+          <div className="flex justify-center">
+            <ReCAPTCHA
+              sitekey="6LfKC9grAAAAAK6JPeC-gKNC0ffDTKraxcbdubPo"
+              onChange={handleRecaptchaChange}
             />
           </div>
           <button
