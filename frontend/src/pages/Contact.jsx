@@ -27,7 +27,7 @@ const Contact = () => {
     {
       icon: Mail,
       title: 'Email Us',
-      details: 'support@LearingSphere.com',
+      details: 'support@LearningSphere.com',
       description: 'Get a response within 24 hours'
     },
     {
@@ -56,7 +56,7 @@ const Contact = () => {
       title: 'Getting Started',
       questions: [
         { q: 'How do I create an account?', a: 'Click "Get Started" and follow the simple signup process.' },
-        { q: 'Is LearingSphere free to use?', a: 'We offer both free and premium features. Basic matching is free!' }
+        { q: 'Is LearningSphere free to use?', a: 'We offer both free and premium features. Basic matching is free!' }
       ]
     },
     {

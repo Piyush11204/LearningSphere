@@ -1,4 +1,4 @@
-# 🌱 LearingSphere - Comprehensive Learning Management System
+# 🌱 LearningSphere - Comprehensive Learning Management System
 
 [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-green.svg)](https://nodejs.org/)
@@ -9,7 +9,7 @@
 
 [🚀 **Live Demo**](https://learningsphere-1fgj.onrender.com) | [📖 Documentation](#-complete-feature-documentation) | [🛠️ Installation](#-installation--setup)
 
-LearingSphere is a feature-rich, full-stack learning management platform that connects learners with tutors through personalized matching, gamified progress tracking, and comprehensive session management. Built with modern web technologies and designed for scalability, it features an advanced assessment system with sectional exams, adaptive practice sessions, and AI-powered performance analytics.
+LearningSphere is a feature-rich, full-stack learning management platform that connects learners with tutors through personalized matching, gamified progress tracking, and comprehensive session management. Built with modern web technologies and designed for scalability, it features an advanced assessment system with sectional exams, adaptive practice sessions, and AI-powered performance analytics.
 
 ## ✨ **Key Features**
 
@@ -833,7 +833,7 @@ graph TB
 
 ### **Backend Setup**
 ```bash
-cd LearingSphere-backend
+cd LearningSphere-backend
 npm install
 # Configure environment variables in .env file
 npm start
@@ -849,7 +849,7 @@ npm run dev
 ### **Environment Variables**
 ```env
 # Database
-MONGODB_URI=mongodb://localhost:27017/LearingSphere
+MONGODB_URI=mongodb://localhost:27017/LearningSphere
 
 # JWT Secret
 JWT_SECRET=your_jwt_secret_key
@@ -1012,7 +1012,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 ## 🤝 **Contributing**
 
-LearingSphere welcomes contributions! Please read our contributing guidelines and submit pull requests for any improvements.
+LearningSphere welcomes contributions! Please read our contributing guidelines and submit pull requests for any improvements.
 
 ### **Development Workflow**
 
@@ -1036,7 +1036,7 @@ Built with modern web technologies and best practices to create a comprehensive 
 
 ---
 
-**LearingSphere** - *Empowering learners worldwide through personalized education* 🌱📚
+**LearningSphere** - *Empowering learners worldwide through personalized education* 🌱📚
 
 ## 🔐 **Authentication & User Management System**
 
@@ -1445,7 +1445,7 @@ Built with modern web technologies and best practices to create a comprehensive 
 
 ### **Backend Setup**
 ```bash
-cd LearingSphere-backend
+cd LearningSphere-backend
 npm install
 # Configure environment variables in .env file
 npm start
@@ -1461,7 +1461,7 @@ npm run dev
 ### **Environment Variables**
 ```env
 # Database
-MONGODB_URI=mongodb://localhost:27017/LearingSphere
+MONGODB_URI=mongodb://localhost:27017/LearningSphere
 
 # JWT Secret
 JWT_SECRET=your_jwt_secret_key
@@ -1624,7 +1624,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 ## 🤝 **Contributing**
 
-LearingSphere welcomes contributions! Please read our contributing guidelines and submit pull requests for any improvements.
+LearningSphere welcomes contributions! Please read our contributing guidelines and submit pull requests for any improvements.
 
 ### **Development Workflow**
 
@@ -1648,4 +1648,4 @@ Built with modern web technologies and best practices to create a comprehensive 
 
 ---
 
-**LearingSphere** - *Empowering learners worldwide through personalized education* 🌱📚
+**LearningSphere** - *Empowering learners worldwide through personalized education* 🌱📚

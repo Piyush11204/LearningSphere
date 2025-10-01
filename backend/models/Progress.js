@@ -115,7 +115,7 @@ progressSchema.statics.getBadgeDefinitions = function() {
     'noobie': {
       id: 'noobie',
       name: 'Noobie',
-      description: 'Welcome to LearingSphere! Your learning journey begins.',
+      description: 'Welcome to LearningSphere! Your learning journey begins.',
       category: 'experience',
       icon: '🌱',
       xpThreshold: 0,

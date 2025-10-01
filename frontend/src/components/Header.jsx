@@ -53,7 +53,7 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
                 className="w-10 h-10 object-contain group-hover:scale-105 transition-transform"
               />
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                LearingSphere
+                LearningSphere
               </span>
             </Link>
           </div>

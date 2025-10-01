@@ -274,14 +274,14 @@ const Home = () => {
               ) : (
                 <>
                   Unlock Your Future with{' '}
-                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> LearingSphere Learning</span>
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> LearningSphere Learning</span>
                 </>
               )}
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
               {user 
                 ? "Continue your learning journey with expert mentors, interactive sessions, and AI-powered assessments."
-                : "Connect with expert mentors, join interactive sessions, and accelerate your learning journey. LearingSphere makes quality education accessible to everyone, everywhere."
+                : "Connect with expert mentors, join interactive sessions, and accelerate your learning journey. LearningSphere makes quality education accessible to everyone, everywhere."
               }
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -988,7 +988,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Why Choose LearingSphere?
+              Why Choose LearningSphere?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               We're not just another learning platform. We're your partner in growth and success.
@@ -1092,7 +1092,7 @@ const Home = () => {
                 What Our Students Say
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Real stories from real learners who transformed their careers with LearingSphere
+                Real stories from real learners who transformed their careers with LearningSphere
               </p>
             </div>
 
@@ -1156,7 +1156,7 @@ const Home = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Email Us</h3>
-                  <p className="text-blue-100 mb-1">support@LearingSphere.in</p>
+                  <p className="text-blue-100 mb-1">support@LearningSphere.in</p>
                   <p className="text-sm text-blue-200">Get a response within 24 hours</p>
                 </div>
               </div>

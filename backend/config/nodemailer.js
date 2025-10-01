@@ -21,7 +21,7 @@ const sendEmail = async ({ to, subject, html }) => {
     }
 
     const info = await transporter.sendMail({
-      from: `"LearingSphere Support" <${process.env.AUTH_EMAIL}>`,
+      from: `"LearningSphere Support" <${process.env.AUTH_EMAIL}>`,
       to: to,
       subject: subject,
       html: html,

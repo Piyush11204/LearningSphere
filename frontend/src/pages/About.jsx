@@ -96,7 +96,7 @@ const About = () => {
                 className="w-16 h-16 object-contain mr-4"
               />
               <h1 className="text-5xl md:text-6xl font-bold">
-                About <span className="text-yellow-400">LearingSphere</span>
+                About <span className="text-yellow-400">LearningSphere</span>
               </h1>
             </div>
             <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-gray-100">
@@ -213,7 +213,7 @@ const About = () => {
                     <p className="text-gray-700">
                       Founded by two college students who struggled to find quality tutors for advanced subjects. 
                       They realized that great mentors existed everywhere, but there was no easy way to connect 
-                      with them. This sparked the idea for LearingSphere.
+                      with them. This sparked the idea for LearningSphere.
                     </p>
                   </div>
                 </div>

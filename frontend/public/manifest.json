@@ -1,6 +1,6 @@
 {
-  "name": "LearingSphere - Personalized Learning Platform",
-  "short_name": "LearingSphere",
+  "name": "LearningSphere - Personalized Learning Platform",
+  "short_name": "LearningSphere",
   "description": "Connect with expert tutors for personalized learning experiences with gamified progress tracking and live sessions",
   "start_url": "/",
   "display": "standalone",

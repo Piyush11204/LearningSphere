@@ -128,7 +128,7 @@ const TutorSidebar = () => {
               {!isCollapsed && (
                 <div className="min-w-0">
                   <h2 className="text-white font-semibold text-lg truncate">Tutor Portal</h2>
-                  <p className="text-gray-400 text-sm truncate">LearingSphere Academy</p>
+                  <p className="text-gray-400 text-sm truncate">LearningSphere Academy</p>
                 </div>
               )}
             </div>

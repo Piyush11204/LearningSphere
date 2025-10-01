@@ -1,9 +1,9 @@
 {
   "info": {
-    "name": "LearingSphere API Testing",
+    "name": "LearningSphere API Testing",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_postman_id": "550e8400-e29b-41d4-a716-446655440000",
-    "description": "API test collection for LearingSphere - The Aura of Growth, Unlock Future with Free Learning",
+    "description": "API test collection for LearningSphere - The Aura of Growth, Unlock Future with Free Learning",
     "version": "1.0.0",
     "postman_id": "550e8400-e29b-41d4-a716-446655440000"
   },

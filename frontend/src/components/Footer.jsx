@@ -12,7 +12,7 @@ const Footer = () => {
                 className="w-10 h-10 object-contain"
               />
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                LearingSphere
+                LearningSphere
               </span>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed max-w-md">
@@ -65,7 +65,7 @@ const Footer = () => {
         <div className="border-t border-gray-800 pt-8 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              &copy; {new Date().getFullYear()} LearingSphere. All rights reserved.
+              &copy; {new Date().getFullYear()} LearningSphere. All rights reserved.
             </p>
             <p className="text-gray-400 text-sm mt-2 md:mt-0">
               Made with ❤️ for learners worldwide

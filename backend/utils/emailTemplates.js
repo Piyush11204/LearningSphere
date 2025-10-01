@@ -192,14 +192,14 @@ exports.sendSessionReminder = async (to, session, tutorName) => {
 
             <div class="footer">
               <p>
-                <strong>LearingSphere Academy</strong><br>
+                <strong>LearningSphere Academy</strong><br>
                 Empowering learners worldwide through personalized education
               </p>
               <p style="margin-top: 10px;">
-                Questions? Contact us at <a href="mailto:support@LearingSphere.com" style="color: #667eea;">support@LearingSphere.com</a>
+                Questions? Contact us at <a href="mailto:support@LearningSphere.com" style="color: #667eea;">support@LearningSphere.com</a>
               </p>
               <p style="margin-top: 15px; font-size: 12px; color: #adb5bd;">
-                © 2025 LearingSphere. All rights reserved.
+                © 2025 LearningSphere. All rights reserved.
               </p>
             </div>
           </div>
@@ -426,14 +426,14 @@ exports.sendLiveSessionInvitation = async (to, session, tutorName, studentName) 
 
             <div class="footer">
               <p>
-                <strong>LearingSphere Academy</strong><br>
+                <strong>LearningSphere Academy</strong><br>
                 Empowering learners worldwide through personalized education
               </p>
               <p style="margin-top: 10px;">
-                Questions? Contact your tutor directly or reach us at <a href="mailto:support@LearingSphere.com" style="color: #667eea;">support@LearingSphere.com</a>
+                Questions? Contact your tutor directly or reach us at <a href="mailto:support@LearningSphere.com" style="color: #667eea;">support@LearningSphere.com</a>
               </p>
               <p style="margin-top: 15px; font-size: 12px; color: #adb5bd;">
-                © 2025 LearingSphere. All rights reserved.
+                © 2025 LearningSphere. All rights reserved.
               </p>
             </div>
           </div>
@@ -644,14 +644,14 @@ exports.sendLiveSessionConfirmation = async (to, session, studentName, tutorName
 
             <div class="footer">
               <p>
-                <strong>LearingSphere Academy</strong><br>
+                <strong>LearningSphere Academy</strong><br>
                 Empowering learners worldwide through personalized education
               </p>
               <p style="margin-top: 10px;">
-                Need help? Contact us at <a href="mailto:support@LearingSphere.com" style="color: #28a745;">support@LearingSphere.com</a>
+                Need help? Contact us at <a href="mailto:support@LearningSphere.com" style="color: #28a745;">support@LearningSphere.com</a>
               </p>
               <p style="margin-top: 15px; font-size: 12px; color: #adb5bd;">
-                © 2025 LearingSphere. All rights reserved.
+                © 2025 LearningSphere. All rights reserved.
               </p>
             </div>
           </div>
@@ -669,14 +669,14 @@ exports.sendVerificationEmail = async (to, verifyUrl) => {
   try {
     await sendEmail({
       to,
-      subject: '🎉 Welcome to LearingSphere - Verify Your Account',
+      subject: '🎉 Welcome to LearningSphere - Verify Your Account',
       html: `
         <!DOCTYPE html>
         <html lang="en">
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Verify Your LearingSphere Account</title>
+          <title>Verify Your LearningSphere Account</title>
           <style>
             body {
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -887,14 +887,14 @@ exports.sendVerificationEmail = async (to, verifyUrl) => {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Welcome to LearingSphere!</h1>
+              <h1>Welcome to LearningSphere!</h1>
               <p>Let's verify your account to get started</p>
             </div>
 
             <div class="content">
               <div class="welcome-message">
                 <h2>🎉 Almost there!</h2>
-                <p>Thank you for joining LearingSphere Academy. We're excited to help you on your learning journey!</p>
+                <p>Thank you for joining LearningSphere Academy. We're excited to help you on your learning journey!</p>
               </div>
 
               <div class="verification-card">
@@ -916,7 +916,7 @@ exports.sendVerificationEmail = async (to, verifyUrl) => {
               </div>
 
               <div class="features">
-                <h3>🚀 What you can do with LearingSphere:</h3>
+                <h3>🚀 What you can do with LearningSphere:</h3>
                 <div class="feature-grid">
                   <div class="feature-item">
                     <span class="feature-icon">📚</span>
@@ -945,25 +945,25 @@ exports.sendVerificationEmail = async (to, verifyUrl) => {
 
               <div class="support-info">
                 <strong>💬 Need Help?</strong> If you didn't create this account or have any questions,
-                please contact our support team at <a href="mailto:support@LearingSphere.com" style="color: #0c5460; font-weight: 500;">support@LearingSphere.com</a>
+                please contact our support team at <a href="mailto:support@LearningSphere.com" style="color: #0c5460; font-weight: 500;">support@LearningSphere.com</a>
               </div>
             </div>
 
             <div class="footer">
               <p>
-                <strong>LearingSphere Academy</strong><br>
+                <strong>LearningSphere Academy</strong><br>
                 Empowering learners worldwide through personalized education
               </p>
 
               <div class="footer-links">
-                <a href="https://LearingSphere.com">Visit Website</a> |
-                <a href="https://LearingSphere.com/privacy">Privacy Policy</a> |
-                <a href="https://LearingSphere.com/terms">Terms of Service</a>
+                <a href="https://LearningSphere.com">Visit Website</a> |
+                <a href="https://LearningSphere.com/privacy">Privacy Policy</a> |
+                <a href="https://LearningSphere.com/terms">Terms of Service</a>
               </div>
 
               <p style="margin-top: 20px; font-size: 12px; color: #adb5bd;">
-                © 2025 LearingSphere. All rights reserved.<br>
-                This email was sent to you because you registered for a LearingSphere account.
+                © 2025 LearningSphere. All rights reserved.<br>
+                This email was sent to you because you registered for a LearningSphere account.
                 If you no longer wish to receive these emails, you can unsubscribe from your account settings.
               </p>
             </div>
