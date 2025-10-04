@@ -37,7 +37,7 @@ const examSchema = new mongoose.Schema({
     correctAnswers: { type: Number },
     submittedAt: { type: Date, default: Date.now }
   }],
-  status: { type: String, enum: ['scheduled', 'live', 'ongoing', 'completed'], default: 'scheduled' },
+  status: { type: String, enum: ['scheduled', 'live', 'ongoing', 'completed'], default: 'live' },
   proctoringEnabled: { type: Boolean, default: false }, // For AI proctoring
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
