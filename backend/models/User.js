@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
   },
   isTutor: { 
     type: Boolean, 
-    default: false 
+    default: true 
   },  // For switching between learner/tutor modes
   profile: {
     name: { 
