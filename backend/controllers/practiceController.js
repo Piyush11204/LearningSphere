@@ -364,22 +364,23 @@ const getPracticeSessionResults = async (req, res) => {
       await session.save();
     }
 
-    // Format questions with answers - include all questions but mark answered status properly
-    const questions = session.questions.map(q => ({
-      question_text: q.questionId.question_text,
-      difficulty: q.questionId.difficulty,
-      tags: q.questionId.tags,
-      userAnswer: q.userAnswer,
-      correctAnswer: q.questionId.answer,
-      correct: q.isCorrect,
-      timeTaken: q.timeTaken,
-      answered: !!q.answeredAt // Use answeredAt to determine if question was attempted
-    }));
+    // Format questions with answers - only include questions that were actually asked (have answeredAt)
+    const questions = session.questions
+      .filter(q => q.answeredAt) // Only questions that were presented to the user
+      .map(q => ({
+        question_text: q.questionId.question_text,
+        difficulty: q.questionId.difficulty,
+        tags: q.questionId.tags,
+        userAnswer: q.userAnswer,
+        correctAnswer: q.questionId.answer,
+        correct: q.isCorrect,
+        timeTaken: q.timeTaken,
+        answered: true // All questions in this array were answered (presented to user)
+      }));
 
-    // Calculate actual totals from answered questions only
-    const answeredQuestions = session.questions.filter(q => q.answeredAt);
-    const actualCorrectAnswers = answeredQuestions.filter(q => q.isCorrect).length;
-    const actualTotalQuestions = answeredQuestions.length;
+    // Calculate totals from the filtered questions
+    const actualCorrectAnswers = questions.filter(q => q.correct).length;
+    const actualTotalQuestions = questions.length;
 
     // Get user data for badges and XP info
     const User = require('../models/User');
