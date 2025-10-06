@@ -332,7 +332,7 @@ const TakePracticeExam = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h1 className="text-xl font-semibold">Practice Session</h1>
-            <span className="text-gray-400">Question {questionNumber}</span>
+            {/* <span className="text-gray-400">Question {questionNumber}</span> */}
           </div>
 
           <div className="flex items-center space-x-4">
@@ -463,9 +463,7 @@ const TakePracticeExam = () => {
 
           {/* Navigation */}
           <div className="flex justify-between items-center">
-            <div className="text-gray-400">
-              Question {questionNumber}
-            </div>
+            
 
             <button
               onClick={handleSubmitAnswer}
