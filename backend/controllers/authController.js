@@ -6,33 +6,33 @@ const crypto = require('crypto');
 const axios = require('axios');
 const { transporter, sendEmail } = require('../config/nodemailer');
 
-// Verify reCAPTCHA token - COMMENTED OUT FOR NOW
-// const verifyRecaptcha = async (token) => {
-//   try {
-//     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-//     const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
-//       params: {
-//         secret: secretKey,
-//         response: token
-//       }
-//     });
-//     return response.data.success;
-//   } catch (error) {
-//     console.error('reCAPTCHA verification error:', error);
-//     return false;
-//   }
-// };
+// Verify reCAPTCHA token
+const verifyRecaptcha = async (token) => {
+  try {
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+    const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
+      params: {
+        secret: secretKey,
+        response: token
+      }
+    });
+    return response.data.success;
+  } catch (error) {
+    console.error('reCAPTCHA verification error:', error);
+    return false;
+  }
+};
 
 // Register new user
 exports.registerUser = async (req, res) => {
   try {
     const { email, password, name, interests, skills, location, recaptchaToken } = req.body;
 
-    // Verify reCAPTCHA - COMMENTED OUT FOR NOW
-    // const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
-    // if (!isRecaptchaValid) {
-    //   return res.status(400).json({ msg: 'reCAPTCHA verification failed' });
-    // }
+    // Verify reCAPTCHA
+    const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+    if (!isRecaptchaValid) {
+      return res.status(400).json({ msg: 'reCAPTCHA verification failed' });
+    }
 
     // Check if user exists
     let user = await User.findOne({ email });
@@ -94,11 +94,11 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password, recaptchaToken } = req.body;
 
-    // Verify reCAPTCHA - COMMENTED OUT FOR NOW
-    // const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
-    // if (!isRecaptchaValid) {
-    //   return res.status(400).json({ msg: 'reCAPTCHA verification failed' });
-    // }
+    // Verify reCAPTCHA
+    const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+    if (!isRecaptchaValid) {
+      return res.status(400).json({ msg: 'reCAPTCHA verification failed' });
+    }
 
     // Find user
     const user = await User.findOne({ email });

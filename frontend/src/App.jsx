@@ -42,6 +42,11 @@ import SectionalTestSelection from './pages/SectionalTest/SectionalTestSelection
 import TakeSectionalTest from './pages/SectionalTest/TakeSectionalTest';
 import SectionalTestResults from './pages/SectionalTest/SectionalTestResults';
 import SectionSummary from './pages/SectionalTest/SectionSummary';
+// Adaptive Exam imports
+import StartExam from './pages/AdaptiveExam/StartExam';
+import ExamInterface from './pages/AdaptiveExam/ExamInterface';
+import ResultsDashboard from './pages/AdaptiveExam/ResultsDashboard';
+import ExamHistory from './pages/AdaptiveExam/ExamHistory';
 // Admin imports
 import AdminCreateExam from './pages/Admin/AdminCreateExam';
 import { useState, useEffect } from 'react';
@@ -128,6 +133,11 @@ function App() {
             <Route path="/sectional-test/take/:sessionId" element={<TakeSectionalTest />} />
             <Route path="/sectional-test/section-summary/:sessionId" element={<SectionSummary />} />
             <Route path="/sectional-test/results/:sessionId" element={<SectionalTestResults />} />
+            {/* Adaptive Exam Routes - IRT-based adaptive testing */}
+            <Route path="/adaptive-exam" element={<StartExam />} />
+            <Route path="/adaptive-exam/exam" element={<ExamInterface />} />
+            <Route path="/adaptive-exam/results" element={<ResultsDashboard />} />
+            <Route path="/adaptive-exam/history" element={<ExamHistory />} />
             {/* Alternative paths for consistency */}
             <Route path="/student/exams" element={<StudentExams />} />
             <Route path="/student/exam/:id" element={<TakeExamStudent />} />

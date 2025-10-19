@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { 
@@ -20,6 +21,7 @@ import {
 import './ChatbotImproved.css';
 
 const ChatbotEnhanced = () => {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -45,6 +47,17 @@ const ChatbotEnhanced = () => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const chatContainerRef = useRef(null);
+
+  // Hide chatbot on exam pages
+  const shouldHideChatbot = () => {
+    const hiddenPaths = [
+      '/adaptive-exam/exam',
+      '/exam/',
+      '/practice-exam/take/',
+      '/sectional-test/take/'
+    ];
+    return hiddenPaths.some(path => location.pathname.includes(path));
+  };
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -443,6 +456,11 @@ What would you like to know about?`,
       </div>
     );
   };
+
+  // Don't render chatbot on exam pages
+  if (shouldHideChatbot()) {
+    return null;
+  }
 
   if (!isOpen) {
     return (

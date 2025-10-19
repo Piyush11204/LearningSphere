@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'https://learningsphere-1fgj.onrender.com';
+export const API_BASE_URL = 'https://learningsphere-1fgj.onrender.com';
 
 export const API_URLS = {
   BASE: API_BASE_URL,
@@ -16,7 +16,9 @@ export const API_URLS = {
   REPORTS: `${API_BASE_URL}/api/reports`,
   PRACTICE: `${API_BASE_URL}/api/practice`,
   QUESTIONS: `${API_BASE_URL}/api/questions`,
-  CHATBOT: `${API_BASE_URL}/api/chatbot`
+  CHATBOT: `${API_BASE_URL}/api/chatbot`,
+  ADAPTIVE_EXAM: `${API_BASE_URL}/api/adaptive-exam`
 };
 
+// Default export
 export default API_URLS;

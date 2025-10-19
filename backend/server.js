@@ -68,6 +68,7 @@ app.use('/api/reports', require('./routes/reports'));
 app.use('/api/questions', require('./routes/questions'));
 app.use('/api/practice', require('./routes/practice'));
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/adaptive-exam', require('./routes/adaptiveExam'));
 
 // Socket.io integration
 require('./sockets/sessionSockets')(io);
