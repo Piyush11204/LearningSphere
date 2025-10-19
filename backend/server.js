@@ -8,7 +8,7 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 const connectDB = require('./config/database');
-
+const chatbotRoutes= require('./routes/chatbotRoutes.js')
 dotenv.config();
 
 const app = express();
@@ -67,6 +67,7 @@ app.use('/api/exams', require('./routes/exams'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/questions', require('./routes/questions'));
 app.use('/api/practice', require('./routes/practice'));
+app.use('/api/chatbot', chatbotRoutes);
 
 // Socket.io integration
 require('./sockets/sessionSockets')(io);

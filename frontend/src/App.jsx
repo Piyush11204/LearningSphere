@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './components/Header';
-import Footer from './components/Footer';
+import Footer from './components/Footer.jsx';
 import Home from './pages/Home';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
@@ -47,6 +47,8 @@ import AdminCreateExam from './pages/Admin/AdminCreateExam';
 import { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ChatbotEnhanced from './components/Chatbot/ChatbotEnhanced.jsx';
+import ChatbotPage from './pages/Chatbot/ChatbotPage.jsx';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -131,9 +133,13 @@ function App() {
             <Route path="/student/exam/:id" element={<TakeExamStudent />} />
             <Route path="/student/exam/:id/results" element={<ExamResults />} />
             <Route path="/student/reports" element={<StudentReports />} />
+            {/* Chatbot Page */}
+            <Route path="/chatbot" element={<ChatbotPage />} />
           </Routes>
         </main>
         <Footer />
+              <ChatbotEnhanced />
+        
         <ToastContainer
           position="top-right"
           autoClose={5000}
