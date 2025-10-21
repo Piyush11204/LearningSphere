@@ -69,44 +69,8 @@ const StartAdaptiveExam = () => {
     }
   };
 
-  const resumeActiveSession = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/adaptive-exam/resume/${activeSession.sessionId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Navigate to exam interface with resumed session data
-        navigate('/adaptive-exam/exam', {
-          state: {
-            sessionId: data.sessionId,
-            examNumber: data.examNumber,
-            question: data.question,
-            userAbility: data.userAbility,
-            previousAbility: data.previousAbility
-          }
-        });
-      } else {
-        setError(data.error || 'Failed to resume exam');
-      }
-    } catch (error) {
-      console.error('Error resuming exam:', error);
-      setError('Failed to resume exam. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const abandonActiveSession = async () => {
-    if (!window.confirm('Are you sure you want to abandon this exam? Your progress will be lost.')) {
+    if (!window.confirm('Are you sure you want to end this exam session? Your partial results will be saved and you can view them in your history, but you cannot resume this session later.')) {
       return;
     }
 
@@ -115,24 +79,39 @@ const StartAdaptiveExam = () => {
       setError('');
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/adaptive-exam/abandon/${activeSession.sessionId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/adaptive-exam/end/${activeSession.sessionId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          saveResults: true
+        })
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setActiveSession(null);
-        setError('');
+        // Navigate to results page to show partial results
+        if (data.results) {
+          navigate('/adaptive-exam/results', {
+            state: {
+              sessionId: activeSession.sessionId,
+              results: data.results
+            }
+          });
+        } else {
+          // If no results, just clear the active session and refresh stats
+          setActiveSession(null);
+          fetchUserStats();
+        }
       } else {
-        setError(data.error || 'Failed to abandon exam');
+        setError(data.error || 'Failed to end exam session');
       }
     } catch (error) {
-      console.error('Error abandoning exam:', error);
-      setError('Failed to abandon exam. Please try again.');
+      console.error('Error ending exam session:', error);
+      setError('Failed to end exam session. Please try again.');
     } finally {
       setAbandonLoading(false);
     }
@@ -376,68 +355,59 @@ const StartAdaptiveExam = () => {
           <div className="space-y-6">
             {/* Active Session Warning */}
             {activeSession && (
-              <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-2xl p-8 text-white">
+              <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-2xl p-8 text-white">
                 <div className="flex items-center mb-4">
                   <AlertCircle className="w-8 h-8 mr-3" />
-                  <h2 className="text-2xl font-bold">Active Exam Found</h2>
+                  <h2 className="text-2xl font-bold">Active Exam Session Found</h2>
                 </div>
-                <p className="text-orange-100 mb-6">
-                  You have an active exam session in progress. You can resume it or abandon it to start a new one.
+                <p className="text-red-100 mb-6">
+                  You have an active exam session in progress. You must end this session before starting a new exam.
+                  Exams cannot be resumed - they must be completed in a single session.
                 </p>
 
                 <div className="bg-white/10 rounded-lg p-4 mb-6">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-orange-100">Exam #{activeSession.examNumber}</span>
-                    <span className="text-sm text-orange-100">Session ID: {activeSession.sessionId?.slice(0, 8)}...</span>
+                    <span className="text-sm text-red-100">Exam #{activeSession.examNumber}</span>
+                    <span className="text-sm text-red-100">Session ID: {activeSession.sessionId?.slice(0, 8)}...</span>
                   </div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-orange-100">Questions Answered:</span>
+                    <span className="text-sm text-red-100">Questions Answered:</span>
                     <span className="font-bold">{activeSession.totalQuestions || 0}</span>
                   </div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-orange-100">Current Accuracy:</span>
+                    <span className="text-sm text-red-100">Current Accuracy:</span>
                     <span className="font-bold">{(activeSession.accuracy || 0).toFixed(1)}%</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-orange-100">Current Ability:</span>
+                    <span className="text-sm text-red-100">Current Ability:</span>
                     <span className="font-bold">{(activeSession.currentAbility || 0.5).toFixed(2)}</span>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <button
-                    onClick={resumeActiveSession}
-                    disabled={loading}
-                    className="w-full bg-white text-orange-600 font-bold py-4 px-6 rounded-lg hover:bg-orange-50 transition duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600"></div>
-                        <span>Resuming...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Resume Exam</span>
-                        <ChevronRight className="w-5 h-5" />
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={abandonActiveSession}
-                    disabled={abandonLoading}
-                    className="w-full bg-white/10 text-white font-bold py-3 px-6 rounded-lg hover:bg-white/20 transition duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-white/30"
-                  >
-                    {abandonLoading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        <span>Abandoning...</span>
-                      </>
-                    ) : (
-                      <span>Abandon & Start New</span>
-                    )}
-                  </button>
+                <div className="bg-yellow-500/20 border border-yellow-400/50 rounded-lg p-4 mb-6">
+                  <p className="text-yellow-100 text-sm font-medium">
+                    ⚠️ <strong>Important:</strong> Ending this session will save your partial results and current progress.
+                    You can view these results in your exam history, but you cannot resume the session.
+                  </p>
                 </div>
+
+                <button
+                  onClick={abandonActiveSession}
+                  disabled={abandonLoading}
+                  className="w-full bg-white text-red-600 font-bold py-4 px-6 rounded-lg hover:bg-red-50 transition duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                >
+                  {abandonLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                      <span>Ending Session...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>End Session & View Results</span>
+                      <ChevronRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
               </div>
             )}
 

@@ -25,6 +25,8 @@ const ResultsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const sessionId = location.state?.sessionId;
+  const timeExpired = location.state?.timeExpired;
+  const results = location.state?.results;
 
   useEffect(() => {
     if (!sessionId) {
@@ -129,11 +131,41 @@ const ResultsDashboard = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mb-4 shadow-lg">
-            <Trophy className="w-12 h-12 text-white" />
+          <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 shadow-lg ${
+            timeExpired ? 'bg-gradient-to-br from-orange-400 to-red-500' : 
+            analytics?.status === 'abandoned' ? 'bg-gradient-to-br from-gray-400 to-gray-600' :
+            'bg-gradient-to-br from-yellow-400 to-orange-500'
+          }`}>
+            {timeExpired ? <Clock className="w-12 h-12 text-white" /> :
+             analytics?.status === 'abandoned' ? <XCircle className="w-12 h-12 text-white" /> :
+             <Trophy className="w-12 h-12 text-white" />}
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Exam Complete!</h1>
-          <p className="text-xl text-gray-600">Here's your detailed performance analysis</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            {timeExpired ? 'Time Expired!' : 
+             analytics?.status === 'abandoned' ? 'Session Ended' :
+             'Exam Complete!'}
+          </h1>
+          <p className="text-xl text-gray-600">
+            {timeExpired ? 'Your session ended due to time limit' :
+             analytics?.status === 'abandoned' ? 'Here are your partial results' :
+             "Here's your detailed performance analysis"}
+          </p>
+          {timeExpired && (
+            <div className="mt-4 p-4 bg-orange-100 rounded-lg border border-orange-300">
+              <p className="text-orange-800 font-medium">
+                ⏰ The exam was automatically ended when the time limit was reached.
+                Your progress has been saved and counted towards your results.
+              </p>
+            </div>
+          )}
+          {analytics?.status === 'abandoned' && (
+            <div className="mt-4 p-4 bg-blue-100 rounded-lg border border-blue-300">
+              <p className="text-blue-800 font-medium">
+                📊 This session was ended early. Your partial progress and performance 
+                analysis are shown below.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Main Stats Grid */}
@@ -146,11 +178,19 @@ const ResultsDashboard = () => {
                 {performanceLevel.label}
               </span>
             </div>
-            <p className="text-sm text-gray-600 mb-1">Accuracy</p>
+            <p className="text-sm text-gray-600 mb-1">
+              {analytics.status === 'abandoned' ? 'Partial Accuracy' : 'Accuracy'}
+            </p>
             <p className="text-4xl font-bold text-green-600">{analytics.accuracy.toFixed(1)}%</p>
             <p className="text-sm text-gray-500 mt-2">
-              {analytics.correctAnswers}/{analytics.totalQuestions} correct
+              {analytics.correctAnswers}/{analytics.totalQuestions || analytics.questionsAnswered} 
+              {analytics.status === 'abandoned' ? ' answered' : ' correct'}
             </p>
+            {analytics.status === 'abandoned' && (
+              <p className="text-xs text-orange-600 mt-1 font-medium">
+                Session ended early
+              </p>
+            )}
           </div>
 
           {/* Ability Level */}

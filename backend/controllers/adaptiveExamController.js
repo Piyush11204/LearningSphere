@@ -63,66 +63,88 @@ const calculateXP = (exam) => {
 
 // Award badges based on exam performance
 const awardBadges = async (userId, exam) => {
-  const progress = await Progress.findOne({ user: userId });
-  if (!progress) return [];
-  
-  const newBadges = [];
-  const existingBadgeIds = progress.badges.map(b => b.id);
-  
-  // Get total completed adaptive exams
-  const totalExams = await AdaptiveExam.getUserExamCount(userId);
-  
-  // Check milestone badges
-  for (const badge of ADAPTIVE_BADGES) {
-    if (existingBadgeIds.includes(badge.id)) continue;
+  try {
+    const progress = await Progress.findOne({ user: userId });
+    if (!progress) return [];
     
-    let shouldAward = false;
+    const newBadges = [];
+    const existingBadgeIds = progress.badges.map(b => b.id);
     
-    if (typeof badge.threshold === 'number') {
-      shouldAward = totalExams >= badge.threshold;
-    } else if (badge.threshold === 'accuracy_80') {
-      shouldAward = exam.accuracy >= 80;
-    } else if (badge.threshold === 'ability_2') {
-      shouldAward = exam.finalAbility >= 2.0;
-    }
+    // Get total completed adaptive exams
+    const totalExams = await AdaptiveExam.getUserExamCount(userId);
     
-    if (shouldAward) {
-      const newBadge = {
-        id: badge.id,
-        name: badge.name,
-        icon: badge.icon,
-        description: badge.description,
-        category: 'adaptive_exam',
-        earnedAt: new Date()
-      };
+    // Check milestone badges
+    for (const badge of ADAPTIVE_BADGES) {
+      if (existingBadgeIds.includes(badge.id)) continue;
       
-      progress.badges.push(newBadge);
-      newBadges.push(newBadge);
+      let shouldAward = false;
+      
+      if (typeof badge.threshold === 'number') {
+        shouldAward = totalExams >= badge.threshold;
+      } else if (badge.threshold === 'accuracy_80') {
+        shouldAward = exam.accuracy >= 80;
+      } else if (badge.threshold === 'ability_2') {
+        shouldAward = exam.finalAbility >= 2.0;
+      }
+      
+      if (shouldAward) {
+        const newBadge = {
+          id: badge.id,
+          name: badge.name,
+          icon: badge.icon || '🏆', // Fallback icon
+          description: badge.description,
+          category: 'exam', // Valid enum value for Progress schema
+          xpReward: 0, // Added required field
+          earnedAt: new Date()
+        };
+        
+        // Validate badge structure before adding
+        const validCategories = ['experience', 'session', 'course', 'admin', 'achievement', 'exam'];
+        
+        if (newBadge.id && newBadge.name && newBadge.description && 
+            newBadge.category && validCategories.includes(newBadge.category)) {
+          progress.badges.push(newBadge);
+          newBadges.push(newBadge);
+        } else {
+          console.warn('Invalid badge structure or category for:', badge.id, 'Category:', newBadge.category);
+        }
+      }
     }
+    
+    if (newBadges.length > 0) {
+      await progress.save();
+    }
+    
+    return newBadges;
+  } catch (error) {
+    console.error('Error awarding badges:', error);
+    return []; // Return empty array on error to prevent breaking the flow
   }
-  
-  if (newBadges.length > 0) {
-    await progress.save();
-  }
-  
-  return newBadges;
 };
 
 // Update user progress with XP
 const updateUserProgress = async (userId, xpEarned) => {
-  const progress = await Progress.findOne({ user: userId });
-  if (!progress) return;
-  
-  progress.experiencePoints += xpEarned;
-  
-  // Calculate new level (1000 XP per level)
-  const newLevel = Math.floor(progress.experiencePoints / 1000) + 1;
-  if (newLevel > progress.currentLevel) {
-    progress.currentLevel = newLevel;
+  try {
+    const progress = await Progress.findOne({ user: userId });
+    if (!progress) {
+      console.warn(`Progress not found for user: ${userId}`);
+      return null;
+    }
+    
+    progress.experiencePoints += xpEarned;
+    
+    // Calculate new level (1000 XP per level)
+    const newLevel = Math.floor(progress.experiencePoints / 1000) + 1;
+    if (newLevel > progress.currentLevel) {
+      progress.currentLevel = newLevel;
+    }
+    
+    await progress.save();
+    return progress;
+  } catch (error) {
+    console.error('Error updating user progress:', error);
+    throw error; // Re-throw to be caught by caller's try-catch
   }
-  
-  await progress.save();
-  return progress;
 };
 
 // Start a new adaptive exam
@@ -268,14 +290,24 @@ exports.submitAnswer = async (req, res, next) => {
       const xpEarned = calculateXP(exam);
       exam.xpEarned = xpEarned;
       
-      // Award badges
-      const newBadges = await awardBadges(userId, exam);
-      exam.badgesEarned = newBadges.map(b => b.id);
+      let newBadges = [];
+      try {
+        // Award badges (wrapped in try-catch to prevent badge errors from breaking exam completion)
+        newBadges = await awardBadges(userId, exam);
+        exam.badgesEarned = newBadges.map(b => b.id);
+      } catch (badgeError) {
+        console.error('Badge awarding failed, but continuing with exam completion:', badgeError);
+        exam.badgesEarned = [];
+      }
       
       await exam.save();
       
-      // Update user progress
-      await updateUserProgress(userId, xpEarned);
+      try {
+        // Update user progress (wrapped in try-catch to prevent progress errors from breaking exam completion)
+        await updateUserProgress(userId, xpEarned);
+      } catch (progressError) {
+        console.error('Progress update failed, but exam completed successfully:', progressError);
+      }
       
       return res.json({
         success: true,
@@ -449,20 +481,30 @@ exports.abandonExam = async (req, res, next) => {
     if (saveResults) {
       exam.status = 'completed';
       exam.endTime = new Date();
-      exam.finalAbility = exam.currentAbility;
+      exam.finalAbility = exam.currentAbility || exam.initialAbility || 0.5; // Fallback values
       
       // Calculate XP based on current progress
       const xpEarned = calculateXP(exam);
       exam.xpEarned = xpEarned;
       
-      // Award badges
-      const newBadges = await awardBadges(userId, exam);
-      exam.badgesEarned = newBadges.map(b => b.id);
+      let newBadges = [];
+      try {
+        // Award badges (wrapped in try-catch to prevent badge errors from breaking exam completion)
+        newBadges = await awardBadges(userId, exam);
+        exam.badgesEarned = newBadges.map(b => b.id);
+      } catch (badgeError) {
+        console.error('Badge awarding failed, but continuing with exam completion:', badgeError);
+        exam.badgesEarned = [];
+      }
       
       await exam.save();
       
-      // Update user progress
-      await updateUserProgress(userId, xpEarned);
+      try {
+        // Update user progress (wrapped in try-catch to prevent progress errors from breaking exam completion)
+        await updateUserProgress(userId, xpEarned);
+      } catch (progressError) {
+        console.error('Progress update failed, but exam completed successfully:', progressError);
+      }
       
       return res.json({
         success: true,

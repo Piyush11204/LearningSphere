@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Brain,
@@ -39,52 +39,60 @@ const ExamInterface = () => {
   const duration = sessionData?.duration || 20; // Duration in minutes
   const totalSeconds = duration * 60;
 
-  // Timer effect with auto-end
-  useEffect(() => {
-    const handleTimeExpired = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_BASE_URL}/api/adaptive-exam/end/${sessionData.sessionId}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            saveResults: true
-          })
+  // Auto-end exam when time expires
+  const autoEndExam = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/adaptive-exam/end/${sessionData.sessionId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          saveResults: true,
+          timeExpired: true
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.results) {
+        navigate('/adaptive-exam/results', {
+          state: {
+            sessionId: sessionData.sessionId,
+            results: data.results,
+            timeExpired: true
+          }
         });
-
-        const data = await response.json();
-
-        if (data.success && data.results) {
-          navigate('/adaptive-exam/results', {
-            state: {
-              sessionId: sessionData.sessionId,
-              results: data.results,
-              timeExpired: true
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error handling time expiration:', error);
+      } else {
         navigate('/adaptive-exam');
       }
-    };
+    } catch (error) {
+      console.error('Error auto-ending exam:', error);
+      navigate('/adaptive-exam');
+    }
+  }, [sessionData.sessionId, navigate]);
 
+  // Timer effect with auto-end
+  useEffect(() => {
     const timer = setInterval(() => {
       const elapsed = Math.floor((Date.now() - examStartTime) / 1000);
       setElapsedTime(elapsed);
 
-      // Check if time expired
+      // Check if time expired and auto-end exam
       if (elapsed >= totalSeconds && !timeExpired) {
         setTimeExpired(true);
-        handleTimeExpired();
+        // Clear interval to stop timer
+        clearInterval(timer);
+        
+        // Auto-end the exam
+        autoEndExam();
       }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [examStartTime, totalSeconds, timeExpired, sessionData.sessionId, navigate]);
+  }, [examStartTime, totalSeconds, timeExpired, autoEndExam]);
 
   // Fullscreen effect
   useEffect(() => {
@@ -152,43 +160,77 @@ const ExamInterface = () => {
     setQuestionStartTime(Date.now());
   }, [sessionData, navigate]);
 
+  // Prevent accidental navigation away from exam
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      // Only show warning if exam is still active and time hasn't expired
+      if (!timeExpired && currentQuestion) {
+        e.preventDefault();
+        e.returnValue = 'Are you sure you want to leave the exam? Your progress will be saved but you cannot resume the session.';
+        
+        // Attempt to save progress before user leaves
+        try {
+          navigator.sendBeacon(`${API_BASE_URL}/api/adaptive-exam/end/${sessionData.sessionId}`, 
+            JSON.stringify({
+              saveResults: true,
+              abandonedViaClose: true
+            })
+          );
+        } catch (error) {
+          console.error('Failed to send beacon for session cleanup:', error);
+        }
+        
+        return e.returnValue;
+      }
+    };
+
+    const handlePopstate = () => {
+      // Only prevent navigation if exam is still active
+      if (!timeExpired && currentQuestion) {
+        const confirmExit = window.confirm(
+          'Are you sure you want to leave the exam? Your progress will be saved but you cannot resume the session.'
+        );
+        
+        if (!confirmExit) {
+          // Push the current state back to prevent navigation
+          window.history.pushState(null, '', window.location.pathname);
+          return;
+        }
+        
+        // If user confirms, end the exam and clean up
+        autoEndExam();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      // Warn user if they switch tabs or minimize browser
+      if (document.hidden && !timeExpired && currentQuestion) {
+        console.warn('User left exam tab - visibility changed');
+        // Could implement additional security measures here
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopstate);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Push initial state to handle back button
+    window.history.pushState(null, '', window.location.pathname);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopstate);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [autoEndExam, timeExpired, currentQuestion, sessionData.sessionId]);
+
   const handleAnswerSelect = (answer) => {
-    if (!showFeedback) {
+    if (!showFeedback && !timeExpired) {
       setSelectedAnswer(answer);
     }
   };
 
-  const handleTimeExpired = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/adaptive-exam/end/${sessionData.sessionId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          saveResults: true
-        })
-      });
 
-      const data = await response.json();
-
-      if (data.success && data.results) {
-        // Navigate to results page
-        navigate('/adaptive-exam/results', {
-          state: {
-            sessionId: sessionData.sessionId,
-            results: data.results,
-            timeExpired: true
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error handling time expiration:', error);
-      navigate('/adaptive-exam');
-    }
-  };
 
   const handleExitExam = async () => {
     const confirmExit = window.confirm(
@@ -278,6 +320,11 @@ const ExamInterface = () => {
       return;
     }
 
+    if (timeExpired) {
+      setError('Exam time has expired. Redirecting to results...');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
@@ -356,9 +403,7 @@ const ExamInterface = () => {
     }
   };
 
-  const getOptionLetter = (index) => {
-    return ['a', 'b', 'c', 'd'][index];
-  };
+
 
   const getDifficultyColor = (difficulty) => {
     const colors = {
@@ -485,16 +530,18 @@ const ExamInterface = () => {
                 <button
                   key={key}
                   onClick={() => handleAnswerSelect(key)}
-                  disabled={showFeedback || loading}
+                  disabled={showFeedback || loading || timeExpired}
                   className={`w-full text-left p-6 rounded-xl border-2 transition-all duration-200 ${
-                    isCorrect
+                    timeExpired
+                      ? 'border-gray-300 bg-gray-100 opacity-50'
+                      : isCorrect
                       ? 'border-green-500 bg-green-50'
                       : isWrong
                       ? 'border-red-500 bg-red-50'
                       : isSelected
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                  } ${showFeedback || loading ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  } ${showFeedback || loading || timeExpired ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4 flex-1">
@@ -563,12 +610,25 @@ const ExamInterface = () => {
             </div>
           )}
 
+          {/* Time Expired Message */}
+          {timeExpired && (
+            <div className="mt-8 p-6 bg-red-50 border-2 border-red-200 rounded-xl">
+              <div className="flex items-center justify-center">
+                <Clock className="w-8 h-8 text-red-600 mr-3" />
+                <div className="text-center">
+                  <p className="text-xl font-bold text-red-800 mb-2">Time Expired!</p>
+                  <p className="text-red-700">Your exam session has ended. Redirecting to results...</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Submit Button */}
-          {!showFeedback && (
+          {!showFeedback && !timeExpired && (
             <div className="mt-8">
               <button
                 onClick={submitAnswer}
-                disabled={selectedAnswer === null || loading}
+                disabled={selectedAnswer === null || loading || timeExpired}
                 className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 px-6 rounded-xl hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 {loading ? (
