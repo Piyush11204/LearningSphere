@@ -11,7 +11,9 @@ import {
   MessageSquare,
   TrendingUp,
   Mail,
-  BookOpen
+  BookOpen,
+  Edit,
+  HelpCircle
 } from 'lucide-react';
 
 const AdminSidebar = ({ isOpen, onClose }) => {
@@ -53,6 +55,16 @@ const AdminSidebar = ({ isOpen, onClose }) => {
       name: 'Contact Management',
       path: '/admin/contacts',
       icon: Mail
+    },
+    {
+      name: 'Blog Management',
+      path: '/admin/blogs',
+      icon: Edit
+    },
+    {
+      name: 'Question Management',
+      path: '/admin/questions',
+      icon: HelpCircle
     },
   
   ];

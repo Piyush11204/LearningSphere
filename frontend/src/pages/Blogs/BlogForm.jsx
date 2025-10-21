@@ -6,6 +6,7 @@ import {
     Bold, Italic, Underline, List, ListOrdered, 
     Link2, Image, Quote, Code, Minus
 } from 'lucide-react';
+import { API_URLS } from '../../config/api';
 
 const BlogForm = () => {
     const { id } = useParams();
@@ -36,19 +37,21 @@ const BlogForm = () => {
     const [success, setSuccess] = useState('');
     const [seoScore, setSeoScore] = useState(0);
 
-    const API_BASE_URL = `https://khushihomesofarepairing.com/api`;
-
     const categories = [
-        'Sofa Repair',
-        'Fabric Care',
-        'Frame Restoration', 
-        'Cushion Replacement',
-        'Upholstery Tips',
-        'Maintenance Guides',
-        'Before & After',
-        'DIY Fixes',
-        'Customer Stories',
-        'Expert Advice'
+        'Study Tips',
+        'Exam Preparation',
+        'Technology Trends',
+        'Career Guidance',
+        'Learning Strategies',
+        'Educational Resources',
+        'Student Success',
+        'Skill Development',
+        'Academic Advice',
+        'Industry Insights',
+        'AI & Machine Learning',
+        'Programming',
+        'Data Science',
+        'Success Stories'
     ];
 
     useEffect(() => {
@@ -65,7 +68,7 @@ const BlogForm = () => {
     const fetchBlog = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${API_BASE_URL}/blogs/admin/all`, {
+            const response = await axios.get(`${API_URLS.BLOGS}/admin/all`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -329,9 +332,9 @@ const BlogForm = () => {
 
             let response;
             if (isEditing) {
-                response = await axios.put(`${API_BASE_URL}/blogs/admin/${id}`, submitData, config);
+                response = await axios.put(`${API_URLS.BLOGS}/admin/${id}`, submitData, config);
             } else {
-                response = await axios.post(`${API_BASE_URL}/blogs/admin/create`, submitData, config);
+                response = await axios.post(`${API_URLS.BLOGS}/admin/create`, submitData, config);
             }
 
             if (response.data.success) {
@@ -912,7 +915,7 @@ const BlogForm = () => {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => navigate('/admin/blog')}
+                                onClick={() => navigate('/admin/blogs')}
                                 className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                             >
                                 Cancel

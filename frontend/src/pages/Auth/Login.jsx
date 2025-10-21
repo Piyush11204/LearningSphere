@@ -1,39 +1,49 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import ReCAPTCHA from 'react-google-recaptcha'; // COMMENTED OUT FOR NOW
+import ReCAPTCHA from 'react-google-recaptcha';
 
-const Login = ({ setIsAuthenticated, setUsername }) => {
+const Login = ({ setIsAuthenticated, setUsername, setUserRole }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // const [recaptchaToken, setRecaptchaToken] = useState(''); // COMMENTED OUT FOR NOW
+  const [recaptchaToken, setRecaptchaToken] = useState('');
   const navigate = useNavigate();
 
-  // const handleRecaptchaChange = (token) => { // COMMENTED OUT FOR NOW
-  //   setRecaptchaToken(token);
-  // };
+  const handleRecaptchaChange = (token) => {
+    setRecaptchaToken(token);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // if (!recaptchaToken) { // COMMENTED OUT FOR NOW
-    //   alert('Please complete the reCAPTCHA verification');
-    //   return;
-    // }
+    if (!recaptchaToken) {
+      alert('Please complete the reCAPTCHA verification');
+      return;
+    }
 
     try {
       const response = await fetch('https://learningsphere-1fgj.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }), // removed recaptchaToken
+        body: JSON.stringify({ email, password, recaptchaToken }),
       });
       const data = await response.json();
       if (response.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('userId', data.user.id);
         localStorage.setItem('username', data.user.profile?.name || data.user.email);
+        localStorage.setItem('userRole', data.user.role);
         setIsAuthenticated(true);
         setUsername(data.user.profile?.name || data.user.email);
-        navigate('/');
+        setUserRole(data.user.role);
+        
+        // Redirect based on role
+        if (data.user.role === 'admin') {
+          navigate('/admin');
+        } else if (data.user.role === 'tutor') {
+          navigate('/tutor/dashboard');
+        } else {
+          navigate('/');
+        }
       } else {
         alert(data.msg);
       }
@@ -78,13 +88,12 @@ const Login = ({ setIsAuthenticated, setUsername }) => {
               required
             />
           </div>
-          {/* COMMENTED OUT FOR NOW */}
-          {/* <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-4">
             <ReCAPTCHA
               sitekey="6LfKC9grAAAAAK6JPeC-gKNC0ffDTKraxcbdubPo"
               onChange={handleRecaptchaChange}
             />
-          </div> */}
+          </div>
           <button
             type="submit"
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"

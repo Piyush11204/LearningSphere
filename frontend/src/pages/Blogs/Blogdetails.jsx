@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Calendar, User, Clock, Tag, ArrowLeft, Share2, Eye, Image } from 'lucide-react';
-import { trackBlogView, shareBlog } from '../../utils/blogUtils';
+import { trackBlogView, shareBlog, getCategoryColor, updatePageSEO } from '../../utils/blogUtils';
+import { API_URLS } from '../../config/api';
 
 const BlogDetails = () => {
     const { slug } = useParams();
@@ -11,8 +14,6 @@ const BlogDetails = () => {
     const [relatedBlogs, setRelatedBlogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-
-    const API_BASE_URL = `https://khushihomesofarepairing.com/api`;
 
     useEffect(() => {
         fetchBlogDetails();
@@ -27,21 +28,15 @@ const BlogDetails = () => {
 
     useEffect(() => {
         if (blog) {
-            // Update page title and meta description
-            document.title = `${blog.title} - Khushi Home Sofa Repair Blog`;
-            
-            // Update meta description
-            const metaDescription = document.querySelector('meta[name="description"]');
-            if (metaDescription) {
-                metaDescription.setAttribute('content', blog.metaDescription || blog.excerpt);
-            }
+            // Update page SEO with LearningSphere branding
+            updatePageSEO(blog);
         }
     }, [blog]);
 
     const fetchBlogDetails = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`${API_BASE_URL}/blogs/${slug}`);
+            const response = await axios.get(`${API_URLS.BLOGS}/${slug}`);
             
             if (response.data.success) {
                 setBlog(response.data.blog);
@@ -68,22 +63,160 @@ const BlogDetails = () => {
         }
     };
 
-    // Format content to preserve line breaks and styling
-    const formatContent = (content) => {
-        if (!content) return '';
+    // Function to clean HTML and extract Markdown content
+    const extractMarkdownFromHTML = (htmlContent) => {
+        if (!htmlContent) return '';
         
-        // Convert line breaks to <br> tags and wrap paragraphs
-        return content
-            .split('\n\n')
-            .map(paragraph => {
-                if (paragraph.trim()) {
-                    // Replace single line breaks with <br> tags within paragraphs
-                    const formattedParagraph = paragraph.replace(/\n/g, '<br>');
-                    return `<p>${formattedParagraph}</p>`;
-                }
-                return '';
-            })
-            .join('');
+        // Replace HTML divs with proper line breaks and clean up the content
+        let cleanContent = htmlContent
+            // Replace </div><div> with double line breaks (paragraph breaks)
+            .replace(/<\/div><div>/g, '\n\n')
+            // Replace opening and closing div tags
+            .replace(/<div[^>]*>/g, '')
+            .replace(/<\/div>/g, '\n')
+            // Replace HTML entities
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            // Clean up excessive whitespace
+            .replace(/\n\s*\n\s*\n/g, '\n\n')
+            .trim();
+            
+        return cleanContent;
+    };
+
+    // Function to detect if content is HTML or Markdown
+    const isHTMLContent = (content) => {
+        return content && (content.includes('<div>') || content.includes('<p>') || content.includes('<br>'));
+    };
+
+    // Custom components for markdown rendering
+    const markdownComponents = {
+        h1: ({ children }) => (
+            <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-6 leading-tight border-b pb-4">
+                {children}
+            </h1>
+        ),
+        h2: ({ children }) => (
+            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4 leading-tight">
+                {children}
+            </h2>
+        ),
+        h3: ({ children }) => (
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3 leading-tight">
+                {children}
+            </h3>
+        ),
+        h4: ({ children }) => (
+            <h4 className="text-lg font-semibold text-gray-900 mt-4 mb-2 leading-tight">
+                {children}
+            </h4>
+        ),
+        p: ({ children }) => (
+            <p className="text-gray-700 leading-relaxed mb-6">
+                {children}
+            </p>
+        ),
+        ul: ({ children }) => (
+            <ul className="list-disc list-inside text-gray-700 mb-6 space-y-2 ml-4">
+                {children}
+            </ul>
+        ),
+        ol: ({ children }) => (
+            <ol className="list-decimal list-inside text-gray-700 mb-6 space-y-2 ml-4">
+                {children}
+            </ol>
+        ),
+        li: ({ children }) => (
+            <li className="leading-relaxed">
+                {children}
+            </li>
+        ),
+        blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-blue-500 bg-blue-50 pl-6 py-4 my-6 italic text-gray-700">
+                {children}
+            </blockquote>
+        ),
+        code: ({ inline, children }) => (
+            inline ? (
+                <code className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
+                    {children}
+                </code>
+            ) : (
+                <code className="block bg-gray-900 text-gray-100 p-4 rounded-lg text-sm font-mono overflow-x-auto mb-6">
+                    {children}
+                </code>
+            )
+        ),
+        pre: ({ children }) => (
+            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm font-mono overflow-x-auto mb-6">
+                {children}
+            </pre>
+        ),
+        a: ({ href, children }) => (
+            <a 
+                href={href} 
+                className="text-blue-600 hover:text-blue-800 underline font-medium"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                {children}
+            </a>
+        ),
+        img: ({ src, alt }) => (
+            <img 
+                src={src} 
+                alt={alt} 
+                className="w-full max-w-2xl mx-auto rounded-lg shadow-md mb-6"
+            />
+        ),
+        table: ({ children }) => (
+            <div className="overflow-x-auto mb-6 border border-gray-200 rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200">
+                    {children}
+                </table>
+            </div>
+        ),
+        thead: ({ children }) => (
+            <thead className="bg-gray-50">
+                {children}
+            </thead>
+        ),
+        tbody: ({ children }) => (
+            <tbody className="bg-white divide-y divide-gray-200">
+                {children}
+            </tbody>
+        ),
+        tr: ({ children }) => (
+            <tr className="hover:bg-gray-50">
+                {children}
+            </tr>
+        ),
+        th: ({ children }) => (
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                {children}
+            </th>
+        ),
+        td: ({ children }) => (
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-200">
+                {children}
+            </td>
+        ),
+        strong: ({ children }) => (
+            <strong className="font-bold text-gray-900">
+                {children}
+            </strong>
+        ),
+        em: ({ children }) => (
+            <em className="italic text-gray-700">
+                {children}
+            </em>
+        ),
+        hr: () => (
+            <hr className="border-t border-gray-300 my-8" />
+        )
     };
 
     if (loading) {
@@ -135,7 +268,7 @@ const BlogDetails = () => {
                 {/* Article Header */}
                 <header className="mb-8">
                     <div className="mb-4">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full font-medium ${getCategoryColor(blog.category)}`}>
                             <Tag className="w-3 h-3" />
                             {blog.category}
                         </span>
@@ -152,7 +285,7 @@ const BlogDetails = () => {
                     <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 mb-6">
                         <div className="flex items-center gap-1">
                             <User className="w-4 h-4" />
-                            <span>{blog.author?.name || 'Khushi Home Sofa Repair Team'}</span>
+                            <span>{blog.author?.name || 'LearningSphere Team'}</span>
                         </div>
                         <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
@@ -195,21 +328,25 @@ const BlogDetails = () => {
                     </div>
                 )}
 
-                {/* Article Content with proper formatting */}
+                {/* Article Content - Smart Rendering */}
                 <div className="mb-12">
-                    <div 
-                        className="prose prose-lg max-w-none prose-blue prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6"
-                        dangerouslySetInnerHTML={{ 
-                            __html: blog.content.includes('<p>') || blog.content.includes('<div>') || blog.content.includes('<br>') 
-                                ? blog.content 
-                                : formatContent(blog.content)
-                        }}
-                        style={{
-                            fontSize: '1.125rem',
-                            lineHeight: '1.75',
-                            color: '#374151'
-                        }}
-                    />
+                    <div className="prose prose-lg max-w-none text-lg leading-relaxed text-gray-700">
+                        {isHTMLContent(blog.content) ? (
+                            <ReactMarkdown 
+                                remarkPlugins={[remarkGfm]}
+                                components={markdownComponents}
+                            >
+                                {extractMarkdownFromHTML(blog.content)}
+                            </ReactMarkdown>
+                        ) : (
+                            <ReactMarkdown 
+                                remarkPlugins={[remarkGfm]}
+                                components={markdownComponents}
+                            >
+                                {blog.content}
+                            </ReactMarkdown>
+                        )}
+                    </div>
                 </div>
 
                 {/* Additional Images */}
@@ -340,7 +477,7 @@ const BlogDetails = () => {
                                     )}
                                     <div className="p-6">
                                         <div className="mb-3">
-                                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                            <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full font-medium ${getCategoryColor(relatedBlog.category)}`}>
                                                 <Tag className="w-3 h-3" />
                                                 {relatedBlog.category}
                                             </span>

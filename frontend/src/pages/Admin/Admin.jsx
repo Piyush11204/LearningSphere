@@ -6,6 +6,9 @@ import Sessions from './Sessions';
 import LiveSessions from './LiveSessions';
 import ExamManagement from './ExamManagement';
 import ContactManagement from '../../components/admin/ContactManagement';
+import QuestionManagement from './QuestionManagement';
+import BlogManagement from '../Blogs/BlogManagement';
+import BlogForm from '../Blogs/BlogForm';
 import {
   BarChart3,
   Users,
@@ -353,6 +356,28 @@ const AdminDashboard = () => {
                     <p className="text-xs text-orange-600">Handle customer inquiries</p>
                   </div>
                 </button>
+
+                <button
+                  onClick={() => navigate('/admin/blogs')}
+                  className="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                >
+                  <BookOpen className="w-6 h-6 text-purple-600 mr-3" />
+                  <div>
+                    <p className="text-sm font-medium text-purple-900">Blog Management</p>
+                    <p className="text-xs text-purple-600">Create and manage blog posts</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => navigate('/admin/questions')}
+                  className="flex items-center p-4 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                >
+                  <BookOpen className="w-6 h-6 text-emerald-600 mr-3" />
+                  <div>
+                    <p className="text-sm font-medium text-emerald-900">Question Bank</p>
+                    <p className="text-xs text-emerald-600">Manage exam questions</p>
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -511,6 +536,38 @@ const Admin = () => {
           <AdminSidebar />
           <div className="flex-1 p-8">
             <ExamManagement />
+          </div>
+        </div>
+      } />
+      <Route path="/blogs" element={
+        <div className="min-h-screen bg-gray-50 flex">
+          <AdminSidebar />
+          <div className="flex-1">
+            <BlogManagement />
+          </div>
+        </div>
+      } />
+      <Route path="/blogs/create" element={
+        <div className="min-h-screen bg-gray-50 flex">
+          <AdminSidebar />
+          <div className="flex-1">
+            <BlogForm />
+          </div>
+        </div>
+      } />
+      <Route path="/blogs/edit/:id" element={
+        <div className="min-h-screen bg-gray-50 flex">
+          <AdminSidebar />
+          <div className="flex-1">
+            <BlogForm />
+          </div>
+        </div>
+      } />
+      <Route path="/questions" element={
+        <div className="min-h-screen bg-gray-50 flex">
+          <AdminSidebar />
+          <div className="flex-1">
+            <QuestionManagement />
           </div>
         </div>
       } />

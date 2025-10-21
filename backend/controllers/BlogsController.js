@@ -1,13 +1,6 @@
 const Blog = require('../models/BlogsModel');
 const User = require('../models/User');
-const cloudinary = require('cloudinary').v2;
-
-// Cloudinary config (should already be called in your main server)
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
+const cloudinary = require('../config/cloudinary');
 
 // Utility: Extract keywords from content
 const extractKeywords = (content) => {
@@ -49,7 +42,7 @@ const calculateSEOScore = (blog) => {
 };
 
 // Utility: Upload image to Cloudinary
-const uploadImageToCloudinary = async (file, folder = 'khushi-home-sofa-blog-images') => {
+const uploadImageToCloudinary = async (file, folder = 'learningsphere-blog-images') => {
     try {
         const base64String = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
         const result = await cloudinary.uploader.upload(base64String, {
@@ -175,9 +168,6 @@ module.exports = {
     // Admin: Get all blogs (no filters)
     adminGetAllBlogs: async (req, res) => {
         try {
-            if (!req.user || req.user.role !== 'admin') {
-                return res.status(403).json({ error: 'Access denied' });
-            }
             const blogs = await Blog.find()
                 .populate('author', 'name email')
                 .sort({ createdAt: -1 })
@@ -208,13 +198,13 @@ module.exports = {
 
             let featuredImage = null;
             if (req.files && req.files.featuredImage && req.files.featuredImage[0]) {
-                featuredImage = await uploadImageToCloudinary(req.files.featuredImage[0], 'khushi-home-sofa-blog-featured');
+                featuredImage = await uploadImageToCloudinary(req.files.featuredImage[0], 'learningsphere-blog-featured');
             }
 
             let images = [];
             if (req.files && req.files.images) {
                 for (const file of req.files.images) {
-                    const uploadedImage = await uploadImageToCloudinary(file, 'khushi-home-sofa-blog-content');
+                    const uploadedImage = await uploadImageToCloudinary(file, 'learningsphere-blog-content');
                     images.push({
                         ...uploadedImage,
                         alt: file.originalname.split('.')[0]
@@ -292,7 +282,7 @@ module.exports = {
                 if (blog.featuredImage?.publicId) {
                     await deleteImageFromCloudinary(blog.featuredImage.publicId);
                 }
-                blog.featuredImage = await uploadImageToCloudinary(req.files.featuredImage[0], 'khushi-home-sofa-blog-featured');
+                blog.featuredImage = await uploadImageToCloudinary(req.files.featuredImage[0], 'learningsphere-blog-featured');
             }
 
             if (content || title) {

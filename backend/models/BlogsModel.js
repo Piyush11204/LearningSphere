@@ -39,16 +39,20 @@ const blogSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: [
-            'Sofa Repair',
-            'Fabric Care',
-            'Frame Restoration',
-            'Cushion Replacement',
-            'Upholstery Tips',
-            'Maintenance Guides',
-            'Before & After',
-            'DIY Fixes',
-            'Customer Stories',
-            'Expert Advice'
+            'Study Tips',
+            'Exam Preparation',
+            'Technology Trends',
+            'Career Guidance',
+            'Learning Strategies',
+            'Educational Resources',
+            'Student Success',
+            'Skill Development',
+            'Academic Advice',
+            'Industry Insights',
+            'AI & Machine Learning',
+            'Programming',
+            'Data Science',
+            'Success Stories'
         ]
     },
     tags: [String],
@@ -142,31 +146,31 @@ blogSchema.pre('save', async function(next) {
     next();
 });
 
-// Generate structured data for Khushi Home Sofa Repair
+// Generate structured data for LearningSphere
 blogSchema.methods.generateStructuredData = function() {
     return {
         "@context": "https://schema.org",
         "@type": "BlogPosting",
-        "headline": this.title,
+        "headline": "LearningSphere Blog - " + this.title,
         "description": this.metaDescription,
         "image": this.featuredImage?.url,
         "author": {
             "@type": "Person",
-            "name": this.author?.name || "Khushi Home Sofa Repair Team"
+            "name": this.author?.name || "LearningSphere Team"
         },
         "publisher": {
             "@type": "Organization",
-            "name": "Khushi Home Sofa Repair",
+            "name": "LearningSphere",
             "logo": {
                 "@type": "ImageObject",
-                "url": "https://khushihomesofageneration.com/logo.png"
+                "url": "https://learningsphere-1fgj.onrender.com/LearningSphereLogo.png"
             }
         },
         "datePublished": this.publishedAt,
         "dateModified": this.updatedAt,
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": `https://khushihomesofageneration.com/blog/${this.slug}`
+            "@id": `https://learningsphere-1fgj.onrender.com/blog/${this.slug}`
         }
     };
 };

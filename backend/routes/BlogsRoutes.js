@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const blogController = require('../controllers/BlogsController');
-const auth = require('../middlewares/auth');
-const admin = require('../middlewares/admin');
+const auth = require('../middleware/auth');
+const roleCheck = require('../middleware/roleCheck');
 
 // Multer config for memory storage (for Cloudinary)
 const storage = multer.memoryStorage();
@@ -22,12 +22,12 @@ router.get('/sitemap.xml', blogController.generateSitemap);
 router.get('/:slug', blogController.getBlogBySlug);
 
 // -------- ADMIN ROUTES --------
-router.get('/admin/all', auth, admin, blogController.adminGetAllBlogs);
+router.get('/admin/all', auth, roleCheck('admin'), blogController.adminGetAllBlogs);
 
 router.post(
     '/admin/create',
     auth,
-    admin,
+    roleCheck('admin'),
     upload.fields([
         { name: 'featuredImage', maxCount: 1 },
         { name: 'images', maxCount: 10 }
@@ -38,7 +38,7 @@ router.post(
 router.put(
     '/admin/:id',
     auth,
-    admin,
+    roleCheck('admin'),
     upload.fields([
         { name: 'featuredImage', maxCount: 1 },
         { name: 'images', maxCount: 10 }
@@ -46,6 +46,6 @@ router.put(
     blogController.adminUpdateBlog
 );
 
-router.delete('/admin/:id', auth, admin, blogController.adminDeleteBlog);
+router.delete('/admin/:id', auth, roleCheck('admin'), blogController.adminDeleteBlog);
 
 module.exports = router;

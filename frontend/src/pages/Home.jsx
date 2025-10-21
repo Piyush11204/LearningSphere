@@ -1260,9 +1260,145 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Featured Blog Posts Section */}
+      <FeaturedBlogs />
+
       {/* Final CTA Section */}
      
     </div>
+  );
+};
+
+// Featured Blog Posts Component
+const FeaturedBlogs = () => {
+  const [featuredPosts, setFeaturedPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedBlogs = async () => {
+      try {
+        const response = await fetch(`${API_URLS.BLOGS}?limit=3&sort=newest`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setFeaturedPosts(data.blogs);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching featured blogs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedBlogs();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading featured articles...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuredPosts.length === 0) return null;
+
+  return (
+    <section className="py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <div className="flex items-center justify-center mb-6">
+            <BookOpen className="w-10 h-10 text-blue-600 mr-3" />
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+              Latest from Our <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Blog</span>
+            </h2>
+          </div>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Stay updated with the latest insights, study tips, and educational trends from our expert team.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {featuredPosts.map((post) => (
+            <article 
+              key={post._id} 
+              className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+            >
+              {post.featuredImage?.url && (
+                <Link to={`/blog/${post.slug}`}>
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={post.featuredImage.url}
+                      alt={post.title}
+                      className="w-full h-48 object-cover hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                    <div className="absolute top-4 right-4">
+                      <span className="bg-white/90 backdrop-blur-sm text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                        {post.category}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              )}
+              
+              <div className="p-6">
+                <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+                  <div className="flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    <span>{post.author?.name || 'LearningSphere Team'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    <span>{post.readTime || 5} min read</span>
+                  </div>
+                </div>
+                
+                <Link to={`/blog/${post.slug}`}>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:bg-clip-text hover:text-transparent cursor-pointer transition-all duration-200">
+                    {post.title}
+                  </h3>
+                </Link>
+                
+                <p className="text-gray-600 line-clamp-3 leading-relaxed mb-4">
+                  {post.excerpt}
+                </p>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">
+                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+                  </span>
+                  <Link 
+                    to={`/blog/${post.slug}`}
+                    className="inline-flex items-center gap-2 text-blue-600 hover:text-purple-600 font-semibold text-sm transition-colors duration-200 group"
+                  >
+                    Read More 
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                  </Link>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <Link 
+            to="/blog" 
+            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300"
+          >
+            <BookOpen className="w-5 h-5" />
+            <span>View All Articles</span>
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 };
 

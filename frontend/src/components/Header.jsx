@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 
-const Header = ({ isAuthenticated, username, onLogout }) => {
+const Header = ({ isAuthenticated, username, userRole, onLogout }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isExamsDropdownOpen, setIsExamsDropdownOpen] = useState(false);
@@ -39,7 +39,7 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
   }, [isAuthenticated, username, onLogout]);
 
   const displayName = userProfile?.profile?.name || username || 'User';
-  const userRole = userProfile?.role || 'learner';
+  const currentUserRole = userRole || userProfile?.role || 'learner';
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
@@ -194,16 +194,15 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
               About
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
+            <Link to="/blog" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors relative group">
+              Blog
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
+            </Link>
             <Link to="/contact" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors relative group">
               Contact
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
-            {isAuthenticated && (
-              <Link to="/chatbot" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors relative group">
-                AI Assistant
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
-              </Link>
-            )}
+            
           </nav>
 
           <div className="flex items-center space-x-4">
@@ -252,7 +251,7 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
                           My Profile
                         </Link>
                         <Link
-                          to={userRole === 'admin' ? '/admin' : userRole === 'tutor' ? '/tutor/dashboard' : '/progress'}
+                          to={currentUserRole === 'admin' ? '/admin' : currentUserRole === 'tutor' ? '/tutor/dashboard' : '/progress'}
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                           onClick={() => setIsDropdownOpen(false)}
                         >
@@ -261,7 +260,7 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
                           </svg>
                           Dashboard
                         </Link>
-                        {userRole === 'admin' && (
+                        {currentUserRole === 'admin' && (
                           <Link
                             to="/admin/contacts"
                             className="flex items-center px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors"
@@ -273,7 +272,7 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
                             Contact Management
                           </Link>
                         )}
-                        {userRole === 'admin' && (
+                        {currentUserRole === 'admin' && (
                           <Link
                             to="/admin"
                             className="flex items-center px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors"
@@ -283,6 +282,18 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.40A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                             </svg>
                             Admin Panel
+                          </Link>
+                        )}
+                        {currentUserRole === 'admin' && (
+                          <Link
+                            to="/admin/blogs"
+                            className="flex items-center px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                            Blog Management
                           </Link>
                         )}
                         
@@ -393,6 +404,9 @@ const Header = ({ isAuthenticated, username, onLogout }) => {
               </Link>
               <Link to="/about" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-base font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
                 About
+              </Link>
+              <Link to="/blog" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-base font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                Blog
               </Link>
               <Link to="/contact" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-base font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
                 Contact

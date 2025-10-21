@@ -17,7 +17,8 @@ export const API_URLS = {
   PRACTICE: `${API_BASE_URL}/api/practice`,
   QUESTIONS: `${API_BASE_URL}/api/questions`,
   CHATBOT: `${API_BASE_URL}/api/chatbot`,
-  ADAPTIVE_EXAM: `${API_BASE_URL}/api/adaptive-exam`
+  ADAPTIVE_EXAM: `${API_BASE_URL}/api/adaptive-exam`,
+  BLOGS: `${API_BASE_URL}/api/blogs`
 };
 
 // Default export
